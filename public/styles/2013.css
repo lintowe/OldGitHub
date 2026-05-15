@@ -429,6 +429,123 @@ html[data-oldgh-hide-modern-header] body > header:not([data-oldgh]) {
   border-top: 1px solid var(--gh-border-faint);
 }
 
+/* repo header — title bar, action buttons, tabs */
+html[data-oldgh-hide-modern-repo-header] #repository-container-header,
+html[data-oldgh-hide-modern-repo-header] .pagehead,
+html[data-oldgh-hide-modern-repo-header] [data-pjax="#repo-content-pjax-container"] > .border-bottom,
+html[data-oldgh-hide-modern-repo-header] .UnderlineNav.js-repo-nav {
+  display: none !important;
+}
+
+.oldgh-repo-header {
+  background: var(--gh-bg-elev);
+  border-bottom: 1px solid var(--gh-border);
+  margin-top: 0;
+}
+.oldgh-repo-header .oldgh-page {
+  margin: 0 auto;
+  padding-top: 18px;
+  padding-bottom: 0;
+}
+
+.oldgh-repo-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.oldgh-repo-header__title {
+  margin: 0;
+  padding: 0;
+  font-size: var(--gh-size-h1);
+  font-weight: normal;
+  color: var(--gh-fg);
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+}
+.oldgh-repo-header__title strong {
+  font-weight: bold;
+}
+.oldgh-repo-header__icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-header__slash {
+  color: var(--gh-fg-faint);
+}
+
+.oldgh-repo-header__fork-of {
+  margin: 4px 0 0;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+
+.oldgh-repo-header__description {
+  margin: 8px 0 0;
+  font-size: var(--gh-size-lg);
+  color: var(--gh-fg);
+  max-width: 70ch;
+}
+
+.oldgh-repo-header__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.oldgh-repo-header__action {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-repo-header__action-btn {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.oldgh-repo-header__action-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: var(--gh-size-sm);
+  font-weight: bold;
+  color: var(--gh-fg);
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-btn-border);
+  border-left: none;
+  border-top-right-radius: var(--gh-radius);
+  border-bottom-right-radius: var(--gh-radius);
+  line-height: 1.4;
+}
+.oldgh-repo-header__action-count:hover {
+  background: var(--gh-bg-stripe);
+  text-decoration: none;
+  color: var(--gh-fg);
+}
+.oldgh-repo-header__action:has(.oldgh-repo-header__action-count:empty) .oldgh-repo-header__action-btn {
+  border-radius: var(--gh-radius);
+}
+
+/* repo-level tab nav */
+.oldgh-repo-tabs {
+  margin-top: 14px;
+}
+.oldgh-repo-tabs .oldgh-tabs {
+  margin: 0;
+}
+.oldgh-repo-tabs__link .octicon {
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-tabs__link[aria-current="page"] .octicon {
+  color: var(--gh-fg);
+}
+
 /* state pills */
 .oldgh-state {
   display: inline-flex;
