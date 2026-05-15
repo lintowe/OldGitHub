@@ -4,11 +4,19 @@ import { applyTheme, watchThemeChanges } from "@/theme";
 import { mountHeader } from "@/views/header";
 
 async function boot(): Promise<void> {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => void run(), { once: true });
+  } else {
+    await run();
+  }
+}
+
+async function run(): Promise<void> {
   const loggedIn = isLoggedIn();
   console.debug("[oldgh] boot", {
     url: window.location.href,
     loggedIn,
-    cookieKeys: document.cookie ? document.cookie.split(";").map((c) => c.trim().split("=")[0]).join(",") : "(empty)",
+    hasUserLoginMeta: !!document.querySelector('meta[name="user-login"]'),
   });
   if (!loggedIn) {
     return;
@@ -18,18 +26,9 @@ async function boot(): Promise<void> {
   injectThemeStylesheet();
   await applyTheme();
   watchThemeChanges();
-
-  const mount = async (): Promise<void> => {
-    console.debug("[oldgh] mounting header + router");
-    await mountHeader();
-    mountRouter();
-  };
-
-  if (document.body) {
-    await mount();
-  } else {
-    document.addEventListener("DOMContentLoaded", () => void mount(), { once: true });
-  }
+  console.debug("[oldgh] mounting header + router");
+  await mountHeader();
+  mountRouter();
 }
 
 function injectThemeStylesheet(): void {
