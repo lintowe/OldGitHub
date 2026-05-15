@@ -4,7 +4,7 @@ import { applyTheme, watchThemeChanges } from "@/theme";
 import { mountHeader } from "@/views/header";
 
 async function boot(): Promise<void> {
-  if (!(await isLoggedIn())) {
+  if (!isLoggedIn()) {
     return;
   }
   killTurbo();

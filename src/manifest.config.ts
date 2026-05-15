@@ -30,7 +30,7 @@ export const manifest: chrome.runtime.ManifestV3 = {
     open_in_tab: true,
   },
 
-  permissions: ["cookies", "storage", "scripting", "declarativeNetRequest"],
+  permissions: ["storage", "scripting", "declarativeNetRequest"],
   host_permissions: [
     "https://github.com/*",
     "https://*.githubusercontent.com/*",
