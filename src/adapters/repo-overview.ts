@@ -36,6 +36,49 @@ export type CommitInfo = {
   shortMessageHtmlLink: string;
 };
 
+export type RepoTreeView = {
+  owner: string;
+  repo: string;
+  branch: string;
+  path: string;
+  items: TreeItem[];
+};
+
+export async function getRepoTree(owner: string, repo: string, refAndPath: string): Promise<RepoTreeView> {
+  const url = `https://github.com/${owner}/${repo}/tree/${refAndPath}`;
+  const resp = await fetch(url, {
+    credentials: "include",
+    headers: { Accept: "text/html" },
+  });
+  if (!resp.ok) {
+    throw new AdapterFailure("getRepoTree", `${owner}/${repo}/tree/${refAndPath} responded ${resp.status}`);
+  }
+  const html = await resp.text();
+  const doc = parseRepoPage(html);
+  const payload = extractEmbeddedPayload(doc);
+
+  const route = read<{ payload?: unknown }>(payload, "payload");
+  const treeRoute = read<{ codeViewTreeRoute?: unknown }>(route, "codeViewTreeRoute");
+  if (!treeRoute) {
+    throw new AdapterFailure("getRepoTree", "missing codeViewTreeRoute in payload");
+  }
+
+  const refInfo = read<{ name?: unknown }>(treeRoute, "refInfo");
+  const branch = typeof refInfo?.name === "string" ? refInfo.name : null;
+  const path = (treeRoute as { path?: unknown }).path;
+  if (!branch || typeof path !== "string") {
+    throw new AdapterFailure("getRepoTree", "missing refInfo.name or path");
+  }
+
+  return {
+    owner,
+    repo,
+    branch,
+    path,
+    items: readTree(treeRoute),
+  };
+}
+
 export async function getRepoOverview(owner: string, repo: string): Promise<RepoOverview> {
   const html = await fetchRepoPage(owner, repo);
   const doc = parseRepoPage(html);

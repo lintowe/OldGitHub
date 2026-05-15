@@ -815,6 +815,42 @@ html[data-oldgh-hide-modern-repo-body] turbo-frame#repo-content-turbo-frame {
   white-space: pre-wrap;
 }
 
+/* breadcrumb for tree subdir */
+.oldgh-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 12px;
+  font-size: var(--gh-size-lg);
+  color: var(--gh-fg);
+  flex-wrap: wrap;
+}
+.oldgh-breadcrumb__ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-breadcrumb__ref strong {
+  color: var(--gh-fg);
+  font-weight: bold;
+}
+.oldgh-breadcrumb__seg {
+  color: var(--gh-link);
+}
+.oldgh-breadcrumb__seg--current {
+  color: var(--gh-fg);
+  font-weight: bold;
+}
+.oldgh-breadcrumb__sep {
+  color: var(--gh-fg-faint);
+}
+
 /* state pills */
 .oldgh-state {
   display: inline-flex;

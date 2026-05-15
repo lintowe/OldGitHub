@@ -1,18 +1,25 @@
 import { AdapterFailure } from "@/adapters";
 import { mountRepoHeader, unmountRepoHeader, updateActiveTab } from "@/views/repo-header";
 import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
+import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
 
 type Route =
   | { kind: "out-of-scope" }
   | { kind: "repo-home"; owner: string; repo: string }
-  | { kind: "repo-subpath"; owner: string; repo: string; subpath: string }
+  | { kind: "repo-tree"; owner: string; repo: string; refAndPath: string }
+  | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string }
   | { kind: "todo"; name: string };
 
 type RepoKey = { owner: string; repo: string };
 
+type BodyState =
+  | { kind: "none" }
+  | { kind: "home"; owner: string; repo: string }
+  | { kind: "tree"; owner: string; repo: string; refAndPath: string };
+
 let mountedRepo: RepoKey | null = null;
-let mountedHome = false;
+let bodyState: BodyState = { kind: "none" };
 
 const OUT_OF_SCOPE_PREFIXES = [
   "/codespaces",
@@ -71,41 +78,40 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 
   try {
     if (route.kind === "out-of-scope") {
-      teardownAll();
+      await applyBodyState({ kind: "none" });
+      teardownRepoHeader();
       return;
     }
 
-    if (route.kind === "repo-home" || route.kind === "repo-subpath") {
-      await ensureRepoMounted(route.owner, route.repo, currentPath(loc));
-      if (route.kind === "repo-home") {
-        if (!mountedHome) {
-          await mountRepoHome(route.owner, route.repo);
-          mountedHome = true;
-        }
-      } else if (mountedHome) {
-        unmountRepoHome();
-        mountedHome = false;
-      }
+    if (route.kind === "repo-home" || route.kind === "repo-tree" || route.kind === "repo-other") {
+      await ensureRepoHeader(route.owner, route.repo, currentPath(loc));
+      await applyBodyState(targetBodyForRoute(route));
       return;
     }
 
-    teardownRepo();
+    await applyBodyState({ kind: "none" });
+    teardownRepoHeader();
   } catch (err) {
     if (err instanceof AdapterFailure) {
       console.debug("[oldgh] dispatch adapter failure:", err.name, err.message);
-      teardownRepo();
+      await applyBodyState({ kind: "none" });
+      teardownRepoHeader();
       return;
     }
     throw err;
   }
 }
 
-async function ensureRepoMounted(owner: string, repo: string, pathname: string): Promise<void> {
+function targetBodyForRoute(
+  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-other" }>,
+): BodyState {
+  if (route.kind === "repo-home") return { kind: "home", owner: route.owner, repo: route.repo };
+  if (route.kind === "repo-tree") return { kind: "tree", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
+  return { kind: "none" };
+}
+
+async function ensureRepoHeader(owner: string, repo: string, pathname: string): Promise<void> {
   if (!mountedRepo || mountedRepo.owner !== owner || mountedRepo.repo !== repo) {
-    if (mountedHome) {
-      unmountRepoHome();
-      mountedHome = false;
-    }
     await mountRepoHeader(owner, repo);
     mountedRepo = { owner, repo };
   } else {
@@ -113,19 +119,43 @@ async function ensureRepoMounted(owner: string, repo: string, pathname: string):
   }
 }
 
-function teardownRepo(): void {
-  if (mountedHome) {
-    unmountRepoHome();
-    mountedHome = false;
-  }
+function teardownRepoHeader(): void {
   if (mountedRepo) {
     unmountRepoHeader();
     mountedRepo = null;
   }
 }
 
-function teardownAll(): void {
-  teardownRepo();
+async function applyBodyState(target: BodyState): Promise<void> {
+  if (sameBody(bodyState, target)) return;
+  unmountBody();
+  bodyState = { kind: "none" };
+  if (target.kind === "home") {
+    await mountRepoHome(target.owner, target.repo);
+    bodyState = target;
+    return;
+  }
+  if (target.kind === "tree") {
+    await mountRepoTree(target.owner, target.repo, target.refAndPath);
+    bodyState = target;
+    return;
+  }
+}
+
+function sameBody(a: BodyState, b: BodyState): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "home" && b.kind === "home") {
+    return a.owner === b.owner && a.repo === b.repo;
+  }
+  if (a.kind === "tree" && b.kind === "tree") {
+    return a.owner === b.owner && a.repo === b.repo && a.refAndPath === b.refAndPath;
+  }
+  return a.kind === "none" && b.kind === "none";
+}
+
+function unmountBody(): void {
+  unmountRepoHome();
+  unmountRepoTree();
 }
 
 function currentPath(loc: Location | URL): string {
@@ -160,5 +190,11 @@ function resolveRoute(loc: Location | URL): Route {
   if (segs.length === 2) {
     return { kind: "repo-home", owner, repo };
   }
-  return { kind: "repo-subpath", owner, repo, subpath: segs.slice(2).join("/") };
+
+  if (segs[2] === "tree" && segs.length >= 4) {
+    const refAndPath = segs.slice(3).join("/");
+    return { kind: "repo-tree", owner, repo, refAndPath };
+  }
+
+  return { kind: "repo-other", owner, repo };
 }

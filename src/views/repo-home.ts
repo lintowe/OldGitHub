@@ -1,13 +1,6 @@
 import { octicon } from "@/icons";
-import { AdapterFailure } from "@/adapters";
-import {
-  getRepoOverview,
-  getTreeCommitInfo,
-  type CommitInfo,
-  type RepoOverview,
-  type TreeItem,
-} from "@/adapters/repo-overview";
-import { absoluteTime, relativeTime } from "@/util/time";
+import { getRepoOverview, type RepoOverview } from "@/adapters/repo-overview";
+import { hydrateTreeTable, renderTreeTable } from "./_tree-table";
 
 const ROOT_CLASS = "oldgh-repo-home";
 
@@ -36,7 +29,12 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
   bindCloneTabs(root);
   bindCopyButtons(root);
 
-  void hydrateCommitInfo(root, owner, repo, overview);
+  void hydrateTreeTable(root, {
+    owner,
+    repo,
+    branch: overview.branch,
+    basePath: "",
+  });
 }
 
 export function unmountRepoHome(): void {
@@ -45,11 +43,10 @@ export function unmountRepoHome(): void {
 }
 
 function renderShell(o: RepoOverview): string {
-  const sorted = sortTree(o.tree);
   return `
     <div class="oldgh-page">
       ${renderTopBar(o)}
-      ${renderTreeTable(o, sorted)}
+      ${renderTreeTable({ owner: o.owner, repo: o.repo, branch: o.branch, basePath: "" }, o.tree)}
       ${renderReadme(o)}
     </div>
   `;
@@ -121,52 +118,6 @@ function renderCloneBox(o: RepoOverview): string {
   `;
 }
 
-function sortTree(items: TreeItem[]): TreeItem[] {
-  const cmp = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" }).compare;
-  return [...items].sort((a, b) => {
-    if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
-    return cmp(a.name, b.name);
-  });
-}
-
-function renderTreeTable(o: RepoOverview, sorted: TreeItem[]): string {
-  return `
-    <table class="oldgh-table oldgh-repo-home__tree" aria-label="Files">
-      <thead>
-        <tr>
-          <th colspan="3">${escapeText(o.repo)} / <span class="oldgh-fg-muted">${escapeText(o.branch)}</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sorted.map((it) => renderTreeRow(o, it)).join("")}
-      </tbody>
-    </table>
-  `;
-}
-
-function renderTreeRow(o: RepoOverview, it: TreeItem): string {
-  const iconName = it.isDirectory ? "file-directory" : "file";
-  const href = it.isDirectory
-    ? `/${o.owner}/${o.repo}/tree/${encodeURIComponent(o.branch)}/${pathSegments(it.path)}`
-    : `/${o.owner}/${o.repo}/blob/${encodeURIComponent(o.branch)}/${pathSegments(it.path)}`;
-  return `
-    <tr data-path="${escapeAttr(it.path)}">
-      <td class="oldgh-repo-home__cell-icon">
-        ${octicon(iconName, { size: 16 })}
-      </td>
-      <td class="oldgh-repo-home__cell-name">
-        <a href="${escapeAttr(href)}">${escapeText(it.name)}</a>
-      </td>
-      <td class="oldgh-repo-home__cell-msg" data-msg></td>
-      <td class="oldgh-repo-home__cell-age" data-age></td>
-    </tr>
-  `;
-}
-
-function pathSegments(path: string): string {
-  return path.split("/").map(encodeURIComponent).join("/");
-}
-
 function renderReadme(o: RepoOverview): string {
   if (!o.readme) return "";
   return `
@@ -180,36 +131,8 @@ function renderReadme(o: RepoOverview): string {
   `;
 }
 
-async function hydrateCommitInfo(
-  root: HTMLElement,
-  owner: string,
-  repo: string,
-  o: RepoOverview,
-): Promise<void> {
-  let info: Record<string, CommitInfo>;
-  try {
-    info = await getTreeCommitInfo(owner, repo, o.branch);
-  } catch (err) {
-    if (err instanceof AdapterFailure) {
-      console.debug("[oldgh] tree-commit-info failure:", err.message);
-      return;
-    }
-    throw err;
-  }
-
-  root.querySelectorAll<HTMLTableRowElement>("tr[data-path]").forEach((row) => {
-    const path = row.dataset["path"];
-    if (!path) return;
-    const ci = info[path];
-    if (!ci) return;
-    const msgCell = row.querySelector<HTMLTableCellElement>("[data-msg]");
-    const ageCell = row.querySelector<HTMLTableCellElement>("[data-age]");
-    if (msgCell) msgCell.innerHTML = ci.shortMessageHtmlLink;
-    if (ageCell) {
-      ageCell.textContent = relativeTime(ci.date);
-      ageCell.title = absoluteTime(ci.date);
-    }
-  });
+function pathSegments(path: string): string {
+  return path.split("/").map(encodeURIComponent).join("/");
 }
 
 function bindCloneTabs(root: HTMLElement): void {
