@@ -3,12 +3,14 @@ import { mountRepoHeader, unmountRepoHeader, updateActiveTab } from "@/views/rep
 import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
 import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
+import { mountRepoCommits, unmountRepoCommits } from "@/views/repo-commits";
 
 type Route =
   | { kind: "out-of-scope" }
   | { kind: "repo-home"; owner: string; repo: string }
   | { kind: "repo-tree"; owner: string; repo: string; refAndPath: string }
   | { kind: "repo-blob"; owner: string; repo: string; refAndPath: string }
+  | { kind: "repo-commits"; owner: string; repo: string; refAndPath: string; query: string }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string }
   | { kind: "todo"; name: string };
@@ -19,7 +21,8 @@ type BodyState =
   | { kind: "none" }
   | { kind: "home"; owner: string; repo: string }
   | { kind: "tree"; owner: string; repo: string; refAndPath: string }
-  | { kind: "blob"; owner: string; repo: string; refAndPath: string };
+  | { kind: "blob"; owner: string; repo: string; refAndPath: string }
+  | { kind: "commits"; owner: string; repo: string; refAndPath: string; query: string };
 
 let mountedRepo: RepoKey | null = null;
 let bodyState: BodyState = { kind: "none" };
@@ -90,6 +93,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       route.kind === "repo-home" ||
       route.kind === "repo-tree" ||
       route.kind === "repo-blob" ||
+      route.kind === "repo-commits" ||
       route.kind === "repo-other"
     ) {
       await ensureRepoHeader(route.owner, route.repo, currentPath(loc));
@@ -111,11 +115,12 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 }
 
 function targetBodyForRoute(
-  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-other" }>,
+  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-commits" | "repo-other" }>,
 ): BodyState {
   if (route.kind === "repo-home") return { kind: "home", owner: route.owner, repo: route.repo };
   if (route.kind === "repo-tree") return { kind: "tree", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
   if (route.kind === "repo-blob") return { kind: "blob", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
+  if (route.kind === "repo-commits") return { kind: "commits", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath, query: route.query };
   return { kind: "none" };
 }
 
@@ -154,6 +159,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "commits") {
+    await mountRepoCommits(target.owner, target.repo, target.refAndPath, target.query);
+    bodyState = target;
+    return;
+  }
 }
 
 function sameBody(a: BodyState, b: BodyState): boolean {
@@ -167,6 +177,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "blob" && b.kind === "blob") {
     return a.owner === b.owner && a.repo === b.repo && a.refAndPath === b.refAndPath;
   }
+  if (a.kind === "commits" && b.kind === "commits") {
+    return a.owner === b.owner && a.repo === b.repo && a.refAndPath === b.refAndPath && a.query === b.query;
+  }
   return a.kind === "none" && b.kind === "none";
 }
 
@@ -174,10 +187,16 @@ function unmountBody(): void {
   unmountRepoHome();
   unmountRepoTree();
   unmountRepoBlob();
+  unmountRepoCommits();
 }
 
 function currentPath(loc: Location | URL): string {
   return "pathname" in loc ? loc.pathname : new URL(String(loc)).pathname;
+}
+
+function currentSearch(loc: Location | URL): string {
+  const raw = "search" in loc ? loc.search : new URL(String(loc)).search;
+  return raw.startsWith("?") ? raw.slice(1) : raw;
 }
 
 function resolveRoute(loc: Location | URL): Route {
@@ -217,6 +236,11 @@ function resolveRoute(loc: Location | URL): Route {
   if (segs[2] === "blob" && segs.length >= 5) {
     const refAndPath = segs.slice(3).join("/");
     return { kind: "repo-blob", owner, repo, refAndPath };
+  }
+
+  if (segs[2] === "commits" && segs.length >= 4) {
+    const refAndPath = segs.slice(3).join("/");
+    return { kind: "repo-commits", owner, repo, refAndPath, query: currentSearch(loc) };
   }
 
   return { kind: "repo-other", owner, repo };

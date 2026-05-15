@@ -938,6 +938,111 @@ html[data-oldgh-hide-modern-repo-body] turbo-frame#repo-content-turbo-frame {
   margin: 0 0 12px;
 }
 
+/* commits list */
+.oldgh-repo-commits > .oldgh-page {
+  padding-top: 12px;
+  padding-bottom: 40px;
+}
+.oldgh-repo-commits__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.oldgh-repo-commits__title {
+  margin: 0;
+  font-size: var(--gh-size-h2);
+  font-weight: normal;
+}
+.oldgh-repo-commits__group {
+  margin-bottom: 18px;
+}
+.oldgh-repo-commits__group-title {
+  margin: 0 0 8px;
+  padding: 6px 0;
+  font-size: var(--gh-size-md);
+  font-weight: normal;
+  color: var(--gh-fg-muted);
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-repo-commits__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+}
+.oldgh-repo-commits__item {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  align-items: center;
+}
+.oldgh-repo-commits__item:last-child {
+  border-bottom: none;
+}
+.oldgh-repo-commits__avatar img {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--gh-radius);
+}
+.oldgh-repo-commits__body {
+  min-width: 0;
+}
+.oldgh-repo-commits__msg {
+  margin: 0;
+  font-size: var(--gh-size-lg);
+  line-height: 1.3;
+  color: var(--gh-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oldgh-repo-commits__msg a {
+  color: var(--gh-fg);
+}
+.oldgh-repo-commits__msg a:hover {
+  color: var(--gh-link);
+}
+.oldgh-repo-commits__meta {
+  margin: 4px 0 0;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-commits__meta strong {
+  color: var(--gh-fg);
+  font-weight: bold;
+}
+.oldgh-repo-commits__author {
+  color: inherit;
+}
+.oldgh-repo-commits__actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.oldgh-repo-commits__sha code {
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-muted);
+  background: transparent;
+  padding: 0;
+}
+.oldgh-repo-commits__pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.oldgh-repo-commits__pagination .oldgh-btn[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* state pills */
 .oldgh-state {
   display: inline-flex;
