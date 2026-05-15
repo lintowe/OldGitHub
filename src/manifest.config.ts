@@ -36,16 +36,6 @@ export const manifest: chrome.runtime.ManifestV3 = {
     "https://*.githubusercontent.com/*",
   ],
 
-  declarative_net_request: {
-    rule_resources: [
-      {
-        id: "block-modern-gh-assets",
-        enabled: true,
-        path: "dnr/block-modern-css.json",
-      },
-    ],
-  },
-
   web_accessible_resources: [
     {
       resources: ["styles/2013.css", "assets/*"],
