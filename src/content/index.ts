@@ -4,7 +4,13 @@ import { applyTheme, watchThemeChanges } from "@/theme";
 import { mountHeader } from "@/views/header";
 
 async function boot(): Promise<void> {
-  if (!isLoggedIn()) {
+  const loggedIn = isLoggedIn();
+  console.debug("[oldgh] boot", {
+    url: window.location.href,
+    loggedIn,
+    cookieKeys: document.cookie ? document.cookie.split(";").map((c) => c.trim().split("=")[0]).join(",") : "(empty)",
+  });
+  if (!loggedIn) {
     return;
   }
   killTurbo();
@@ -14,6 +20,7 @@ async function boot(): Promise<void> {
   watchThemeChanges();
 
   const mount = async (): Promise<void> => {
+    console.debug("[oldgh] mounting header + router");
     await mountHeader();
     mountRouter();
   };
