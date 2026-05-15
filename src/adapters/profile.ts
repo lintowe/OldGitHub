@@ -36,6 +36,7 @@ export type ProfileView = {
   followingCount: string | null;
   repoCountHint: number | null;
   contributionHeading: string | null;
+  contributionGraphHtml: string | null;
   pinned: PinnedRepo[];
   orgs: ProfileOrg[];
   achievements: AchievementBadge[];
@@ -64,9 +65,7 @@ export async function getProfile(login: string): Promise<ProfileView> {
   const avatarUrl = meta(doc, "og:image") ?? `https://github.com/${profileUsername}.png?size=400`;
 
   const ogTitle = meta(doc, "og:title") ?? profileUsername;
-  const displayName = kind === "user"
-    ? ogTitle.replace(/\s*-\s*Overview\s*$/, "").trim() || profileUsername
-    : ogTitle.trim();
+  const displayName = extractDisplayName(doc, ogTitle, profileUsername);
 
   const ogDescription = meta(doc, "og:description") ?? "";
   const repoHintMatch = /\bhas (\d+(?:,\d+)*)\s+repositor/i.exec(ogDescription);
@@ -75,7 +74,7 @@ export async function getProfile(login: string): Promise<ProfileView> {
     : null;
 
   const orgBio = kind === "org" && ogDescription
-    ? ogDescription.replace(/\s+GitHub is where [^.]+ builds software\.?\s*$/i, "").trim()
+    ? ogDescription.replace(/\s+GitHub is where .+? builds software\.?\s*$/i, "").trim()
     : null;
   const userBioEl = doc.querySelector<HTMLElement>(".user-profile-bio, [data-bio-text]");
   const userBio = userBioEl?.textContent?.trim() || null;
@@ -99,11 +98,39 @@ export async function getProfile(login: string): Promise<ProfileView> {
     followingCount: readCountFromTabLink(doc, "following"),
     repoCountHint,
     contributionHeading: doc.querySelector(".js-yearly-contributions h2")?.textContent?.trim() || null,
+    contributionGraphHtml: extractContributionGraph(doc),
     pinned: readPinned(doc),
     orgs: readOrgs(doc),
     achievements: readAchievements(doc, profileUsername),
     isViewer: !!doc.querySelector('a[href$="/account"]'),
   };
+}
+
+function extractDisplayName(doc: Document, ogTitle: string, login: string): string {
+  const rawTitle = doc.querySelector("title")?.textContent?.trim() ?? "";
+  const title = rawTitle.replace(/\s*·\s*GitHub\s*$/, "").trim();
+
+  const parenMatch = /^(.+?)\s*\((.+?)\)\s*$/.exec(title);
+  if (parenMatch && parenMatch[1] && parenMatch[2]) {
+    const a = parenMatch[1].trim();
+    const b = parenMatch[2].trim();
+    if (a === login && b !== login) return b;
+    if (b === login && a !== login) return a;
+    if (a !== login) return a;
+    return b;
+  }
+
+  const ogTrim = ogTitle.replace(/\s*-\s*Overview\s*$/, "").trim();
+  if (ogTrim && ogTrim !== login) return ogTrim;
+  if (title && title !== login) return title;
+  return login;
+}
+
+function extractContributionGraph(doc: Document): string | null {
+  const container = doc.querySelector<HTMLElement>(".js-yearly-contributions");
+  if (!container) return null;
+  const table = container.querySelector<HTMLElement>("table");
+  return table?.outerHTML ?? null;
 }
 
 function meta(doc: Document, key: string): string | null {
@@ -160,13 +187,18 @@ function readOrgs(doc: Document): ProfileOrg[] {
 function readAchievements(doc: Document, login: string): AchievementBadge[] {
   const anchors = doc.querySelectorAll<HTMLAnchorElement>(`a[href*="${login}?achievement="]`);
   const out: AchievementBadge[] = [];
+  const seen = new Set<string>();
   for (const a of Array.from(anchors)) {
+    const href = a.getAttribute("href") || "";
+    const key = /achievement=([^&]+)/.exec(href)?.[1] ?? href;
+    if (seen.has(key)) continue;
     const img = a.querySelector<HTMLImageElement>("img");
     if (!img) continue;
+    seen.add(key);
     out.push({
-      name: img.getAttribute("alt") || "",
+      name: img.getAttribute("alt") || key,
       iconUrl: img.getAttribute("src") || "",
-      href: a.getAttribute("href") || "",
+      href,
     });
   }
   return out;

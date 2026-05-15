@@ -148,11 +148,8 @@ async function startNotificationPolling(root: HTMLElement): Promise<void> {
         badge.textContent = "";
       }
     } catch (err) {
-      if (err instanceof AdapterFailure) {
-        console.debug("[oldgh] notifications adapter failure:", err.name, err.message);
-        return;
-      }
-      throw err;
+      const reason = err instanceof AdapterFailure ? err.name + ": " + err.message : String(err);
+      console.debug("[oldgh] notifications poll skipped:", reason);
     }
   };
 

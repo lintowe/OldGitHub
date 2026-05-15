@@ -1,4 +1,5 @@
 import { dispatchRoute } from "@/router/dispatch";
+import { isCovered } from "@/router/resolve";
 
 export function killTurbo(): void {
   const meta = document.createElement("meta");
@@ -52,6 +53,13 @@ function interceptClicks(): void {
       const url = new URL(href, window.location.href);
       if (url.origin !== window.location.origin) return;
       if (anchor.target && anchor.target !== "_self") return;
+
+      if (!isCovered(url.pathname)) {
+        // not a fully-rebuilt route — let the browser do a full nav so modern
+        // GH can render its own body; our content script will re-mount the
+        // header on the new page load.
+        return;
+      }
 
       e.preventDefault();
       history.pushState({}, "", url.toString());

@@ -40,7 +40,7 @@ function renderShell(v: ProfileView): string {
       <main class="oldgh-profile__main">
         ${renderHeading(v)}
         ${v.pinned.length > 0 ? renderPinned(v) : ""}
-        ${renderActivityStub(v)}
+        ${renderContributions(v)}
       </main>
     </div>
   `;
@@ -142,15 +142,19 @@ function renderPinnedCard(p: PinnedRepo): string {
   `;
 }
 
-function renderActivityStub(v: ProfileView): string {
+function renderContributions(v: ProfileView): string {
+  if (!v.contributionGraphHtml) {
+    return `
+      <section class="oldgh-profile__activity">
+        <h3 class="oldgh-profile__section-title">Contributions</h3>
+        <p class="oldgh-profile__activity-link">${octicon("graph", { size: 14 })}<span>See the full contribution graph at <a href="https://github.com/${escapeAttr(v.login)}">github.com/${escapeText(v.login)}</a>.</span></p>
+      </section>
+    `;
+  }
   return `
-    <section class="oldgh-profile__activity">
-      <h3 class="oldgh-profile__section-title">Contributions</h3>
-      <p class="oldgh-profile__activity-link">
-        ${octicon("graph", { size: 14 })}
-        See the full contribution graph and recent activity at
-        <a href="https://github.com/${escapeAttr(v.login)}">github.com/${escapeText(v.login)}</a>.
-      </p>
+    <section class="oldgh-profile__contribs">
+      ${v.contributionHeading ? `<h3 class="oldgh-profile__section-title">${escapeText(v.contributionHeading)}</h3>` : `<h3 class="oldgh-profile__section-title">Contributions</h3>`}
+      <div class="oldgh-profile__contribs-graph">${v.contributionGraphHtml}</div>
     </section>
   `;
 }

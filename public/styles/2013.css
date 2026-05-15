@@ -1377,17 +1377,22 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
   border-radius: var(--gh-radius);
   background: var(--gh-bg-elev);
   display: flex;
+  overflow: hidden;
 }
 .oldgh-profile__stats li {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   border-right: 1px solid var(--gh-border-faint);
 }
 .oldgh-profile__stats li:last-child { border-right: none; }
 .oldgh-profile__stats a {
   display: block;
-  padding: 8px 6px;
+  padding: 6px 4px;
   text-align: center;
   color: var(--gh-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .oldgh-profile__stats a:hover {
   background: var(--gh-bg-stripe);
@@ -1395,14 +1400,17 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
 }
 .oldgh-profile__stats strong {
   display: block;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--gh-fg);
 }
 .oldgh-profile__stats span {
-  font-size: var(--gh-size-xs);
+  display: block;
+  font-size: 10px;
   color: var(--gh-fg-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .oldgh-profile__orgs,
@@ -1536,16 +1544,66 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
   padding: 14px 16px;
 }
 .oldgh-profile__activity-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   margin: 0;
   color: var(--gh-fg-muted);
   font-size: var(--gh-size-md);
+  line-height: 1.5;
+}
+.oldgh-profile__activity-link .octicon {
+  vertical-align: text-bottom;
+  margin-right: 4px;
 }
 .oldgh-profile__activity-link a {
   color: var(--gh-link);
 }
+
+/* contribution graph (scraped from modern GH, restyled to 2013 palette) */
+.oldgh-profile__contribs {
+  margin-top: 4px;
+}
+.oldgh-profile__contribs-graph {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 14px;
+  overflow-x: auto;
+}
+.oldgh-profile__contribs-graph table {
+  border-collapse: separate;
+  border-spacing: 3px;
+  margin: 0 auto;
+}
+.oldgh-profile__contribs-graph th {
+  font-size: 9px;
+  font-weight: normal;
+  color: var(--gh-fg-muted);
+  padding: 0 2px;
+  text-align: left;
+}
+.oldgh-profile__contribs-graph td {
+  width: 11px;
+  height: 11px;
+  background: #eeeeee;
+  border-radius: 2px;
+  padding: 0;
+}
+.oldgh-profile__contribs-graph td[data-level="1"] { background: #d6e685; }
+.oldgh-profile__contribs-graph td[data-level="2"] { background: #8cc665; }
+.oldgh-profile__contribs-graph td[data-level="3"] { background: #44a340; }
+.oldgh-profile__contribs-graph td[data-level="4"] { background: #1e6823; }
+.oldgh-profile__contribs-graph .ContributionCalendar-day {
+  fill: #eeeeee;
+}
+.oldgh-profile__contribs-graph .ContributionCalendar-day[data-level="1"] { fill: #d6e685; }
+.oldgh-profile__contribs-graph .ContributionCalendar-day[data-level="2"] { fill: #8cc665; }
+.oldgh-profile__contribs-graph .ContributionCalendar-day[data-level="3"] { fill: #44a340; }
+.oldgh-profile__contribs-graph .ContributionCalendar-day[data-level="4"] { fill: #1e6823; }
+
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td { background: #2a2a2a; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="1"] { background: #0e4429; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="2"] { background: #006d32; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="3"] { background: #26a641; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="4"] { background: #39d353; }
 
 /* state pills */
 .oldgh-state {
