@@ -19,21 +19,16 @@ type TabKey = (typeof TABS)[number]["key"];
 const ROOT_CLASS = "oldgh-repo-header";
 
 export async function mountRepoHeader(owner: string, repo: string): Promise<void> {
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-header", "");
-
   let summary: RepoSummary;
   try {
     summary = await getRepoSummary(owner, repo);
   } catch (err) {
-    if (err instanceof AdapterFailure) {
-      console.debug("[oldgh] repo-header adapter failure:", err.name, err.message);
-      unmountRepoHeader();
-      return;
-    }
+    unmountRepoHeader();
     throw err;
   }
 
   unmountRepoHeader();
+  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-header", "");
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;

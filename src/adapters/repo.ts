@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchRepoPage, parseRepoPage } from "./_page";
 
 export type RepoSummary = {
   owner: string;
@@ -15,16 +16,8 @@ export type RepoSummary = {
 };
 
 export async function getRepoSummary(owner: string, repo: string): Promise<RepoSummary> {
-  const resp = await fetch(`https://github.com/${owner}/${repo}`, {
-    credentials: "include",
-    headers: { Accept: "text/html" },
-  });
-  if (!resp.ok) {
-    throw new AdapterFailure("getRepoSummary", `${owner}/${repo} responded ${resp.status}`);
-  }
-
-  const html = await resp.text();
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  const html = await fetchRepoPage(owner, repo);
+  const doc = parseRepoPage(html);
 
   const nwo = meta(doc, "octolytics-dimension-repository_nwo");
   if (!nwo) {

@@ -1,15 +1,18 @@
 import { AdapterFailure } from "@/adapters";
 import { mountRepoHeader, unmountRepoHeader, updateActiveTab } from "@/views/repo-header";
+import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 
 type Route =
   | { kind: "out-of-scope" }
-  | { kind: "repo"; owner: string; repo: string }
+  | { kind: "repo-home"; owner: string; repo: string }
+  | { kind: "repo-subpath"; owner: string; repo: string; subpath: string }
   | { kind: "profile"; login: string }
   | { kind: "todo"; name: string };
 
 type RepoKey = { owner: string; repo: string };
 
 let mountedRepo: RepoKey | null = null;
+let mountedHome = false;
 
 const OUT_OF_SCOPE_PREFIXES = [
   "/codespaces",
@@ -72,38 +75,57 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       return;
     }
 
-    if (route.kind === "repo") {
-      if (!mountedRepo || mountedRepo.owner !== route.owner || mountedRepo.repo !== route.repo) {
-        await mountRepoHeader(route.owner, route.repo);
-        mountedRepo = { owner: route.owner, repo: route.repo };
-      } else {
-        updateActiveTab(route.owner, route.repo, currentPath(loc));
+    if (route.kind === "repo-home" || route.kind === "repo-subpath") {
+      await ensureRepoMounted(route.owner, route.repo, currentPath(loc));
+      if (route.kind === "repo-home") {
+        if (!mountedHome) {
+          await mountRepoHome(route.owner, route.repo);
+          mountedHome = true;
+        }
+      } else if (mountedHome) {
+        unmountRepoHome();
+        mountedHome = false;
       }
       return;
     }
 
-    if (mountedRepo) {
-      unmountRepoHeader();
-      mountedRepo = null;
-    }
+    teardownRepo();
   } catch (err) {
     if (err instanceof AdapterFailure) {
       console.debug("[oldgh] dispatch adapter failure:", err.name, err.message);
-      if (mountedRepo) {
-        unmountRepoHeader();
-        mountedRepo = null;
-      }
+      teardownRepo();
       return;
     }
     throw err;
   }
 }
 
-function teardownAll(): void {
+async function ensureRepoMounted(owner: string, repo: string, pathname: string): Promise<void> {
+  if (!mountedRepo || mountedRepo.owner !== owner || mountedRepo.repo !== repo) {
+    if (mountedHome) {
+      unmountRepoHome();
+      mountedHome = false;
+    }
+    await mountRepoHeader(owner, repo);
+    mountedRepo = { owner, repo };
+  } else {
+    updateActiveTab(owner, repo, pathname);
+  }
+}
+
+function teardownRepo(): void {
+  if (mountedHome) {
+    unmountRepoHome();
+    mountedHome = false;
+  }
   if (mountedRepo) {
     unmountRepoHeader();
     mountedRepo = null;
   }
+}
+
+function teardownAll(): void {
+  teardownRepo();
 }
 
 function currentPath(loc: Location | URL): string {
@@ -133,5 +155,10 @@ function resolveRoute(loc: Location | URL): Route {
     return { kind: "profile", login: first };
   }
 
-  return { kind: "repo", owner: first, repo: segs[1]! };
+  const owner = first;
+  const repo = segs[1]!;
+  if (segs.length === 2) {
+    return { kind: "repo-home", owner, repo };
+  }
+  return { kind: "repo-subpath", owner, repo, subpath: segs.slice(2).join("/") };
 }

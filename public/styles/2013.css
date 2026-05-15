@@ -546,6 +546,275 @@ html[data-oldgh-hide-modern-repo-header] .UnderlineNav.js-repo-nav {
   color: var(--gh-fg);
 }
 
+/* repo home — topbar, clone box, file table, readme */
+html[data-oldgh-hide-modern-repo-body] react-app[app-name="react-code-view"],
+html[data-oldgh-hide-modern-repo-body] [data-pjax-container] > main,
+html[data-oldgh-hide-modern-repo-body] [data-pjax-container] > .repository-content,
+html[data-oldgh-hide-modern-repo-body] turbo-frame#repo-content-turbo-frame {
+  display: none !important;
+}
+
+.oldgh-repo-home {
+  background: var(--gh-bg);
+}
+.oldgh-repo-home > .oldgh-page {
+  padding-top: 18px;
+  padding-bottom: 40px;
+}
+
+.oldgh-repo-home__topbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.oldgh-repo-home__refbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+}
+
+.oldgh-repo-home__branch-btn {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  font-weight: normal;
+}
+.oldgh-repo-home__branch-btn strong {
+  font-weight: bold;
+}
+
+.oldgh-repo-home__commits {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-home__commits strong {
+  color: var(--gh-fg);
+}
+
+.oldgh-repo-home__clone {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 10px;
+  width: 360px;
+  max-width: 100%;
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-repo-home__clone-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--gh-btn-border);
+  border-radius: var(--gh-radius);
+  overflow: hidden;
+  width: max-content;
+  margin-bottom: 8px;
+}
+.oldgh-repo-home__clone-tab {
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: var(--gh-size-xs);
+  font-weight: bold;
+  color: var(--gh-fg);
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  border: none;
+  border-right: 1px solid var(--gh-btn-border);
+  cursor: pointer;
+}
+.oldgh-repo-home__clone-tab:last-child {
+  border-right: none;
+}
+.oldgh-repo-home__clone-tab[aria-selected="true"] {
+  background: #fff;
+  color: var(--gh-fg);
+  cursor: default;
+}
+.oldgh-repo-home__clone-pane {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+.oldgh-repo-home__clone-pane input {
+  flex: 1;
+  padding: 4px 8px;
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg);
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  border-right: none;
+  border-top-left-radius: var(--gh-radius);
+  border-bottom-left-radius: var(--gh-radius);
+  outline: none;
+}
+.oldgh-repo-home__clone-pane .oldgh-btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.oldgh-repo-home__clone-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* file tree table */
+.oldgh-repo-home__tree {
+  margin-top: 4px;
+}
+.oldgh-repo-home__tree thead th {
+  background: var(--gh-bg-subtle);
+  color: var(--gh-fg-muted);
+  font-weight: normal;
+  font-size: var(--gh-size-md);
+  padding: 8px 10px;
+}
+.oldgh-repo-home__tree tbody tr:hover > td {
+  background: var(--gh-bg-stripe);
+}
+.oldgh-repo-home__cell-icon {
+  width: 22px;
+  color: var(--gh-fg-muted);
+  text-align: center;
+}
+.oldgh-repo-home__cell-name {
+  font-weight: bold;
+  width: 28%;
+}
+.oldgh-repo-home__cell-name a {
+  color: var(--gh-fg);
+}
+.oldgh-repo-home__cell-name a:hover {
+  color: var(--gh-link);
+  text-decoration: underline;
+}
+.oldgh-repo-home__cell-msg {
+  color: var(--gh-fg-muted);
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+.oldgh-repo-home__cell-msg a {
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-home__cell-msg a:hover {
+  color: var(--gh-link);
+}
+.oldgh-repo-home__cell-age {
+  width: 12em;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-sm);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* readme */
+.oldgh-repo-home__readme {
+  margin-top: 20px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  overflow: hidden;
+}
+.oldgh-repo-home__readme-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--gh-bg-subtle);
+  border-bottom: 1px solid var(--gh-border);
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-home__readme-head a {
+  color: var(--gh-fg);
+  font-weight: bold;
+}
+.oldgh-repo-home__readme-body {
+  padding: 20px;
+  font-size: var(--gh-size-lg);
+  line-height: 1.6;
+  color: var(--gh-fg);
+}
+.oldgh-repo-home__readme-body h1,
+.oldgh-repo-home__readme-body h2,
+.oldgh-repo-home__readme-body h3,
+.oldgh-repo-home__readme-body h4,
+.oldgh-repo-home__readme-body h5,
+.oldgh-repo-home__readme-body h6 {
+  margin: 24px 0 12px;
+  font-weight: bold;
+  line-height: 1.3;
+  border-bottom: 1px solid var(--gh-border-faint);
+  padding-bottom: 4px;
+}
+.oldgh-repo-home__readme-body h1 { font-size: 28px; }
+.oldgh-repo-home__readme-body h2 { font-size: 22px; }
+.oldgh-repo-home__readme-body h3 { font-size: 18px; border-bottom: none; }
+.oldgh-repo-home__readme-body h4 { font-size: 16px; border-bottom: none; }
+.oldgh-repo-home__readme-body h5 { font-size: 14px; border-bottom: none; }
+.oldgh-repo-home__readme-body h6 { font-size: 13px; border-bottom: none; color: var(--gh-fg-muted); }
+.oldgh-repo-home__readme-body p {
+  margin: 0 0 14px;
+}
+.oldgh-repo-home__readme-body a {
+  color: var(--gh-link);
+}
+.oldgh-repo-home__readme-body code {
+  background: var(--gh-bg-subtle);
+  padding: 0.15em 0.35em;
+  border-radius: var(--gh-radius);
+  font-size: 0.92em;
+}
+.oldgh-repo-home__readme-body pre {
+  background: var(--gh-bg-subtle);
+  padding: 12px 14px;
+  border-radius: var(--gh-radius);
+  overflow-x: auto;
+  font-size: var(--gh-size-sm);
+  line-height: 1.45;
+}
+.oldgh-repo-home__readme-body pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+.oldgh-repo-home__readme-body blockquote {
+  margin: 0 0 14px;
+  padding: 0 14px;
+  border-left: 4px solid var(--gh-border);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-home__readme-body ul,
+.oldgh-repo-home__readme-body ol {
+  padding-left: 26px;
+  margin: 0 0 14px;
+}
+.oldgh-repo-home__readme-body table {
+  border-collapse: collapse;
+  margin: 0 0 14px;
+}
+.oldgh-repo-home__readme-body table th,
+.oldgh-repo-home__readme-body table td {
+  padding: 6px 10px;
+  border: 1px solid var(--gh-border-faint);
+}
+.oldgh-repo-home__readme-body table th {
+  background: var(--gh-bg-subtle);
+}
+.oldgh-repo-home__readme-body img {
+  max-width: 100%;
+}
+.oldgh-repo-home__readme-body .plain pre {
+  white-space: pre-wrap;
+}
+
 /* state pills */
 .oldgh-state {
   display: inline-flex;
