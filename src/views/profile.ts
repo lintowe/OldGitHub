@@ -66,6 +66,8 @@ function renderSidebar(v: ProfileView): string {
   if (v.location) details.push(`<p class="oldgh-profile__detail">${octicon("location", { size: 14 })}<span>${escapeText(v.location)}</span></p>`);
   if (v.homepage) details.push(`<p class="oldgh-profile__detail">${octicon("link", { size: 14 })}<a href="${escapeAttr(v.homepage)}" rel="nofollow noopener">${escapeText(stripUrl(v.homepage))}</a></p>`);
 
+  const highlights = renderHighlights(v);
+
   const orgs = v.orgs.length > 0
     ? `<section class="oldgh-profile__orgs">
         <h3>Organizations</h3>
@@ -91,8 +93,26 @@ function renderSidebar(v: ProfileView): string {
     ${details.join("")}
     ${action}
     ${stats.length > 0 ? `<ul class="oldgh-profile__stats">${stats.join("")}</ul>` : ""}
+    ${highlights}
     ${orgs}
     ${achievements}
+  `;
+}
+
+function renderHighlights(v: ProfileView): string {
+  const items: string[] = [];
+  if (v.highlights.proPlan) {
+    items.push(`<li class="oldgh-profile__highlight"><span class="oldgh-profile__pro">PRO</span> Account</li>`);
+  }
+  if (v.highlights.devProgramMember) {
+    items.push(`<li class="oldgh-profile__highlight">${octicon("rocket", { size: 14 })}<a href="/settings/profile#github-developer-program">Developer Program Member</a></li>`);
+  }
+  if (items.length === 0) return "";
+  return `
+    <section class="oldgh-profile__highlights">
+      <h3>Highlights</h3>
+      <ul class="oldgh-profile__highlight-list">${items.join("")}</ul>
+    </section>
   `;
 }
 

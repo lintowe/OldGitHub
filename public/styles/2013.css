@@ -1414,11 +1414,13 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
 }
 
 .oldgh-profile__orgs,
-.oldgh-profile__achievements {
+.oldgh-profile__achievements,
+.oldgh-profile__highlights {
   margin-top: 16px;
 }
 .oldgh-profile__orgs h3,
-.oldgh-profile__achievements h3 {
+.oldgh-profile__achievements h3,
+.oldgh-profile__highlights h3 {
   margin: 0 0 8px;
   font-size: var(--gh-size-md);
   font-weight: bold;
@@ -1427,6 +1429,35 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--gh-border-faint);
   padding-bottom: 4px;
+}
+
+.oldgh-profile__highlight-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.oldgh-profile__highlight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg);
+}
+.oldgh-profile__highlight a {
+  color: var(--gh-link);
+}
+.oldgh-profile__pro {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--gh-radius);
+  background: linear-gradient(to bottom, #f9d05a, #d8a624);
+  color: #5a4408;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  border: 1px solid #b08613;
 }
 .oldgh-profile__org-list,
 .oldgh-profile__badges {

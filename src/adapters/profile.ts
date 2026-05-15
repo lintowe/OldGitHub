@@ -24,6 +24,12 @@ export type AchievementBadge = {
   href: string;
 };
 
+export type ProfileHighlights = {
+  proPlan: boolean;
+  devProgramMember: boolean;
+  starWaveSpotted: boolean;
+};
+
 export type ProfileView = {
   login: string;
   kind: ProfileKind;
@@ -40,6 +46,7 @@ export type ProfileView = {
   pinned: PinnedRepo[];
   orgs: ProfileOrg[];
   achievements: AchievementBadge[];
+  highlights: ProfileHighlights;
   isViewer: boolean;
 };
 
@@ -86,6 +93,16 @@ export async function getProfile(login: string): Promise<ProfileView> {
   const locationEl = doc.querySelector<HTMLElement>('li[itemprop="homeLocation"] span, [itemprop="homeLocation"]');
   const location = locationEl?.textContent?.trim() || null;
 
+  let contributionGraphHtml = extractContributionGraph(doc);
+  let contributionHeading = doc.querySelector(".js-yearly-contributions h2")?.textContent?.trim() || null;
+  if (!contributionGraphHtml && kind === "user") {
+    const fetched = await fetchContributionFragment(profileUsername);
+    if (fetched) {
+      contributionGraphHtml = fetched.tableHtml;
+      contributionHeading = fetched.heading ?? contributionHeading;
+    }
+  }
+
   return {
     login: profileUsername,
     kind,
@@ -97,13 +114,40 @@ export async function getProfile(login: string): Promise<ProfileView> {
     followersCount: readCountFromTabLink(doc, "followers"),
     followingCount: readCountFromTabLink(doc, "following"),
     repoCountHint,
-    contributionHeading: doc.querySelector(".js-yearly-contributions h2")?.textContent?.trim() || null,
-    contributionGraphHtml: extractContributionGraph(doc),
+    contributionHeading,
+    contributionGraphHtml,
     pinned: readPinned(doc),
     orgs: readOrgs(doc),
     achievements: readAchievements(doc, profileUsername),
+    highlights: readHighlights(doc),
     isViewer: !!doc.querySelector('a[href$="/account"]'),
   };
+}
+
+async function fetchContributionFragment(login: string): Promise<{ tableHtml: string; heading: string | null } | null> {
+  try {
+    const resp = await fetch(`https://github.com/users/${login}/contributions`, {
+      credentials: "include",
+      headers: { Accept: "text/html" },
+    });
+    if (!resp.ok) return null;
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const table = doc.querySelector<HTMLElement>("table.ContributionCalendar-grid, table.js-calendar-graph-table, .js-yearly-contributions table");
+    const heading = doc.querySelector("h2")?.textContent?.trim() || null;
+    return table ? { tableHtml: table.outerHTML, heading } : null;
+  } catch {
+    return null;
+  }
+}
+
+function readHighlights(doc: Document): ProfileHighlights {
+  const proPlan = !!doc.querySelector('[data-test-selector="profile-pro-button"]')
+    || !!doc.querySelector('.user-profile-pro-button-label, .Label[data-view-component="true"][title*="Pro" i]')
+    || /\bPRO\b/.test(doc.querySelector(".vcard-names + p, .h-card .Label")?.textContent || "");
+  const devProgramMember = !!doc.querySelector('a[href$="#github-developer-program"]');
+  const starWaveSpotted = !!doc.querySelector('a[href*="starwave"]');
+  return { proPlan, devProgramMember, starWaveSpotted };
 }
 
 function extractDisplayName(doc: Document, ogTitle: string, login: string): string {
