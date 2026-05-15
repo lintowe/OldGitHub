@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||github.githubassets.com/assets/",
+      "resourceTypes": ["stylesheet"],
+      "initiatorDomains": ["github.com"]
+    }
+  }
+]
