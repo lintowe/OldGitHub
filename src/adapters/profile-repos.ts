@@ -73,7 +73,9 @@ function parseRow(li: HTMLElement): RepoListItem | null {
   const name = anchor.textContent?.trim() || "";
   if (!name || !href) return null;
 
-  const description = li.querySelector('p[itemprop="description"], p.col-9, p.color-fg-muted')?.textContent?.trim() || null;
+  const descEl = li.querySelector<HTMLElement>('p[itemprop="description"]');
+  const descText = descEl?.textContent?.trim() || "";
+  const description = descText && !/There was an error/i.test(descText) ? descText : null;
   const language = li.querySelector('[itemprop="programmingLanguage"]')?.textContent?.trim() || null;
   const langSwatch = li.querySelector<HTMLElement>('.repo-language-color');
   const languageColor = readBackgroundColor(langSwatch);
