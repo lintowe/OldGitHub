@@ -1215,6 +1215,59 @@ html[data-oldgh-hide-modern-repo-body] turbo-frame#repo-content-turbo-frame {
   font-style: italic;
 }
 
+/* 2013 syntax theme — applies when blob body has been highlighted via hljs */
+.oldgh-hljs .oldgh-repo-blob__code { color: #333; }
+.oldgh-hljs .hljs-comment,
+.oldgh-hljs .hljs-quote { color: #998; font-style: italic; }
+.oldgh-hljs .hljs-keyword,
+.oldgh-hljs .hljs-selector-tag,
+.oldgh-hljs .hljs-subst { color: #000; font-weight: bold; }
+.oldgh-hljs .hljs-built_in { color: #0086b3; }
+.oldgh-hljs .hljs-type { color: #458; font-weight: bold; }
+.oldgh-hljs .hljs-class .hljs-title,
+.oldgh-hljs .hljs-title.class_ { color: #458; font-weight: bold; }
+.oldgh-hljs .hljs-function .hljs-title,
+.oldgh-hljs .hljs-title.function_ { color: #900; font-weight: bold; }
+.oldgh-hljs .hljs-number,
+.oldgh-hljs .hljs-literal { color: #099; }
+.oldgh-hljs .hljs-string,
+.oldgh-hljs .hljs-doctag { color: #d14; }
+.oldgh-hljs .hljs-symbol,
+.oldgh-hljs .hljs-bullet { color: #990073; }
+.oldgh-hljs .hljs-params { color: #008080; }
+.oldgh-hljs .hljs-tag,
+.oldgh-hljs .hljs-section { color: #008080; }
+.oldgh-hljs .hljs-name { color: #008080; }
+.oldgh-hljs .hljs-attr,
+.oldgh-hljs .hljs-attribute { color: #008080; }
+.oldgh-hljs .hljs-variable,
+.oldgh-hljs .hljs-template-variable { color: #008080; }
+.oldgh-hljs .hljs-meta { color: #999; font-weight: bold; }
+.oldgh-hljs .hljs-regexp { color: #009926; }
+.oldgh-hljs .hljs-link { color: #4183c4; text-decoration: underline; }
+.oldgh-hljs .hljs-emphasis { font-style: italic; }
+.oldgh-hljs .hljs-strong { font-weight: bold; }
+.oldgh-hljs .hljs-deletion { color: #8a1a08; background: #ffeef0; }
+.oldgh-hljs .hljs-addition { color: #2e7212; background: #e6ffed; }
+
+html[data-oldgh-theme="dark"] .oldgh-hljs .oldgh-repo-blob__code { color: #d9d9d9; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-comment,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-quote { color: #7a7a7a; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-keyword { color: #e6e6e6; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-string,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-doctag { color: #e9967a; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-number,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-literal { color: #5cb0a0; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-built_in { color: #6aa9e0; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-type,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-class .hljs-title,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-title.class_ { color: #b5a4d8; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-function .hljs-title,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-title.function_ { color: #f0c674; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-tag,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-name,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-attr { color: #8abeb7; }
+
 /* state pills */
 .oldgh-state {
   display: inline-flex;

@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "highlight.js": "11.11.1",
     "octicons": "8.5.0"
   },
   "devDependencies": {

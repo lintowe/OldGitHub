@@ -1,5 +1,6 @@
 import { octicon } from "@/icons";
 import { getRepoBlob, type RepoBlobView } from "@/adapters/repo-overview";
+import { highlightFile } from "@/highlight";
 
 const ROOT_CLASS = "oldgh-repo-blob";
 
@@ -24,6 +25,21 @@ export async function mountRepoBlob(owner: string, repo: string, refAndPath: str
   } else {
     document.body.append(root);
   }
+
+  if (!view.isBinary && view.rawLines.length > 0) {
+    void hydrateHighlight(root, view);
+  }
+}
+
+async function hydrateHighlight(root: HTMLElement, view: RepoBlobView): Promise<void> {
+  const result = await highlightFile(view.rawLines.join("\n"), view.language);
+  if (!result) return;
+  const codeCells = root.querySelectorAll<HTMLTableCellElement>("td.oldgh-repo-blob__code");
+  for (let i = 0; i < codeCells.length && i < result.lines.length; i++) {
+    codeCells[i]!.innerHTML = result.lines[i]!;
+  }
+  root.classList.add(`oldgh-hljs-${result.language}`);
+  root.classList.add("oldgh-hljs");
 }
 
 export function unmountRepoBlob(): void {
