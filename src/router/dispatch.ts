@@ -6,6 +6,7 @@ import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
 import { mountRepoCommits, unmountRepoCommits } from "@/views/repo-commits";
 import { mountRepoCommit, unmountRepoCommit } from "@/views/repo-commit";
 import { mountRepoCompare, unmountRepoCompare } from "@/views/repo-compare";
+import { mountRepoIssues, unmountRepoIssues } from "@/views/repo-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { resolveRoute, type Route } from "./resolve";
 
@@ -19,6 +20,7 @@ type BodyState =
   | { kind: "commits"; owner: string; repo: string; refAndPath: string; query: string }
   | { kind: "commit"; owner: string; repo: string; sha: string }
   | { kind: "compare"; owner: string; repo: string; range: string }
+  | { kind: "issues"; owner: string; repo: string; query: string; subkind: "issues" | "pulls" }
   | { kind: "profile"; login: string; tab: string; query: string };
 
 let mountedRepo: RepoKey | null = null;
@@ -45,6 +47,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       route.kind === "repo-commits" ||
       route.kind === "repo-commit" ||
       route.kind === "repo-compare" ||
+      route.kind === "repo-issues" ||
       route.kind === "repo-other"
     ) {
       await ensureRepoHeader(route.owner, route.repo, pathname);
@@ -72,7 +75,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 }
 
 function targetBodyForRoute(
-  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-commits" | "repo-commit" | "repo-compare" | "repo-other" }>,
+  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-commits" | "repo-commit" | "repo-compare" | "repo-issues" | "repo-other" }>,
 ): BodyState {
   if (route.kind === "repo-home") return { kind: "home", owner: route.owner, repo: route.repo };
   if (route.kind === "repo-tree") return { kind: "tree", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
@@ -80,6 +83,7 @@ function targetBodyForRoute(
   if (route.kind === "repo-commits") return { kind: "commits", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath, query: route.query };
   if (route.kind === "repo-commit") return { kind: "commit", owner: route.owner, repo: route.repo, sha: route.sha };
   if (route.kind === "repo-compare") return { kind: "compare", owner: route.owner, repo: route.repo, range: route.range };
+  if (route.kind === "repo-issues") return { kind: "issues", owner: route.owner, repo: route.repo, query: route.query, subkind: route.subkind };
   return { kind: "none" };
 }
 
@@ -133,6 +137,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "issues") {
+    await mountRepoIssues(target.owner, target.repo, target.query, target.subkind);
+    bodyState = target;
+    return;
+  }
   if (target.kind === "profile") {
     await mountProfile(target.login, target.tab, target.query);
     bodyState = target;
@@ -160,6 +169,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "compare" && b.kind === "compare") {
     return a.owner === b.owner && a.repo === b.repo && a.range === b.range;
   }
+  if (a.kind === "issues" && b.kind === "issues") {
+    return a.owner === b.owner && a.repo === b.repo && a.query === b.query && a.subkind === b.subkind;
+  }
   if (a.kind === "profile" && b.kind === "profile") {
     return a.login === b.login && a.tab === b.tab && a.query === b.query;
   }
@@ -173,6 +185,7 @@ function unmountBody(): void {
   unmountRepoCommits();
   unmountRepoCommit();
   unmountRepoCompare();
+  unmountRepoIssues();
   unmountProfile();
 }
 

@@ -6,6 +6,7 @@ export type Route =
   | { kind: "repo-commits"; owner: string; repo: string; refAndPath: string; query: string }
   | { kind: "repo-commit"; owner: string; repo: string; sha: string }
   | { kind: "repo-compare"; owner: string; repo: string; range: string }
+  | { kind: "repo-issues"; owner: string; repo: string; query: string; subkind: "issues" | "pulls" }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
   | { kind: "todo"; name: string };
@@ -116,6 +117,13 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-compare", owner, repo, range };
   }
 
+  if (segs[2] === "issues" && segs.length === 3) {
+    return { kind: "repo-issues", owner, repo, query: search, subkind: "issues" };
+  }
+  if (segs[2] === "pulls" && segs.length === 3) {
+    return { kind: "repo-issues", owner, repo, query: search, subkind: "pulls" };
+  }
+
   return { kind: "repo-other", owner, repo };
 }
 
@@ -128,6 +136,7 @@ export function isCovered(pathname: string): boolean {
     route.kind === "repo-commits" ||
     route.kind === "repo-commit" ||
     route.kind === "repo-compare" ||
+    route.kind === "repo-issues" ||
     route.kind === "profile"
   );
 }
@@ -145,7 +154,8 @@ export function isFullyCoveredUrl(pathname: string, search: string): boolean {
     route.kind === "repo-blob" ||
     route.kind === "repo-commits" ||
     route.kind === "repo-commit" ||
-    route.kind === "repo-compare"
+    route.kind === "repo-compare" ||
+    route.kind === "repo-issues"
   );
 }
 
