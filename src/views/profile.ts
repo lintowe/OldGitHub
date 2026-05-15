@@ -1,9 +1,21 @@
 import { octicon } from "@/icons";
+import { AdapterFailure } from "@/adapters";
 import { getProfile, type PinnedRepo, type ProfileView } from "@/adapters/profile";
+import { getProfileRepos, type ProfileReposView, type RepoListItem } from "@/adapters/profile-repos";
+import { absoluteTime, relativeTime } from "@/util/time";
 
 const ROOT_CLASS = "oldgh-profile";
 
-export async function mountProfile(login: string): Promise<void> {
+const TABS: { key: string; label: string }[] = [
+  { key: "overview", label: "Overview" },
+  { key: "repositories", label: "Repositories" },
+  { key: "stars", label: "Stars" },
+  { key: "followers", label: "Followers" },
+  { key: "following", label: "Following" },
+  { key: "achievements", label: "Achievements" },
+];
+
+export async function mountProfile(login: string, tab: string, query: string): Promise<void> {
   let view: ProfileView;
   try {
     view = await getProfile(login);
@@ -17,12 +29,16 @@ export async function mountProfile(login: string): Promise<void> {
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
-  root.innerHTML = renderShell(view);
+  root.innerHTML = renderShell(view, tab);
   const after = document.querySelector(".oldgh-header");
   if (after && after.parentNode) {
     after.after(root);
   } else {
     document.body.append(root);
+  }
+
+  if (tab === "repositories") {
+    void hydrateRepos(root, login, query);
   }
 }
 
@@ -31,19 +47,110 @@ export function unmountProfile(): void {
   document.documentElement.removeAttribute("data-oldgh-hide-modern-profile");
 }
 
-function renderShell(v: ProfileView): string {
+function renderShell(v: ProfileView, tab: string): string {
   return `
     <div class="oldgh-page oldgh-profile__page">
       <aside class="oldgh-profile__sidebar">
         ${renderSidebar(v)}
       </aside>
       <main class="oldgh-profile__main">
-        ${renderHeading(v)}
-        ${v.pinned.length > 0 ? renderPinned(v) : ""}
-        ${renderContributions(v)}
+        ${renderTabNav(v, tab)}
+        ${renderTabBody(v, tab)}
       </main>
     </div>
   `;
+}
+
+function renderTabNav(v: ProfileView, tab: string): string {
+  const items = TABS.map((t) => {
+    const href = t.key === "overview" ? `/${v.login}` : `/${v.login}?tab=${t.key}`;
+    const active = tab === t.key ? ' aria-current="page"' : "";
+    return `<li class="oldgh-tabs__item"><a class="oldgh-tabs__link" href="${escapeAttr(href)}"${active}>${escapeText(t.label)}</a></li>`;
+  }).join("");
+  return `<nav class="oldgh-profile__tabnav" aria-label="Profile sections"><ul class="oldgh-tabs">${items}</ul></nav>`;
+}
+
+function renderTabBody(v: ProfileView, tab: string): string {
+  if (tab === "repositories") {
+    return `<div class="oldgh-profile__repos" data-state="loading">${renderReposLoading()}</div>`;
+  }
+  return `
+    ${v.pinned.length > 0 ? renderPinned(v) : ""}
+    ${renderContributions(v)}
+  `;
+}
+
+function renderReposLoading(): string {
+  return `<p class="oldgh-profile__muted">Loading repositories&hellip;</p>`;
+}
+
+async function hydrateRepos(root: HTMLElement, login: string, query: string): Promise<void> {
+  const container = root.querySelector<HTMLElement>(".oldgh-profile__repos");
+  if (!container) return;
+  let data: ProfileReposView;
+  try {
+    data = await getProfileRepos(login, query);
+  } catch (err) {
+    container.innerHTML = `<p class="oldgh-profile__muted">${err instanceof AdapterFailure ? "Couldn't load repositories." : "Couldn't load repositories."}</p>`;
+    return;
+  }
+  container.innerHTML = renderRepos(data);
+}
+
+function renderRepos(d: ProfileReposView): string {
+  if (d.items.length === 0) {
+    return `<p class="oldgh-profile__muted">No repositories.</p>`;
+  }
+  return `
+    <ul class="oldgh-repo-list">
+      ${d.items.map((r) => renderRepoRow(r)).join("")}
+    </ul>
+    ${renderRepoPagination(d)}
+  `;
+}
+
+function renderRepoRow(r: RepoListItem): string {
+  const privacy = r.isPrivate
+    ? `<span class="oldgh-repo-list__visibility">Private</span>`
+    : `<span class="oldgh-repo-list__visibility oldgh-repo-list__visibility--public">Public</span>`;
+  const forkLabel = r.isFork ? `<span class="oldgh-repo-list__type">Forked</span>` : "";
+  const mirror = r.isMirror ? `<span class="oldgh-repo-list__type">Mirror</span>` : "";
+  const template = r.isTemplate ? `<span class="oldgh-repo-list__type">Template</span>` : "";
+
+  const meta: string[] = [];
+  if (r.language) {
+    const swatch = r.languageColor
+      ? `<span class="oldgh-profile__lang-swatch" style="background:${escapeAttr(r.languageColor)}"></span>`
+      : "";
+    meta.push(`<span>${swatch}${escapeText(r.language)}</span>`);
+  }
+  if (r.stars) meta.push(`<span>${octicon("star", { size: 12 })}${escapeText(r.stars)}</span>`);
+  if (r.forks) meta.push(`<span>${octicon("repo-forked", { size: 12 })}${escapeText(r.forks)}</span>`);
+  if (r.updatedIso) {
+    meta.push(`<span title="${escapeAttr(absoluteTime(r.updatedIso))}">Updated ${escapeText(relativeTime(r.updatedIso))}</span>`);
+  }
+
+  return `
+    <li class="oldgh-repo-list__item">
+      <h3 class="oldgh-repo-list__title">
+        <a href="${escapeAttr(r.href)}"><strong>${escapeText(r.name)}</strong></a>
+        ${privacy}${forkLabel}${mirror}${template}
+      </h3>
+      ${r.description ? `<p class="oldgh-repo-list__desc">${escapeText(r.description)}</p>` : ""}
+      <p class="oldgh-repo-list__meta">${meta.join("")}</p>
+    </li>
+  `;
+}
+
+function renderRepoPagination(d: ProfileReposView): string {
+  if (!d.pagination.prevHref && !d.pagination.nextHref) return "";
+  const prev = d.pagination.prevHref
+    ? `<a class="oldgh-btn" href="${escapeAttr(d.pagination.prevHref)}">${octicon("triangle-left", { size: 14 })}<span>Previous</span></a>`
+    : `<button class="oldgh-btn" type="button" disabled>${octicon("triangle-left", { size: 14 })}<span>Previous</span></button>`;
+  const next = d.pagination.nextHref
+    ? `<a class="oldgh-btn" href="${escapeAttr(d.pagination.nextHref)}"><span>Next</span>${octicon("triangle-right", { size: 14 })}</a>`
+    : `<button class="oldgh-btn" type="button" disabled><span>Next</span>${octicon("triangle-right", { size: 14 })}</button>`;
+  return `<div class="oldgh-repo-list__pagination">${prev}${next}</div>`;
 }
 
 function renderSidebar(v: ProfileView): string {
@@ -59,7 +166,7 @@ function renderSidebar(v: ProfileView): string {
   const stats: string[] = [];
   if (v.followersCount) stats.push(statItem(v.followersCount, "followers", `/${v.login}?tab=followers`));
   if (v.followingCount) stats.push(statItem(v.followingCount, "following", `/${v.login}?tab=following`));
-  if (v.repoCountHint != null) stats.push(statItem(String(v.repoCountHint), "repositories", `/${v.login}?tab=repositories`));
+  if (v.repoCountHint != null) stats.push(statItem(String(v.repoCountHint), "repos", `/${v.login}?tab=repositories`));
 
   const details: string[] = [];
   if (v.bio) details.push(`<p class="oldgh-profile__bio">${escapeText(v.bio)}</p>`);
@@ -120,16 +227,6 @@ function statItem(value: string, label: string, href: string): string {
   return `<li><a href="${escapeAttr(href)}"><strong>${escapeText(value)}</strong> <span>${escapeText(label)}</span></a></li>`;
 }
 
-function renderHeading(v: ProfileView): string {
-  const kindLabel = v.kind === "org" ? "Organization" : "Public profile";
-  return `
-    <header class="oldgh-profile__head">
-      <h2 class="oldgh-profile__head-title">${escapeText(kindLabel)}</h2>
-      ${v.contributionHeading ? `<p class="oldgh-profile__head-sub">${escapeText(v.contributionHeading)}</p>` : ""}
-    </header>
-  `;
-}
-
 function renderPinned(v: ProfileView): string {
   return `
     <section class="oldgh-profile__pinned">
@@ -175,6 +272,15 @@ function renderContributions(v: ProfileView): string {
     <section class="oldgh-profile__contribs">
       ${v.contributionHeading ? `<h3 class="oldgh-profile__section-title">${escapeText(v.contributionHeading)}</h3>` : `<h3 class="oldgh-profile__section-title">Contributions</h3>`}
       <div class="oldgh-profile__contribs-graph">${v.contributionGraphHtml}</div>
+      <div class="oldgh-profile__contribs-legend">
+        <span>Less</span>
+        <span class="oldgh-profile__contribs-legend-cell" data-level="0"></span>
+        <span class="oldgh-profile__contribs-legend-cell" data-level="1"></span>
+        <span class="oldgh-profile__contribs-legend-cell" data-level="2"></span>
+        <span class="oldgh-profile__contribs-legend-cell" data-level="3"></span>
+        <span class="oldgh-profile__contribs-legend-cell" data-level="4"></span>
+        <span>More</span>
+      </div>
     </section>
   `;
 }

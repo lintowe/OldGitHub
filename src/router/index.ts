@@ -1,5 +1,5 @@
 import { dispatchRoute } from "@/router/dispatch";
-import { isCovered } from "@/router/resolve";
+import { isFullyCoveredUrl } from "@/router/resolve";
 
 export function killTurbo(): void {
   const meta = document.createElement("meta");
@@ -54,7 +54,8 @@ function interceptClicks(): void {
       if (url.origin !== window.location.origin) return;
       if (anchor.target && anchor.target !== "_self") return;
 
-      if (!isCovered(url.pathname)) {
+      const search = url.search.startsWith("?") ? url.search.slice(1) : url.search;
+      if (!isFullyCoveredUrl(url.pathname, search)) {
         // not a fully-rebuilt route — let the browser do a full nav so modern
         // GH can render its own body; our content script will re-mount the
         // header on the new page load.

@@ -19,7 +19,7 @@ type BodyState =
   | { kind: "commits"; owner: string; repo: string; refAndPath: string; query: string }
   | { kind: "commit"; owner: string; repo: string; sha: string }
   | { kind: "compare"; owner: string; repo: string; range: string }
-  | { kind: "profile"; login: string };
+  | { kind: "profile"; login: string; tab: string; query: string };
 
 let mountedRepo: RepoKey | null = null;
 let bodyState: BodyState = { kind: "none" };
@@ -29,7 +29,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
   const search = currentSearch(loc);
   const route = resolveRoute(pathname, search);
 
-  void chrome.runtime.sendMessage({ type: "oldgh:route-change", pathname });
+  void chrome.runtime.sendMessage({ type: "oldgh:route-change", pathname, search });
 
   try {
     if (route.kind === "out-of-scope") {
@@ -54,7 +54,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 
     if (route.kind === "profile") {
       teardownRepoHeader();
-      await applyBodyState({ kind: "profile", login: route.login });
+      await applyBodyState({ kind: "profile", login: route.login, tab: route.tab, query: route.query });
       return;
     }
 
@@ -134,7 +134,7 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "profile") {
-    await mountProfile(target.login);
+    await mountProfile(target.login, target.tab, target.query);
     bodyState = target;
     return;
   }
@@ -161,7 +161,7 @@ function sameBody(a: BodyState, b: BodyState): boolean {
     return a.owner === b.owner && a.repo === b.repo && a.range === b.range;
   }
   if (a.kind === "profile" && b.kind === "profile") {
-    return a.login === b.login;
+    return a.login === b.login && a.tab === b.tab && a.query === b.query;
   }
   return a.kind === "none" && b.kind === "none";
 }

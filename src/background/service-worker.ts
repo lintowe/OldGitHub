@@ -1,4 +1,4 @@
-import { isCovered } from "@/router/resolve";
+import { isFullyCoveredUrl } from "@/router/resolve";
 
 const ResourceType = chrome.declarativeNetRequest.ResourceType;
 const RuleActionType = chrome.declarativeNetRequest.RuleActionType;
@@ -93,7 +93,8 @@ async function reconcile(tabId: number, url: string | undefined): Promise<void> 
     await disableForTab(tabId);
     return;
   }
-  if (isCovered(parsed.pathname)) {
+  const search = parsed.search.startsWith("?") ? parsed.search.slice(1) : parsed.search;
+  if (isFullyCoveredUrl(parsed.pathname, search)) {
     await enableForTab(tabId);
   } else {
     await disableForTab(tabId);
@@ -114,12 +115,13 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (!msg || typeof msg !== "object") return;
-  const m = msg as { type?: unknown; pathname?: unknown };
+  const m = msg as { type?: unknown; pathname?: unknown; search?: unknown };
   if (m.type !== "oldgh:route-change") return;
   const tabId = sender.tab?.id;
   if (typeof tabId !== "number") return;
   if (typeof m.pathname !== "string") return;
-  if (isCovered(m.pathname)) {
+  const search = typeof m.search === "string" ? m.search : "";
+  if (isFullyCoveredUrl(m.pathname, search)) {
     void enableForTab(tabId);
   } else {
     void disableForTab(tabId);

@@ -7,8 +7,10 @@ export type Route =
   | { kind: "repo-commit"; owner: string; repo: string; sha: string }
   | { kind: "repo-compare"; owner: string; repo: string; range: string }
   | { kind: "repo-other"; owner: string; repo: string }
-  | { kind: "profile"; login: string }
+  | { kind: "profile"; login: string; tab: ProfileTab; query: string }
   | { kind: "todo"; name: string };
+
+export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring";
 
 const OUT_OF_SCOPE_PREFIXES = [
   "/codespaces",
@@ -80,7 +82,7 @@ export function resolveRoute(pathname: string, search: string): Route {
   }
 
   if (segs.length === 1) {
-    return { kind: "profile", login: first };
+    return { kind: "profile", login: first, tab: parseProfileTab(search), query: search };
   }
 
   const owner = first;
@@ -128,4 +130,39 @@ export function isCovered(pathname: string): boolean {
     route.kind === "repo-compare" ||
     route.kind === "profile"
   );
+}
+
+const COVERED_PROFILE_TABS = new Set<ProfileTab>(["overview", "repositories"]);
+
+export function isFullyCoveredUrl(pathname: string, search: string): boolean {
+  const route = resolveRoute(pathname, search);
+  if (route.kind === "profile") {
+    return COVERED_PROFILE_TABS.has(route.tab);
+  }
+  return (
+    route.kind === "repo-home" ||
+    route.kind === "repo-tree" ||
+    route.kind === "repo-blob" ||
+    route.kind === "repo-commits" ||
+    route.kind === "repo-commit" ||
+    route.kind === "repo-compare"
+  );
+}
+
+function parseProfileTab(search: string): ProfileTab {
+  const params = new URLSearchParams(search);
+  const t = params.get("tab");
+  switch (t) {
+    case "repositories":
+    case "stars":
+    case "followers":
+    case "following":
+    case "achievements":
+    case "projects":
+    case "packages":
+    case "sponsoring":
+      return t;
+    default:
+      return "overview";
+  }
 }

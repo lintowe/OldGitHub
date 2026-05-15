@@ -1484,22 +1484,116 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
 .oldgh-profile__main {
   min-width: 0;
 }
-.oldgh-profile__head {
-  margin-bottom: 18px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--gh-border);
+.oldgh-profile__tabnav {
+  margin: 0 0 18px;
 }
-.oldgh-profile__head-title {
+.oldgh-profile__tabnav .oldgh-tabs {
   margin: 0;
-  font-size: var(--gh-size-h2);
-  font-weight: normal;
-  color: var(--gh-fg);
 }
-.oldgh-profile__head-sub {
-  margin: 4px 0 0;
+.oldgh-profile__muted {
+  color: var(--gh-fg-muted);
   font-size: var(--gh-size-md);
+}
+
+/* user-repositories tab list */
+.oldgh-repo-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+}
+.oldgh-repo-list__item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-repo-list__item:last-child {
+  border-bottom: none;
+}
+.oldgh-repo-list__title {
+  margin: 0 0 4px;
+  font-size: var(--gh-size-lg);
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.oldgh-repo-list__title a {
+  color: var(--gh-link);
+}
+.oldgh-repo-list__title strong {
+  font-weight: bold;
+}
+.oldgh-repo-list__visibility {
+  display: inline-block;
+  padding: 1px 7px;
+  border: 1px solid var(--gh-border);
+  border-radius: 10px;
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg-subtle);
+}
+.oldgh-repo-list__visibility--public {
   color: var(--gh-fg-muted);
 }
+.oldgh-repo-list__type {
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-list__desc {
+  margin: 0 0 6px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+  line-height: 1.4;
+}
+.oldgh-repo-list__meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-list__meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.oldgh-repo-list__pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* contribution legend */
+.oldgh-profile__contribs-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-muted);
+}
+.oldgh-profile__contribs-legend-cell {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: #eeeeee;
+}
+.oldgh-profile__contribs-legend-cell[data-level="1"] { background: #d6e685; }
+.oldgh-profile__contribs-legend-cell[data-level="2"] { background: #8cc665; }
+.oldgh-profile__contribs-legend-cell[data-level="3"] { background: #44a340; }
+.oldgh-profile__contribs-legend-cell[data-level="4"] { background: #1e6823; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell { background: #2a2a2a; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="1"] { background: #0e4429; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="2"] { background: #006d32; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="3"] { background: #26a641; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4"] { background: #39d353; }
 .oldgh-profile__section-title {
   margin: 0 0 10px;
   font-size: var(--gh-size-lg);
