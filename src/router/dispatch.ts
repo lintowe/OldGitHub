@@ -4,6 +4,7 @@ import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
 import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
 import { mountRepoCommits, unmountRepoCommits } from "@/views/repo-commits";
+import { mountRepoCommit, unmountRepoCommit } from "@/views/repo-commit";
 
 type Route =
   | { kind: "out-of-scope" }
@@ -11,6 +12,7 @@ type Route =
   | { kind: "repo-tree"; owner: string; repo: string; refAndPath: string }
   | { kind: "repo-blob"; owner: string; repo: string; refAndPath: string }
   | { kind: "repo-commits"; owner: string; repo: string; refAndPath: string; query: string }
+  | { kind: "repo-commit"; owner: string; repo: string; sha: string }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string }
   | { kind: "todo"; name: string };
@@ -22,7 +24,8 @@ type BodyState =
   | { kind: "home"; owner: string; repo: string }
   | { kind: "tree"; owner: string; repo: string; refAndPath: string }
   | { kind: "blob"; owner: string; repo: string; refAndPath: string }
-  | { kind: "commits"; owner: string; repo: string; refAndPath: string; query: string };
+  | { kind: "commits"; owner: string; repo: string; refAndPath: string; query: string }
+  | { kind: "commit"; owner: string; repo: string; sha: string };
 
 let mountedRepo: RepoKey | null = null;
 let bodyState: BodyState = { kind: "none" };
@@ -94,6 +97,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       route.kind === "repo-tree" ||
       route.kind === "repo-blob" ||
       route.kind === "repo-commits" ||
+      route.kind === "repo-commit" ||
       route.kind === "repo-other"
     ) {
       await ensureRepoHeader(route.owner, route.repo, currentPath(loc));
@@ -115,12 +119,13 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 }
 
 function targetBodyForRoute(
-  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-commits" | "repo-other" }>,
+  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-commits" | "repo-commit" | "repo-other" }>,
 ): BodyState {
   if (route.kind === "repo-home") return { kind: "home", owner: route.owner, repo: route.repo };
   if (route.kind === "repo-tree") return { kind: "tree", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
   if (route.kind === "repo-blob") return { kind: "blob", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
   if (route.kind === "repo-commits") return { kind: "commits", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath, query: route.query };
+  if (route.kind === "repo-commit") return { kind: "commit", owner: route.owner, repo: route.repo, sha: route.sha };
   return { kind: "none" };
 }
 
@@ -164,6 +169,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "commit") {
+    await mountRepoCommit(target.owner, target.repo, target.sha);
+    bodyState = target;
+    return;
+  }
 }
 
 function sameBody(a: BodyState, b: BodyState): boolean {
@@ -180,6 +190,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "commits" && b.kind === "commits") {
     return a.owner === b.owner && a.repo === b.repo && a.refAndPath === b.refAndPath && a.query === b.query;
   }
+  if (a.kind === "commit" && b.kind === "commit") {
+    return a.owner === b.owner && a.repo === b.repo && a.sha === b.sha;
+  }
   return a.kind === "none" && b.kind === "none";
 }
 
@@ -188,6 +201,7 @@ function unmountBody(): void {
   unmountRepoTree();
   unmountRepoBlob();
   unmountRepoCommits();
+  unmountRepoCommit();
 }
 
 function currentPath(loc: Location | URL): string {
@@ -241,6 +255,11 @@ function resolveRoute(loc: Location | URL): Route {
   if (segs[2] === "commits" && segs.length >= 4) {
     const refAndPath = segs.slice(3).join("/");
     return { kind: "repo-commits", owner, repo, refAndPath, query: currentSearch(loc) };
+  }
+
+  if (segs[2] === "commit" && segs.length >= 4) {
+    const sha = segs[3]!;
+    return { kind: "repo-commit", owner, repo, sha };
   }
 
   return { kind: "repo-other", owner, repo };

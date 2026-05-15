@@ -1043,6 +1043,178 @@ html[data-oldgh-hide-modern-repo-body] turbo-frame#repo-content-turbo-frame {
   cursor: default;
 }
 
+/* single commit + unified diff */
+.oldgh-repo-commit > .oldgh-page {
+  padding-top: 12px;
+  padding-bottom: 40px;
+}
+.oldgh-repo-commit__header {
+  padding: 14px 16px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius) var(--gh-radius) 0 0;
+}
+.oldgh-repo-commit__title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.oldgh-repo-commit__title {
+  margin: 0;
+  font-size: var(--gh-size-h2);
+  font-weight: bold;
+  color: var(--gh-fg);
+}
+.oldgh-repo-commit__sha code {
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-xs);
+  background: transparent;
+  padding: 0;
+}
+.oldgh-repo-commit__body {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: var(--gh-radius);
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-sm);
+  white-space: pre-wrap;
+  color: var(--gh-fg);
+  line-height: 1.5;
+}
+.oldgh-repo-commit__meta {
+  margin-top: 8px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-commit__avatar {
+  border-radius: var(--gh-radius);
+  vertical-align: middle;
+}
+.oldgh-repo-commit__parents {
+  margin-top: 6px;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-commit__parents code {
+  font-family: var(--gh-font-mono);
+  background: transparent;
+  padding: 0;
+  color: var(--gh-link);
+}
+.oldgh-repo-commit__stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  border-top: none;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg);
+  margin-bottom: 18px;
+}
+.oldgh-repo-commit__stats-sep {
+  color: var(--gh-fg-faint);
+}
+.oldgh-repo-commit__add { color: #6cc644; font-weight: bold; }
+.oldgh-repo-commit__del { color: #bd2c00; font-weight: bold; }
+
+.oldgh-repo-commit__file {
+  margin-bottom: 18px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  overflow: hidden;
+}
+.oldgh-repo-commit__file-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--gh-bg-subtle);
+  border-bottom: 1px solid var(--gh-border);
+  font-size: var(--gh-size-md);
+}
+.oldgh-repo-commit__file-path {
+  font-family: var(--gh-font-mono);
+  font-weight: bold;
+}
+.oldgh-repo-commit__file-status {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--gh-radius);
+  font-size: var(--gh-size-xs);
+  font-weight: bold;
+  background: var(--gh-bg);
+  color: var(--gh-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.oldgh-repo-commit__file-status--added { background: #d3f0c7; color: #2e7212; }
+.oldgh-repo-commit__file-status--deleted { background: #fbcfc5; color: #8a1a08; }
+.oldgh-repo-commit__file-status--renamed { background: #d9e6f6; color: #1a4a82; }
+.oldgh-repo-commit__file-counts {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  font-size: var(--gh-size-sm);
+}
+
+.oldgh-diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-sm);
+  line-height: 1.5;
+}
+.oldgh-diff__hunk-header td {
+  background: #f0f5fa;
+  color: #6a737d;
+  padding: 4px 10px;
+  border-top: 1px solid var(--gh-border-faint);
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-diff__num {
+  width: 1%;
+  padding: 0 8px;
+  text-align: right;
+  background: var(--gh-bg-subtle);
+  color: var(--gh-fg-faint);
+  border-right: 1px solid var(--gh-border-faint);
+  user-select: none;
+  vertical-align: top;
+}
+.oldgh-diff__code {
+  padding: 0 10px;
+  white-space: pre;
+  color: var(--gh-fg);
+}
+.oldgh-diff__sign {
+  display: inline-block;
+  width: 1ch;
+  color: var(--gh-fg-faint);
+}
+.oldgh-diff__row--add .oldgh-diff__code { background: #e6ffed; }
+.oldgh-diff__row--add .oldgh-diff__num { background: #cdffd8; color: #3a7a3a; }
+.oldgh-diff__row--add .oldgh-diff__sign { color: #2e7212; }
+.oldgh-diff__row--del .oldgh-diff__code { background: #ffeef0; }
+.oldgh-diff__row--del .oldgh-diff__num { background: #ffdce0; color: #8a1a08; }
+.oldgh-diff__row--del .oldgh-diff__sign { color: #8a1a08; }
+.oldgh-diff__row--no-newline .oldgh-diff__code {
+  background: var(--gh-bg-subtle);
+  color: var(--gh-fg-muted);
+  font-style: italic;
+}
+
+.oldgh-repo-commit__binary {
+  padding: 14px 16px;
+  color: var(--gh-fg-muted);
+  font-style: italic;
+}
+
 /* state pills */
 .oldgh-state {
   display: inline-flex;
