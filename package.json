@@ -6,6 +6,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "build:icons": "node scripts/build-icons.mjs",
+    "prebuild": "npm run build:icons",
+    "predev": "npm run build:icons",
+    "pretypecheck": "npm run build:icons",
     "dev": "vite build --watch --mode development",
     "build": "vite build",
     "typecheck": "tsc --noEmit"

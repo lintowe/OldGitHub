@@ -4,8 +4,18 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "||github.githubassets.com/assets/",
+      "regexFilter": "^https://github\\.githubassets\\.com/assets/.+\\.css(\\?.*)?$",
       "resourceTypes": ["stylesheet"],
+      "initiatorDomains": ["github.com"]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "regexFilter": "^https://github\\.githubassets\\.com/assets/(react-|wp-runtime-|app_assets_modules_|environment-|behaviors-|vendors-|chunk-|notifications-|webpack_|primer-|element-).+\\.js(\\?.*)?$",
+      "resourceTypes": ["script"],
       "initiatorDomains": ["github.com"]
     }
   }

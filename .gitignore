@@ -7,3 +7,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# generated
+src/icons/generated.ts

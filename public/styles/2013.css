@@ -1,12 +1,300 @@
-/* OldGitHub — 2013 theme entry point */
-/* sprite recreations, color tokens, and page-level styles will live here */
+/* OldGitHub — 2013 theme tokens and base styles */
 
-:root[data-oldgh="active"] {
+:root {
+  --gh-font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --gh-font-mono: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
+  --gh-size-xs: 11px;
+  --gh-size-sm: 12px;
+  --gh-size-md: 13px;
+  --gh-size-lg: 14px;
+  --gh-size-h2: 18px;
+  --gh-size-h1: 22px;
+
+  --gh-line: 1.4;
+
   --gh-bg: #f5f5f5;
-  --gh-fg: #333;
+  --gh-bg-elev: #ffffff;
+  --gh-bg-subtle: #fafafa;
+  --gh-bg-stripe: #f7f7f7;
+
+  --gh-fg: #333333;
+  --gh-fg-muted: #777777;
+  --gh-fg-faint: #999999;
+
   --gh-link: #4183c4;
+  --gh-link-hover: #4183c4;
+
   --gh-border: #d8d8d8;
-  --gh-header-bg: #4d4d4d;
-  --gh-header-fg: #eee;
-  --gh-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --gh-border-strong: #cacaca;
+  --gh-border-faint: #eaeaea;
+
+  --gh-header-bg-top: #4d4d4d;
+  --gh-header-bg-bottom: #383838;
+  --gh-header-fg: #eeeeee;
+  --gh-header-fg-muted: #bbbbbb;
+
+  --gh-btn-bg-top: #fafafa;
+  --gh-btn-bg-bottom: #eaeaea;
+  --gh-btn-bg-top-hover: #ffffff;
+  --gh-btn-bg-bottom-hover: #dddddd;
+  --gh-btn-border: #d4d4d4;
+  --gh-btn-fg: #333333;
+
+  --gh-btn-primary-bg-top: #62c462;
+  --gh-btn-primary-bg-bottom: #51a351;
+  --gh-btn-primary-border: #4a934a;
+  --gh-btn-primary-fg: #ffffff;
+
+  --gh-state-open: #6cc644;
+  --gh-state-closed: #bd2c00;
+  --gh-state-merged: #6e5494;
+
+  --gh-radius: 3px;
+  --gh-radius-lg: 4px;
+
+  --gh-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --gh-shadow-soft: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+/* dark variant, invented in 2013 idiom */
+:root[data-oldgh-theme="dark"] {
+  --gh-bg: #1c1c1c;
+  --gh-bg-elev: #242424;
+  --gh-bg-subtle: #1e1e1e;
+  --gh-bg-stripe: #202020;
+
+  --gh-fg: #d9d9d9;
+  --gh-fg-muted: #a0a0a0;
+  --gh-fg-faint: #777777;
+
+  --gh-link: #6aa9e0;
+  --gh-link-hover: #84baee;
+
+  --gh-border: #383838;
+  --gh-border-strong: #4a4a4a;
+  --gh-border-faint: #2a2a2a;
+
+  --gh-header-bg-top: #2a2a2a;
+  --gh-header-bg-bottom: #1a1a1a;
+  --gh-header-fg: #e6e6e6;
+  --gh-header-fg-muted: #9a9a9a;
+
+  --gh-btn-bg-top: #3a3a3a;
+  --gh-btn-bg-bottom: #2a2a2a;
+  --gh-btn-bg-top-hover: #444444;
+  --gh-btn-bg-bottom-hover: #333333;
+  --gh-btn-border: #4a4a4a;
+  --gh-btn-fg: #e6e6e6;
+}
+
+html[data-oldgh="active"],
+html[data-oldgh="active"] body {
+  font-family: var(--gh-font-sans);
+  font-size: var(--gh-size-md);
+  line-height: var(--gh-line);
+  color: var(--gh-fg);
+  background: var(--gh-bg);
+}
+
+html[data-oldgh="active"] a {
+  color: var(--gh-link);
+  text-decoration: none;
+}
+html[data-oldgh="active"] a:hover {
+  text-decoration: underline;
+}
+
+html[data-oldgh="active"] code,
+html[data-oldgh="active"] pre,
+html[data-oldgh="active"] tt {
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-sm);
+}
+
+/* the 2013 octicon glyphs were sized to a 16px box */
+html[data-oldgh="active"] .octicon {
+  display: inline-block;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+/* re-skinned header bar */
+.oldgh-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 60px;
+  background: linear-gradient(
+    to bottom,
+    var(--gh-header-bg-top),
+    var(--gh-header-bg-bottom)
+  );
+  color: var(--gh-header-fg);
+  border-bottom: 1px solid #2c2c2c;
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-header a {
+  color: var(--gh-header-fg);
+}
+.oldgh-header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+  font-size: var(--gh-size-lg);
+}
+.oldgh-header__nav {
+  display: flex;
+  gap: 14px;
+  margin-left: 8px;
+  flex: 1;
+}
+.oldgh-header__nav a {
+  color: var(--gh-header-fg-muted);
+  font-size: var(--gh-size-md);
+}
+.oldgh-header__nav a:hover,
+.oldgh-header__nav a[aria-current="page"] {
+  color: var(--gh-header-fg);
+  text-decoration: none;
+}
+
+/* button — 2013 gradient pill */
+.oldgh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: var(--gh-size-sm);
+  font-weight: bold;
+  color: var(--gh-btn-fg);
+  background: linear-gradient(
+    to bottom,
+    var(--gh-btn-bg-top),
+    var(--gh-btn-bg-bottom)
+  );
+  border: 1px solid var(--gh-btn-border);
+  border-radius: var(--gh-radius);
+  cursor: pointer;
+  line-height: 1.4;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: var(--gh-shadow-inset);
+}
+.oldgh-btn:hover {
+  background: linear-gradient(
+    to bottom,
+    var(--gh-btn-bg-top-hover),
+    var(--gh-btn-bg-bottom-hover)
+  );
+  text-decoration: none;
+}
+.oldgh-btn:active {
+  background: var(--gh-btn-bg-bottom);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.oldgh-btn--primary {
+  color: var(--gh-btn-primary-fg);
+  background: linear-gradient(
+    to bottom,
+    var(--gh-btn-primary-bg-top),
+    var(--gh-btn-primary-bg-bottom)
+  );
+  border-color: var(--gh-btn-primary-border);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* page container */
+.oldgh-page {
+  max-width: 980px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+
+/* sub-nav tab bar — 2013 underline tabs */
+.oldgh-tabs {
+  display: flex;
+  gap: 0;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--gh-border);
+}
+.oldgh-tabs__item {
+  margin: 0 4px -1px 0;
+}
+.oldgh-tabs__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg);
+  border: 1px solid transparent;
+  border-bottom-color: var(--gh-border);
+}
+.oldgh-tabs__link:hover {
+  text-decoration: none;
+  color: var(--gh-fg);
+}
+.oldgh-tabs__link[aria-current="page"] {
+  background: var(--gh-bg-elev);
+  border-color: var(--gh-border);
+  border-bottom-color: var(--gh-bg-elev);
+  color: var(--gh-fg);
+}
+.oldgh-tabs__count {
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg);
+  border-radius: 9px;
+  padding: 0 6px;
+  line-height: 16px;
+}
+
+/* table — file browser / list pages */
+.oldgh-table {
+  width: 100%;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--gh-size-md);
+}
+.oldgh-table th,
+.oldgh-table td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-table tr:last-child > td {
+  border-bottom: none;
+}
+.oldgh-table tr:nth-child(even) > td {
+  background: var(--gh-bg-stripe);
+}
+
+/* state pills */
+.oldgh-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: var(--gh-size-xs);
+  font-weight: bold;
+  color: #fff;
+  border-radius: var(--gh-radius);
+  text-transform: capitalize;
+}
+.oldgh-state--open {
+  background: var(--gh-state-open);
+}
+.oldgh-state--closed {
+  background: var(--gh-state-closed);
+}
+.oldgh-state--merged {
+  background: var(--gh-state-merged);
 }
