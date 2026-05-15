@@ -125,6 +125,7 @@ export function isCovered(pathname: string): boolean {
     route.kind === "repo-blob" ||
     route.kind === "repo-commits" ||
     route.kind === "repo-commit" ||
-    route.kind === "repo-compare"
+    route.kind === "repo-compare" ||
+    route.kind === "profile"
   );
 }

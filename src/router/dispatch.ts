@@ -6,6 +6,7 @@ import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
 import { mountRepoCommits, unmountRepoCommits } from "@/views/repo-commits";
 import { mountRepoCommit, unmountRepoCommit } from "@/views/repo-commit";
 import { mountRepoCompare, unmountRepoCompare } from "@/views/repo-compare";
+import { mountProfile, unmountProfile } from "@/views/profile";
 import { resolveRoute, type Route } from "./resolve";
 
 type RepoKey = { owner: string; repo: string };
@@ -17,7 +18,8 @@ type BodyState =
   | { kind: "blob"; owner: string; repo: string; refAndPath: string }
   | { kind: "commits"; owner: string; repo: string; refAndPath: string; query: string }
   | { kind: "commit"; owner: string; repo: string; sha: string }
-  | { kind: "compare"; owner: string; repo: string; range: string };
+  | { kind: "compare"; owner: string; repo: string; range: string }
+  | { kind: "profile"; login: string };
 
 let mountedRepo: RepoKey | null = null;
 let bodyState: BodyState = { kind: "none" };
@@ -47,6 +49,12 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     ) {
       await ensureRepoHeader(route.owner, route.repo, pathname);
       await applyBodyState(targetBodyForRoute(route));
+      return;
+    }
+
+    if (route.kind === "profile") {
+      teardownRepoHeader();
+      await applyBodyState({ kind: "profile", login: route.login });
       return;
     }
 
@@ -125,6 +133,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "profile") {
+    await mountProfile(target.login);
+    bodyState = target;
+    return;
+  }
 }
 
 function sameBody(a: BodyState, b: BodyState): boolean {
@@ -147,6 +160,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "compare" && b.kind === "compare") {
     return a.owner === b.owner && a.repo === b.repo && a.range === b.range;
   }
+  if (a.kind === "profile" && b.kind === "profile") {
+    return a.login === b.login;
+  }
   return a.kind === "none" && b.kind === "none";
 }
 
@@ -157,6 +173,7 @@ function unmountBody(): void {
   unmountRepoCommits();
   unmountRepoCommit();
   unmountRepoCompare();
+  unmountProfile();
 }
 
 function currentPath(loc: Location | URL): string {
