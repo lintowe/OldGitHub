@@ -2,11 +2,13 @@ import { AdapterFailure } from "@/adapters";
 import { mountRepoHeader, unmountRepoHeader, updateActiveTab } from "@/views/repo-header";
 import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
+import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
 
 type Route =
   | { kind: "out-of-scope" }
   | { kind: "repo-home"; owner: string; repo: string }
   | { kind: "repo-tree"; owner: string; repo: string; refAndPath: string }
+  | { kind: "repo-blob"; owner: string; repo: string; refAndPath: string }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string }
   | { kind: "todo"; name: string };
@@ -16,7 +18,8 @@ type RepoKey = { owner: string; repo: string };
 type BodyState =
   | { kind: "none" }
   | { kind: "home"; owner: string; repo: string }
-  | { kind: "tree"; owner: string; repo: string; refAndPath: string };
+  | { kind: "tree"; owner: string; repo: string; refAndPath: string }
+  | { kind: "blob"; owner: string; repo: string; refAndPath: string };
 
 let mountedRepo: RepoKey | null = null;
 let bodyState: BodyState = { kind: "none" };
@@ -83,7 +86,12 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       return;
     }
 
-    if (route.kind === "repo-home" || route.kind === "repo-tree" || route.kind === "repo-other") {
+    if (
+      route.kind === "repo-home" ||
+      route.kind === "repo-tree" ||
+      route.kind === "repo-blob" ||
+      route.kind === "repo-other"
+    ) {
       await ensureRepoHeader(route.owner, route.repo, currentPath(loc));
       await applyBodyState(targetBodyForRoute(route));
       return;
@@ -103,10 +111,11 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 }
 
 function targetBodyForRoute(
-  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-other" }>,
+  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-other" }>,
 ): BodyState {
   if (route.kind === "repo-home") return { kind: "home", owner: route.owner, repo: route.repo };
   if (route.kind === "repo-tree") return { kind: "tree", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
+  if (route.kind === "repo-blob") return { kind: "blob", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
   return { kind: "none" };
 }
 
@@ -140,6 +149,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "blob") {
+    await mountRepoBlob(target.owner, target.repo, target.refAndPath);
+    bodyState = target;
+    return;
+  }
 }
 
 function sameBody(a: BodyState, b: BodyState): boolean {
@@ -150,12 +164,16 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "tree" && b.kind === "tree") {
     return a.owner === b.owner && a.repo === b.repo && a.refAndPath === b.refAndPath;
   }
+  if (a.kind === "blob" && b.kind === "blob") {
+    return a.owner === b.owner && a.repo === b.repo && a.refAndPath === b.refAndPath;
+  }
   return a.kind === "none" && b.kind === "none";
 }
 
 function unmountBody(): void {
   unmountRepoHome();
   unmountRepoTree();
+  unmountRepoBlob();
 }
 
 function currentPath(loc: Location | URL): string {
@@ -194,6 +212,11 @@ function resolveRoute(loc: Location | URL): Route {
   if (segs[2] === "tree" && segs.length >= 4) {
     const refAndPath = segs.slice(3).join("/");
     return { kind: "repo-tree", owner, repo, refAndPath };
+  }
+
+  if (segs[2] === "blob" && segs.length >= 5) {
+    const refAndPath = segs.slice(3).join("/");
+    return { kind: "repo-blob", owner, repo, refAndPath };
   }
 
   return { kind: "repo-other", owner, repo };

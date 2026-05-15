@@ -851,6 +851,93 @@ html[data-oldgh-hide-modern-repo-body] turbo-frame#repo-content-turbo-frame {
   color: var(--gh-fg-faint);
 }
 
+/* blob view */
+.oldgh-repo-blob > .oldgh-page {
+  padding-top: 12px;
+  padding-bottom: 40px;
+}
+
+.oldgh-repo-blob__file {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  overflow: hidden;
+}
+.oldgh-repo-blob__file-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--gh-bg-subtle);
+  border-bottom: 1px solid var(--gh-border);
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-blob__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.oldgh-repo-blob__sep {
+  color: var(--gh-fg-faint);
+}
+.oldgh-repo-blob__lang {
+  color: var(--gh-fg);
+  font-weight: bold;
+}
+.oldgh-repo-blob__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.oldgh-repo-blob__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-sm);
+  line-height: 1.5;
+}
+.oldgh-repo-blob__num {
+  width: 1%;
+  padding: 0 10px;
+  text-align: right;
+  color: var(--gh-fg-faint);
+  background: var(--gh-bg-subtle);
+  border-right: 1px solid var(--gh-border-faint);
+  user-select: none;
+}
+.oldgh-repo-blob__num a {
+  color: inherit;
+}
+.oldgh-repo-blob__num a:hover {
+  color: var(--gh-link);
+  text-decoration: none;
+}
+.oldgh-repo-blob__code {
+  padding: 0 10px;
+  white-space: pre;
+  color: var(--gh-fg);
+}
+.oldgh-repo-blob__table tr:target .oldgh-repo-blob__code,
+.oldgh-repo-blob__table tr:target .oldgh-repo-blob__num {
+  background: #fff8c4;
+}
+
+.oldgh-repo-blob__binary,
+.oldgh-repo-blob__truncated {
+  padding: 20px;
+  color: var(--gh-fg);
+}
+.oldgh-repo-blob__truncated > p {
+  color: var(--gh-fg-muted);
+  background: #fff8c4;
+  border: 1px solid #e8d160;
+  padding: 8px 12px;
+  border-radius: var(--gh-radius);
+  margin: 0 0 12px;
+}
+
 /* state pills */
 .oldgh-state {
   display: inline-flex;

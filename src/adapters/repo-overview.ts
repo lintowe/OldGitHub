@@ -79,6 +79,83 @@ export async function getRepoTree(owner: string, repo: string, refAndPath: strin
   };
 }
 
+export type RepoBlobView = {
+  owner: string;
+  repo: string;
+  branch: string;
+  path: string;
+  displayName: string;
+  language: string | null;
+  rawLines: string[];
+  rawBlobUrl: string | null;
+  truncated: boolean;
+  isBinary: boolean;
+};
+
+export async function getRepoBlob(owner: string, repo: string, refAndPath: string): Promise<RepoBlobView> {
+  const url = `https://github.com/${owner}/${repo}/blob/${refAndPath}`;
+  const resp = await fetch(url, {
+    credentials: "include",
+    headers: { Accept: "text/html" },
+  });
+  if (!resp.ok) {
+    throw new AdapterFailure("getRepoBlob", `${owner}/${repo}/blob/${refAndPath} responded ${resp.status}`);
+  }
+  const html = await resp.text();
+  const doc = parseRepoPage(html);
+  const payload = extractEmbeddedPayload(doc);
+
+  const route = read<{ payload?: unknown }>(payload, "payload");
+  const blobRoute = read<Record<string, unknown>>(route, "codeViewBlobRoute");
+  if (!blobRoute) {
+    throw new AdapterFailure("getRepoBlob", "missing codeViewBlobRoute in payload");
+  }
+
+  const refInfo = read<{ name?: unknown }>(blobRoute, "refInfo");
+  const branch = typeof refInfo?.name === "string" ? refInfo.name : null;
+  const path = blobRoute["path"];
+  if (!branch || typeof path !== "string") {
+    throw new AdapterFailure("getRepoBlob", "missing refInfo.name or path");
+  }
+
+  const rawLines = readStringArray(blobRoute["rawLines"]);
+  const displayName = typeof blobRoute["displayName"] === "string"
+    ? (blobRoute["displayName"] as string)
+    : pathBasename(path);
+  const language = typeof blobRoute["language"] === "string" ? (blobRoute["language"] as string) : null;
+  const rawBlobUrl = typeof blobRoute["rawBlobUrl"] === "string" ? (blobRoute["rawBlobUrl"] as string) : null;
+  const truncated = blobRoute["truncated"] === true;
+  const isBinary = rawLines === null;
+
+  return {
+    owner,
+    repo,
+    branch,
+    path,
+    displayName,
+    language,
+    rawLines: rawLines ?? [],
+    rawBlobUrl,
+    truncated,
+    isBinary,
+  };
+}
+
+function readStringArray(v: unknown): string[] | null {
+  if (!Array.isArray(v)) return null;
+  const out: string[] = [];
+  for (const x of v) {
+    if (typeof x !== "string") return null;
+    out.push(x);
+  }
+  return out;
+}
+
+function pathBasename(p: string): string {
+  const i = p.lastIndexOf("/");
+  return i >= 0 ? p.slice(i + 1) : p;
+}
+
 export async function getRepoOverview(owner: string, repo: string): Promise<RepoOverview> {
   const html = await fetchRepoPage(owner, repo);
   const doc = parseRepoPage(html);
