@@ -1268,6 +1268,34 @@ html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-tag,
 html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-name,
 html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-attr { color: #8abeb7; }
 
+/* compare view */
+.oldgh-repo-compare > .oldgh-page {
+  padding-top: 12px;
+  padding-bottom: 40px;
+}
+.oldgh-repo-compare__header {
+  margin-bottom: 16px;
+}
+.oldgh-repo-compare__title {
+  margin: 0 0 6px;
+  font-size: var(--gh-size-h1);
+  font-weight: normal;
+}
+.oldgh-repo-compare__intro {
+  margin: 0 0 12px;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+}
+.oldgh-repo-compare__refs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--gh-size-md);
+}
+.oldgh-repo-compare__sep {
+  color: var(--gh-fg-faint);
+}
+
 /* state pills */
 .oldgh-state {
   display: inline-flex;

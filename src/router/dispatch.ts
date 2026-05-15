@@ -5,6 +5,7 @@ import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
 import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
 import { mountRepoCommits, unmountRepoCommits } from "@/views/repo-commits";
 import { mountRepoCommit, unmountRepoCommit } from "@/views/repo-commit";
+import { mountRepoCompare, unmountRepoCompare } from "@/views/repo-compare";
 
 type Route =
   | { kind: "out-of-scope" }
@@ -13,6 +14,7 @@ type Route =
   | { kind: "repo-blob"; owner: string; repo: string; refAndPath: string }
   | { kind: "repo-commits"; owner: string; repo: string; refAndPath: string; query: string }
   | { kind: "repo-commit"; owner: string; repo: string; sha: string }
+  | { kind: "repo-compare"; owner: string; repo: string; range: string }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string }
   | { kind: "todo"; name: string };
@@ -25,7 +27,8 @@ type BodyState =
   | { kind: "tree"; owner: string; repo: string; refAndPath: string }
   | { kind: "blob"; owner: string; repo: string; refAndPath: string }
   | { kind: "commits"; owner: string; repo: string; refAndPath: string; query: string }
-  | { kind: "commit"; owner: string; repo: string; sha: string };
+  | { kind: "commit"; owner: string; repo: string; sha: string }
+  | { kind: "compare"; owner: string; repo: string; range: string };
 
 let mountedRepo: RepoKey | null = null;
 let bodyState: BodyState = { kind: "none" };
@@ -98,6 +101,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       route.kind === "repo-blob" ||
       route.kind === "repo-commits" ||
       route.kind === "repo-commit" ||
+      route.kind === "repo-compare" ||
       route.kind === "repo-other"
     ) {
       await ensureRepoHeader(route.owner, route.repo, currentPath(loc));
@@ -119,13 +123,14 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 }
 
 function targetBodyForRoute(
-  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-commits" | "repo-commit" | "repo-other" }>,
+  route: Extract<Route, { kind: "repo-home" | "repo-tree" | "repo-blob" | "repo-commits" | "repo-commit" | "repo-compare" | "repo-other" }>,
 ): BodyState {
   if (route.kind === "repo-home") return { kind: "home", owner: route.owner, repo: route.repo };
   if (route.kind === "repo-tree") return { kind: "tree", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
   if (route.kind === "repo-blob") return { kind: "blob", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath };
   if (route.kind === "repo-commits") return { kind: "commits", owner: route.owner, repo: route.repo, refAndPath: route.refAndPath, query: route.query };
   if (route.kind === "repo-commit") return { kind: "commit", owner: route.owner, repo: route.repo, sha: route.sha };
+  if (route.kind === "repo-compare") return { kind: "compare", owner: route.owner, repo: route.repo, range: route.range };
   return { kind: "none" };
 }
 
@@ -174,6 +179,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "compare") {
+    await mountRepoCompare(target.owner, target.repo, target.range);
+    bodyState = target;
+    return;
+  }
 }
 
 function sameBody(a: BodyState, b: BodyState): boolean {
@@ -193,6 +203,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "commit" && b.kind === "commit") {
     return a.owner === b.owner && a.repo === b.repo && a.sha === b.sha;
   }
+  if (a.kind === "compare" && b.kind === "compare") {
+    return a.owner === b.owner && a.repo === b.repo && a.range === b.range;
+  }
   return a.kind === "none" && b.kind === "none";
 }
 
@@ -202,6 +215,7 @@ function unmountBody(): void {
   unmountRepoBlob();
   unmountRepoCommits();
   unmountRepoCommit();
+  unmountRepoCompare();
 }
 
 function currentPath(loc: Location | URL): string {
@@ -260,6 +274,11 @@ function resolveRoute(loc: Location | URL): Route {
   if (segs[2] === "commit" && segs.length >= 4) {
     const sha = segs[3]!;
     return { kind: "repo-commit", owner, repo, sha };
+  }
+
+  if (segs[2] === "compare" && segs.length >= 4) {
+    const range = segs.slice(3).join("/");
+    return { kind: "repo-compare", owner, repo, range };
   }
 
   return { kind: "repo-other", owner, repo };
