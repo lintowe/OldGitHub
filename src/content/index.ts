@@ -1,6 +1,7 @@
 import { killTurbo, mountRouter } from "@/router";
 import { isLoggedIn } from "@/auth/session";
 import { applyTheme, watchThemeChanges } from "@/theme";
+import { mountHeader } from "@/views/header";
 
 async function boot(): Promise<void> {
   if (!(await isLoggedIn())) {
@@ -11,7 +12,17 @@ async function boot(): Promise<void> {
   injectThemeStylesheet();
   await applyTheme();
   watchThemeChanges();
-  mountRouter();
+
+  const mount = async (): Promise<void> => {
+    await mountHeader();
+    mountRouter();
+  };
+
+  if (document.body) {
+    await mount();
+  } else {
+    document.addEventListener("DOMContentLoaded", () => void mount(), { once: true });
+  }
 }
 
 function injectThemeStylesheet(): void {
