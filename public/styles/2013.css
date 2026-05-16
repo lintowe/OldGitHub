@@ -2223,3 +2223,267 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="4"] 
   font-weight: bold;
   line-height: 1.4;
 }
+
+/* ===== wiki ===== */
+.oldgh-wiki__header {
+  border-bottom: 1px solid var(--gh-border);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+.oldgh-wiki__title {
+  font-size: 22px;
+  font-weight: 300;
+  margin: 0;
+  color: var(--gh-fg);
+}
+.oldgh-wiki__meta {
+  margin: 4px 0 0;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-wiki__layout {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 24px;
+}
+.oldgh-wiki__content {
+  min-width: 0;
+  font-size: var(--gh-size-sm);
+  line-height: 1.6;
+  color: var(--gh-fg);
+}
+.oldgh-wiki__content h1,
+.oldgh-wiki__content h2 {
+  border-bottom: 1px solid var(--gh-border);
+  padding-bottom: 4px;
+  margin-top: 24px;
+}
+.oldgh-wiki__content pre {
+  background: var(--gh-bg-stripe);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 10px 12px;
+  overflow: auto;
+  font-family: var(--gh-mono);
+  font-size: 12px;
+}
+.oldgh-wiki__content code {
+  background: var(--gh-bg-stripe);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--gh-mono);
+  font-size: 12px;
+}
+.oldgh-wiki__content pre code { background: none; padding: 0; }
+.oldgh-wiki__sidebar {
+  font-size: var(--gh-size-sm);
+}
+.oldgh-wiki__sidebar h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--gh-fg-muted);
+  margin: 0 0 6px;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.oldgh-wiki__pages-count {
+  background: var(--gh-bg-stripe);
+  border-radius: 8px;
+  padding: 0 6px;
+  font-size: 10px;
+  color: var(--gh-fg-muted);
+  margin-left: auto;
+}
+.oldgh-wiki__pages ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.oldgh-wiki__pages a {
+  display: block;
+  padding: 2px 0;
+  color: var(--gh-link);
+  font-size: 12px;
+}
+.oldgh-wiki__pages a:hover { text-decoration: underline; }
+.oldgh-wiki__pages-more {
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+  margin: 4px 0 0;
+}
+.oldgh-wiki__clone {
+  margin-top: 18px;
+}
+.oldgh-wiki__clone .oldgh-input {
+  width: 100%;
+  border: 1px solid var(--gh-border);
+  background: var(--gh-bg);
+  color: var(--gh-fg);
+  font-family: var(--gh-mono);
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: var(--gh-radius);
+}
+
+/* ===== actions ===== */
+.oldgh-actions__layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+}
+.oldgh-actions__sidebar {
+  font-size: var(--gh-size-sm);
+}
+.oldgh-actions__sidebar h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--gh-fg-muted);
+  margin: 0 0 6px;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.oldgh-actions__workflows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.oldgh-actions__workflows a {
+  display: block;
+  padding: 4px 8px;
+  color: var(--gh-link);
+  border-radius: var(--gh-radius);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.oldgh-actions__workflows a:hover {
+  background: var(--gh-bg-stripe);
+  text-decoration: none;
+}
+.oldgh-actions__wf-all {
+  background: var(--gh-bg-stripe);
+}
+.oldgh-actions__main {
+  min-width: 0;
+}
+.oldgh-actions__header {
+  border-bottom: 1px solid var(--gh-border);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.oldgh-actions__header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--gh-fg);
+}
+.oldgh-actions__runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  background: var(--gh-bg-elev);
+}
+.oldgh-actions__run {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gh-border);
+  align-items: flex-start;
+}
+.oldgh-actions__run:last-child { border-bottom: 0; }
+.oldgh-actions__run:hover { background: var(--gh-bg-stripe); }
+.oldgh-actions__run-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #fff;
+}
+.oldgh-actions__run-status--success { background: var(--gh-state-open); }
+.oldgh-actions__run-status--failure { background: var(--gh-state-closed); }
+.oldgh-actions__run-status--in_progress,
+.oldgh-actions__run-status--queued,
+.oldgh-actions__run-status--pending { background: #cc8500; }
+.oldgh-actions__run-status--cancelled,
+.oldgh-actions__run-status--skipped { background: var(--gh-fg-muted); }
+.oldgh-actions__run-status--action_required { background: #d29922; }
+.oldgh-actions__run-status--neutral,
+.oldgh-actions__run-status--unknown { background: var(--gh-fg-muted); }
+.oldgh-actions__run-body {
+  flex: 1;
+  min-width: 0;
+}
+.oldgh-actions__run-title a {
+  font-weight: bold;
+  color: var(--gh-link);
+  font-size: 13px;
+}
+.oldgh-actions__run-number {
+  color: var(--gh-fg-muted);
+  font-size: 12px;
+  margin-left: 6px;
+}
+.oldgh-actions__run-meta {
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+  margin-top: 2px;
+}
+.oldgh-actions__run-meta code {
+  font-family: var(--gh-mono);
+  background: var(--gh-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.oldgh-actions__empty {
+  color: var(--gh-fg-muted);
+  font-style: italic;
+  margin: 12px 0;
+}
+
+/* ===== generic scraped section (pulse/graphs/projects/security) ===== */
+.oldgh-section__header {
+  border-bottom: 1px solid var(--gh-border);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.oldgh-section__header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--gh-fg);
+}
+.oldgh-section__content {
+  font-size: var(--gh-size-sm);
+}
+.oldgh-section__content .Box,
+.oldgh-section__content .Box-row,
+.oldgh-section__content .Box-header,
+.oldgh-section__content .Box-footer {
+  background: var(--gh-bg-elev);
+  border-color: var(--gh-border);
+  color: var(--gh-fg);
+}
+.oldgh-section__content a { color: var(--gh-link); }
+.oldgh-section__content h1,
+.oldgh-section__content h2,
+.oldgh-section__content h3,
+.oldgh-section__content h4 { color: var(--gh-fg); }

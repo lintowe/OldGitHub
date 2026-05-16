@@ -8,6 +8,9 @@ import { mountRepoCommit, unmountRepoCommit } from "@/views/repo-commit";
 import { mountRepoCompare, unmountRepoCompare } from "@/views/repo-compare";
 import { mountRepoIssues, unmountRepoIssues } from "@/views/repo-issues";
 import { mountRepoIssue, unmountRepoIssue } from "@/views/repo-issue";
+import { mountRepoWiki, unmountRepoWiki } from "@/views/repo-wiki";
+import { mountRepoActions, unmountRepoActions } from "@/views/repo-actions";
+import { mountRepoSection, unmountRepoSection } from "@/views/repo-section";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { resolveRoute, type Route } from "./resolve";
 
@@ -23,6 +26,12 @@ type BodyState =
   | { kind: "compare"; owner: string; repo: string; range: string }
   | { kind: "issues"; owner: string; repo: string; query: string; subkind: "issues" | "pulls" }
   | { kind: "issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull" }
+  | { kind: "wiki"; owner: string; repo: string; page: string }
+  | { kind: "actions"; owner: string; repo: string; query: string }
+  | { kind: "pulse"; owner: string; repo: string }
+  | { kind: "graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
+  | { kind: "projects"; owner: string; repo: string; query: string }
+  | { kind: "security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "profile"; login: string; tab: string; query: string };
 
 let mountedRepo: RepoKey | null = null;
@@ -92,6 +101,12 @@ function targetBodyForRoute(route: Route): BodyState {
   if (route.kind === "repo-compare") return { kind: "compare", owner: route.owner, repo: route.repo, range: route.range };
   if (route.kind === "repo-issues") return { kind: "issues", owner: route.owner, repo: route.repo, query: route.query, subkind: route.subkind };
   if (route.kind === "repo-issue") return { kind: "issue", owner: route.owner, repo: route.repo, number: route.number, subkind: route.subkind };
+  if (route.kind === "repo-wiki") return { kind: "wiki", owner: route.owner, repo: route.repo, page: route.page };
+  if (route.kind === "repo-actions") return { kind: "actions", owner: route.owner, repo: route.repo, query: route.query };
+  if (route.kind === "repo-pulse") return { kind: "pulse", owner: route.owner, repo: route.repo };
+  if (route.kind === "repo-graphs") return { kind: "graphs", owner: route.owner, repo: route.repo, subkind: route.subkind };
+  if (route.kind === "repo-projects") return { kind: "projects", owner: route.owner, repo: route.repo, query: route.query };
+  if (route.kind === "repo-security") return { kind: "security", owner: route.owner, repo: route.repo, subkind: route.subkind };
   return { kind: "none" };
 }
 
@@ -155,6 +170,44 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "wiki") {
+    await mountRepoWiki(target.owner, target.repo, target.page);
+    bodyState = target;
+    return;
+  }
+  if (target.kind === "actions") {
+    await mountRepoActions(target.owner, target.repo, target.query);
+    bodyState = target;
+    return;
+  }
+  if (target.kind === "pulse") {
+    await mountRepoSection(target.owner, target.repo, "pulse", "/pulse", "Pulse");
+    bodyState = target;
+    return;
+  }
+  if (target.kind === "graphs") {
+    const titleMap = {
+      "contributors": "Contributors",
+      "commit-activity": "Commit activity",
+      "code-frequency": "Code frequency",
+      "traffic": "Traffic",
+    } as const;
+    await mountRepoSection(target.owner, target.repo, "graphs", `/graphs/${target.subkind}`, titleMap[target.subkind]);
+    bodyState = target;
+    return;
+  }
+  if (target.kind === "projects") {
+    const subPath = `/projects${target.query ? "?" + target.query : ""}`;
+    await mountRepoSection(target.owner, target.repo, "projects", subPath, "Projects");
+    bodyState = target;
+    return;
+  }
+  if (target.kind === "security") {
+    const subPath = target.subkind === "advisories" ? "/security/advisories" : "/security";
+    await mountRepoSection(target.owner, target.repo, "security", subPath, "Security");
+    bodyState = target;
+    return;
+  }
   if (target.kind === "profile") {
     await mountProfile(target.login, target.tab, target.query);
     bodyState = target;
@@ -188,6 +241,24 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "issue" && b.kind === "issue") {
     return a.owner === b.owner && a.repo === b.repo && a.number === b.number && a.subkind === b.subkind;
   }
+  if (a.kind === "wiki" && b.kind === "wiki") {
+    return a.owner === b.owner && a.repo === b.repo && a.page === b.page;
+  }
+  if (a.kind === "actions" && b.kind === "actions") {
+    return a.owner === b.owner && a.repo === b.repo && a.query === b.query;
+  }
+  if (a.kind === "pulse" && b.kind === "pulse") {
+    return a.owner === b.owner && a.repo === b.repo;
+  }
+  if (a.kind === "graphs" && b.kind === "graphs") {
+    return a.owner === b.owner && a.repo === b.repo && a.subkind === b.subkind;
+  }
+  if (a.kind === "projects" && b.kind === "projects") {
+    return a.owner === b.owner && a.repo === b.repo && a.query === b.query;
+  }
+  if (a.kind === "security" && b.kind === "security") {
+    return a.owner === b.owner && a.repo === b.repo && a.subkind === b.subkind;
+  }
   if (a.kind === "profile" && b.kind === "profile") {
     return a.login === b.login && a.tab === b.tab && a.query === b.query;
   }
@@ -203,6 +274,9 @@ function unmountBody(): void {
   unmountRepoCompare();
   unmountRepoIssues();
   unmountRepoIssue();
+  unmountRepoWiki();
+  unmountRepoActions();
+  unmountRepoSection();
   unmountProfile();
 }
 

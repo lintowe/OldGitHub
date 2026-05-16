@@ -179,6 +179,12 @@ const COVERED_REPO_KINDS = new Set<Route["kind"]>([
   "repo-compare",
   "repo-issues",
   "repo-issue",
+  "repo-wiki",
+  "repo-actions",
+  "repo-pulse",
+  "repo-graphs",
+  "repo-projects",
+  "repo-security",
 ]);
 
 export function isCovered(pathname: string): boolean {

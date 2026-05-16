@@ -1,0 +1,110 @@
+import { octicon } from "@/icons";
+import { getActions, type ActionsView, type WorkflowRun } from "@/adapters/repo-actions";
+import { absoluteTime, relativeTime } from "@/util/time";
+
+const ROOT_CLASS = "oldgh-repo-actions";
+
+export async function mountRepoActions(owner: string, repo: string, query: string): Promise<void> {
+  let view: ActionsView;
+  try {
+    view = await getActions(owner, repo, query);
+  } catch (err) {
+    unmountRepoActions();
+    throw err;
+  }
+
+  unmountRepoActions();
+  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+
+  const root = document.createElement("div");
+  root.className = ROOT_CLASS;
+  root.innerHTML = renderShell(view);
+  const after = document.querySelector(".oldgh-repo-header");
+  if (after && after.parentNode) {
+    after.after(root);
+  } else {
+    document.body.append(root);
+  }
+}
+
+export function unmountRepoActions(): void {
+  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
+  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+}
+
+function renderShell(v: ActionsView): string {
+  return `
+    <div class="oldgh-page oldgh-actions">
+      <div class="oldgh-actions__layout">
+        <aside class="oldgh-actions__sidebar">
+          <h3>${octicon("github-action", { size: 12 })} Workflows</h3>
+          <ul class="oldgh-actions__workflows">
+            <li><a href="/${escapeAttr(v.owner)}/${escapeAttr(v.repo)}/actions" class="oldgh-actions__wf-all"><strong>All workflows</strong></a></li>
+            ${v.workflows.map((w) => `
+              <li><a href="${escapeAttr(w.href)}" title="${escapeAttr(w.filePath)}">${escapeText(w.name)}</a></li>
+            `).join("")}
+          </ul>
+        </aside>
+        <div class="oldgh-actions__main">
+          <header class="oldgh-actions__header">
+            <h2>${formatCount(v.totalCount)} workflow ${v.totalCount === 1 ? "run" : "runs"}</h2>
+          </header>
+          ${v.runs.length === 0 ? `<p class="oldgh-actions__empty">No workflow runs match the current filter.</p>` : `
+            <ul class="oldgh-actions__runs">
+              ${v.runs.map((r) => renderRun(r)).join("")}
+            </ul>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRun(r: WorkflowRun): string {
+  return `
+    <li class="oldgh-actions__run">
+      <span class="oldgh-actions__run-status oldgh-actions__run-status--${r.status}" title="${escapeAttr(r.status)}">${statusIcon(r.status)}</span>
+      <div class="oldgh-actions__run-body">
+        <div class="oldgh-actions__run-title">
+          <a href="${escapeAttr(r.url)}">${escapeText(r.title || r.workflowName)}</a>
+          ${r.runNumber ? `<span class="oldgh-actions__run-number">#${r.runNumber}</span>` : ""}
+        </div>
+        <div class="oldgh-actions__run-meta">
+          <span>${escapeText(r.workflowName)}</span>
+          ${r.branch ? `· <a href="${escapeAttr(r.branchUrl || "#")}"><code>${escapeText(r.branch)}</code></a>` : ""}
+          ${r.commitSha ? `· <a href="${escapeAttr(r.commitUrl || "#")}"><code>${escapeText(r.commitSha)}</code></a>` : ""}
+          ${r.actor ? `· <a href="/${escapeAttr(r.actor.login)}">${escapeText(r.actor.login)}</a>` : ""}
+          ${r.startedAt ? `· <span title="${escapeAttr(absoluteTime(r.startedAt))}">${escapeText(relativeTime(r.startedAt))}</span>` : ""}
+          ${r.duration ? `· ${escapeText(r.duration)}` : ""}
+        </div>
+      </div>
+    </li>
+  `;
+}
+
+function statusIcon(s: WorkflowRun["status"]): string {
+  switch (s) {
+    case "success": return octicon("check", { size: 14 });
+    case "failure": return octicon("x", { size: 14 });
+    case "in_progress": return octicon("sync", { size: 14 });
+    case "queued":
+    case "pending": return octicon("primitive-dot", { size: 14 });
+    case "cancelled": return octicon("circle-slash", { size: 14 });
+    case "skipped": return octicon("dash", { size: 14 });
+    case "action_required": return octicon("alert", { size: 14 });
+    case "neutral": return octicon("dash", { size: 14 });
+    default: return octicon("question", { size: 14 });
+  }
+}
+
+function formatCount(n: number): string {
+  return new Intl.NumberFormat().format(n);
+}
+
+function escapeText(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
