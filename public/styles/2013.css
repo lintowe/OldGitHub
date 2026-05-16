@@ -1718,45 +1718,64 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   background: var(--gh-bg-elev);
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
-  padding: 14px;
-  overflow-x: auto;
+  padding: 10px;
+  overflow: hidden;
 }
 .oldgh-profile__contribs-graph table {
   border-collapse: separate;
-  border-spacing: 3px;
-  margin: 0 auto;
+  border-spacing: 2px;
+  margin: 0;
+  width: auto;
+  table-layout: fixed;
 }
-.oldgh-profile__contribs-graph th {
+.oldgh-profile__contribs-graph thead th,
+.oldgh-profile__contribs-graph tbody th {
   font-size: 9px;
   font-weight: normal;
   color: var(--gh-fg-muted);
-  padding: 0 2px;
+  padding: 0 4px 0 0;
   text-align: left;
+  height: 11px;
+  white-space: nowrap;
 }
-.oldgh-profile__contribs-graph td {
+.oldgh-profile__contribs-graph td.ContributionCalendar-day,
+.oldgh-profile__contribs-graph td.day {
   width: 11px;
+  min-width: 11px;
+  max-width: 11px;
   height: 11px;
   background: #eeeeee;
   border-radius: 2px;
   padding: 0;
+  box-sizing: border-box;
 }
-.oldgh-profile__contribs-graph td[data-level="1"] { background: #d6e685; }
-.oldgh-profile__contribs-graph td[data-level="2"] { background: #8cc665; }
-.oldgh-profile__contribs-graph td[data-level="3"] { background: #44a340; }
-.oldgh-profile__contribs-graph td[data-level="4"] { background: #1e6823; }
-.oldgh-profile__contribs-graph .ContributionCalendar-day {
-  fill: #eeeeee;
+.oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="1"],
+.oldgh-profile__contribs-graph td.day[data-level="1"] { background: #d6e685; }
+.oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="2"],
+.oldgh-profile__contribs-graph td.day[data-level="2"] { background: #8cc665; }
+.oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="3"],
+.oldgh-profile__contribs-graph td.day[data-level="3"] { background: #44a340; }
+.oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="4"],
+.oldgh-profile__contribs-graph td.day[data-level="4"] { background: #1e6823; }
+.oldgh-profile__contribs-graph td:not(.ContributionCalendar-day):not(.day) {
+  padding: 0;
 }
-.oldgh-profile__contribs-graph .ContributionCalendar-day[data-level="1"] { fill: #d6e685; }
-.oldgh-profile__contribs-graph .ContributionCalendar-day[data-level="2"] { fill: #8cc665; }
-.oldgh-profile__contribs-graph .ContributionCalendar-day[data-level="3"] { fill: #44a340; }
-.oldgh-profile__contribs-graph .ContributionCalendar-day[data-level="4"] { fill: #1e6823; }
+/* hide the modern "tooltip" / "scoping" auxiliary content that may render */
+.oldgh-profile__contribs-graph tool-tip,
+.oldgh-profile__contribs-graph .sr-only {
+  display: none;
+}
 
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td { background: #2a2a2a; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="1"] { background: #0e4429; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="2"] { background: #006d32; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="3"] { background: #26a641; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="4"] { background: #39d353; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCalendar-day,
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day { background: #2a2a2a; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="1"],
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="1"] { background: #0e4429; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="2"],
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="2"] { background: #006d32; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="3"],
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="3"] { background: #26a641; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="4"],
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="4"] { background: #39d353; }
 
 /* issues + pulls list */
 .oldgh-repo-issues > .oldgh-page {
@@ -2772,6 +2791,47 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="4"] 
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.oldgh-dash__box-link {
+  font-size: var(--gh-size-sm);
+  color: var(--gh-link);
+}
+
+.oldgh-dash__trending-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.oldgh-dash__trending-row {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  font-size: var(--gh-size-sm);
+}
+.oldgh-dash__trending-row:last-child {
+  border-bottom: 0;
+}
+.oldgh-dash__trending-slug {
+  font-weight: bold;
+  font-size: var(--gh-size-md);
+}
+.oldgh-dash__trending-desc {
+  margin: 2px 0 4px;
+  color: var(--gh-fg-muted);
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.oldgh-dash__trending-meta {
+  display: flex;
+  gap: 10px;
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-faint);
+}
+.oldgh-dash__trending-meta .octicon {
+  vertical-align: middle;
 }
 
 .oldgh-dash__broadcast .oldgh-dash__box-head {

@@ -30,6 +30,8 @@ export type ChangelogItem = { title: string; href: string; date: string | null }
 
 export type DashboardView = {
   feed: FeedItem[];
+  trendingRepos: FeedRepoCard[];
+  recommendedRepos: FeedRepoCard[];
   topRepos: TopRepo[];
   changelog: ChangelogItem[];
   viewerLogin: string | null;
@@ -42,12 +44,43 @@ export async function getDashboard(): Promise<DashboardView> {
     fetchFragment("/dashboard/changelog"),
   ]);
 
-  const feed = parseFeed(feedHtml);
+  const allFeed = parseFeed(feedHtml);
+  const trendingRepos: FeedRepoCard[] = [];
+  const recommendedRepos: FeedRepoCard[] = [];
+  const feed: FeedItem[] = [];
+  for (const item of allFeed) {
+    if (item.cardType === "TRENDING_REPOSITORY") {
+      trendingRepos.push(...item.repoCards);
+    } else if (item.cardType === "REPOSITORY_RECOMMENDATION" || item.cardType === "RECOMMENDED_REPOSITORY") {
+      recommendedRepos.push(...item.repoCards);
+    } else {
+      feed.push(item);
+    }
+  }
+
   const topRepos = parseTopRepos(topReposHtml);
   const changelog = parseChangelog(changelogHtml);
   const viewerLogin = readViewerLogin();
 
-  return { feed, topRepos, changelog, viewerLogin };
+  return {
+    feed,
+    trendingRepos: dedupRepos(trendingRepos).slice(0, 5),
+    recommendedRepos: dedupRepos(recommendedRepos).slice(0, 5),
+    topRepos,
+    changelog,
+    viewerLogin,
+  };
+}
+
+function dedupRepos(items: FeedRepoCard[]): FeedRepoCard[] {
+  const seen = new Set<string>();
+  const out: FeedRepoCard[] = [];
+  for (const r of items) {
+    if (seen.has(r.slug)) continue;
+    seen.add(r.slug);
+    out.push(r);
+  }
+  return out;
 }
 
 async function fetchFragment(path: string): Promise<string> {

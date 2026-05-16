@@ -43,10 +43,36 @@ function renderShell(v: DashboardView): string {
         </main>
         <aside class="oldgh-dash__rail">
           ${renderRepoBox(v.topRepos)}
+          ${renderTrendingBox("Trending repositories", "flame", "/trending", v.trendingRepos)}
+          ${renderTrendingBox("Recommended for you", "rocket", "/explore", v.recommendedRepos)}
           ${renderBroadcastBox(v.changelog)}
           ${renderProTipBox()}
         </aside>
       </div>
+    </div>
+  `;
+}
+
+function renderTrendingBox(title: string, icon: string, seeMoreHref: string, repos: FeedRepoCard[]): string {
+  if (repos.length === 0) return "";
+  return `
+    <div class="oldgh-dash__box">
+      <div class="oldgh-dash__box-head">
+        <h3>${octicon(icon, { size: 14 })} ${escapeText(title)}</h3>
+        <a class="oldgh-dash__box-link" href="${escapeAttr(seeMoreHref)}">See more</a>
+      </div>
+      <ul class="oldgh-dash__trending-list">
+        ${repos.map((r) => `
+          <li class="oldgh-dash__trending-row">
+            <a class="oldgh-dash__trending-slug" href="${escapeAttr(r.href)}">${escapeText(r.slug)}</a>
+            ${r.description ? `<p class="oldgh-dash__trending-desc">${escapeText(r.description)}</p>` : ""}
+            <div class="oldgh-dash__trending-meta">
+              ${r.language ? `<span>${escapeText(r.language)}</span>` : ""}
+              ${r.starCount ? `<span>${octicon("star", { size: 12 })} ${escapeText(r.starCount)}</span>` : ""}
+            </div>
+          </li>
+        `).join("")}
+      </ul>
     </div>
   `;
 }
