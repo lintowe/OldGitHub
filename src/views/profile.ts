@@ -3,6 +3,7 @@ import { AdapterFailure } from "@/adapters";
 import { getProfile, type PinnedRepo, type ProfileView } from "@/adapters/profile";
 import { getProfileRepos, type ProfileReposView, type RepoListItem } from "@/adapters/profile-repos";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-profile";
 
@@ -16,26 +17,12 @@ const TABS: { key: string; label: string }[] = [
 ];
 
 export async function mountProfile(login: string, tab: string, query: string): Promise<void> {
-  let view: ProfileView;
-  try {
-    view = await getProfile(login);
-  } catch (err) {
-    unmountProfile();
-    throw err;
-  }
-
-  unmountProfile();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-profile", "");
+  const view = await getProfile(login);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view, tab);
-  const after = document.querySelector(".oldgh-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-header");
 
   if (tab === "repositories") {
     void hydrateRepos(root, login, query);
@@ -45,8 +32,7 @@ export async function mountProfile(login: string, tab: string, query: string): P
 }
 
 export function unmountProfile(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-profile");
+  removeAllBodyRoots();
 }
 
 function renderShell(v: ProfileView, tab: string): string {

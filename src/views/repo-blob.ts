@@ -1,30 +1,17 @@
 import { octicon } from "@/icons";
 import { getRepoBlob, type RepoBlobView } from "@/adapters/repo-overview";
 import { highlightFile } from "@/highlight";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-blob";
 
 export async function mountRepoBlob(owner: string, repo: string, refAndPath: string): Promise<void> {
-  let view: RepoBlobView;
-  try {
-    view = await getRepoBlob(owner, repo, refAndPath);
-  } catch (err) {
-    unmountRepoBlob();
-    throw err;
-  }
-
-  unmountRepoBlob();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = await getRepoBlob(owner, repo, refAndPath);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view);
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 
   if (!view.isBinary && view.rawLines.length > 0) {
     void hydrateHighlight(root, view);
@@ -43,8 +30,7 @@ async function hydrateHighlight(root: HTMLElement, view: RepoBlobView): Promise<
 }
 
 export function unmountRepoBlob(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function renderShell(v: RepoBlobView): string {

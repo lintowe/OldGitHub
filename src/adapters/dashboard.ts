@@ -1,0 +1,273 @@
+import { AdapterFailure } from "./index";
+
+const HEADERS = { Accept: "text/html", "X-Requested-With": "XMLHttpRequest" } as const;
+
+export type FeedActor = { login: string; avatarUrl: string | null };
+
+export type FeedRepoCard = {
+  slug: string;
+  href: string;
+  description: string | null;
+  language: string | null;
+  starCount: string | null;
+  forkCount: string | null;
+  ownerAvatarUrl: string | null;
+};
+
+export type FeedItem = {
+  cardType: string;
+  actor: FeedActor | null;
+  headline: string;
+  bodyTextLink: { text: string; href: string } | null;
+  bodyExcerpt: string | null;
+  occurredAt: string | null;
+  repoCards: FeedRepoCard[];
+};
+
+export type TopRepo = { slug: string; href: string; avatarUrl: string | null };
+
+export type ChangelogItem = { title: string; href: string; date: string | null };
+
+export type DashboardView = {
+  feed: FeedItem[];
+  topRepos: TopRepo[];
+  changelog: ChangelogItem[];
+  viewerLogin: string | null;
+};
+
+export async function getDashboard(): Promise<DashboardView> {
+  const [feedHtml, topReposHtml, changelogHtml] = await Promise.all([
+    fetchFragment("/conduit/for_you_feed"),
+    fetchFragment("/dashboard/my_top_repositories"),
+    fetchFragment("/dashboard/changelog"),
+  ]);
+
+  const feed = parseFeed(feedHtml);
+  const topRepos = parseTopRepos(topReposHtml);
+  const changelog = parseChangelog(changelogHtml);
+  const viewerLogin = readViewerLogin();
+
+  return { feed, topRepos, changelog, viewerLogin };
+}
+
+async function fetchFragment(path: string): Promise<string> {
+  const resp = await fetch(`https://github.com${path}`, {
+    credentials: "include",
+    headers: HEADERS,
+  });
+  if (!resp.ok) {
+    throw new AdapterFailure("getDashboard", `${path} responded ${resp.status}`);
+  }
+  return resp.text();
+}
+
+function parseFeed(html: string): FeedItem[] {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const articles = Array.from(doc.querySelectorAll("article"));
+  return articles.map(parseFeedArticle).filter((x): x is FeedItem => x !== null);
+}
+
+function parseFeedArticle(art: Element): FeedItem | null {
+  stripNoise(art);
+
+  let cardType = "UNKNOWN";
+  try {
+    const raw = (art as HTMLElement).dataset.hydroView;
+    if (raw) {
+      const parsed = JSON.parse(raw) as { payload?: { feed_card?: { card_type?: string } } };
+      cardType = parsed?.payload?.feed_card?.card_type ?? "UNKNOWN";
+    }
+  } catch {
+    // ignore
+  }
+
+  const header = art.querySelector("header");
+  const headline = header ? cleanText(headerWithoutTime(header)) : cleanText(art.textContent || "");
+  if (!headline) return null;
+
+  const avatarImg = art.querySelector<HTMLImageElement>("header img");
+  const actor = parseActor(art, avatarImg);
+
+  const time = art.querySelector("relative-time, time-ago, time");
+  const occurredAt = time?.getAttribute("datetime") ?? null;
+
+  const titleLink = findPrimaryTitleLink(art);
+  const bodyExcerpt = findBodyExcerpt(art);
+
+  const repoCards = isRepoListCard(cardType) ? parseRepoCards(art) : [];
+
+  return {
+    cardType,
+    actor,
+    headline,
+    bodyTextLink: titleLink,
+    bodyExcerpt,
+    occurredAt,
+    repoCards,
+  };
+}
+
+function stripNoise(art: Element): void {
+  const selectors = [
+    "action-menu",
+    "anchored-position",
+    ".Overlay",
+    "focus-group",
+    "dialog",
+    "tool-tip",
+    "[hidden]",
+    "script",
+    "style",
+    "button.Button--invisible",
+  ];
+  for (const sel of selectors) {
+    art.querySelectorAll(sel).forEach((n) => n.remove());
+  }
+  for (const node of Array.from(art.querySelectorAll<HTMLElement>("*"))) {
+    for (const attr of Array.from(node.attributes)) {
+      if (/^on/i.test(attr.name)) node.removeAttribute(attr.name);
+    }
+  }
+}
+
+function headerWithoutTime(header: Element): string {
+  const clone = header.cloneNode(true) as Element;
+  clone.querySelectorAll("relative-time, time-ago, time").forEach((n) => n.remove());
+  return clone.textContent || "";
+}
+
+function parseActor(art: Element, avatarImg: HTMLImageElement | null): FeedActor | null {
+  const link = art.querySelector<HTMLAnchorElement>("header a[href^='/']");
+  const href = link?.getAttribute("href") || "";
+  const login = href.startsWith("/") ? href.slice(1).split("/")[0] || "" : "";
+  if (!login) return null;
+  return { login, avatarUrl: avatarImg?.getAttribute("src") || null };
+}
+
+function findPrimaryTitleLink(art: Element): { text: string; href: string } | null {
+  const candidate = art.querySelector<HTMLAnchorElement>(
+    "a.Link--primary, h3 a[href*='/pull/'], h3 a[href*='/issues/'], h3 a[href*='/commit/'], h3 a[href*='/releases/'], h1 a, h2 a",
+  );
+  if (!candidate) return null;
+  const href = candidate.getAttribute("href") || "";
+  const text = cleanText(candidate.textContent || "");
+  if (!text || !href) return null;
+  return { text, href };
+}
+
+function findBodyExcerpt(art: Element): string | null {
+  const md = art.querySelector(".markdown-body, .comment-body, .lazy-load-prerender-text");
+  if (md) {
+    const txt = cleanText(md.textContent || "");
+    if (txt) return txt.slice(0, 280);
+  }
+  return null;
+}
+
+function isRepoListCard(cardType: string): boolean {
+  return (
+    cardType === "TRENDING_REPOSITORY" ||
+    cardType === "REPOSITORY_RECOMMENDATION" ||
+    cardType === "RECOMMENDED_REPOSITORY"
+  );
+}
+
+function parseRepoCards(art: Element): FeedRepoCard[] {
+  const cards: FeedRepoCard[] = [];
+  const seen = new Set<string>();
+  const links = Array.from(art.querySelectorAll<HTMLAnchorElement>("a[href]"));
+  for (const link of links) {
+    const href = link.getAttribute("href") || "";
+    const m = href.match(/^\/([\w.-]+)\/([\w.-]+)(?:[/?#].*)?$/);
+    if (!m) continue;
+    const slug = `${m[1]}/${m[2]}`;
+    if (seen.has(slug)) continue;
+    const text = cleanText(link.textContent || "");
+    if (text !== slug && !text.endsWith("/" + m[2])) continue;
+    seen.add(slug);
+    const container = link.closest("article, div") || art;
+    const description = pickDescription(container);
+    const language = pickLanguage(container);
+    const starCount = pickStars(container);
+    cards.push({
+      slug,
+      href: `/${slug}`,
+      description,
+      language,
+      starCount,
+      forkCount: null,
+      ownerAvatarUrl: null,
+    });
+    if (cards.length >= 6) break;
+  }
+  return cards;
+}
+
+function pickDescription(container: Element): string | null {
+  const sel = container.querySelector("p, .text-small");
+  const txt = cleanText(sel?.textContent || "");
+  return txt ? txt.slice(0, 200) : null;
+}
+
+function pickLanguage(container: Element): string | null {
+  const langDot = container.querySelector("[itemprop='programmingLanguage'], .repo-language-color + *");
+  return langDot ? cleanText(langDot.textContent || "") || null : null;
+}
+
+function pickStars(container: Element): string | null {
+  const m = (container.textContent || "").match(/(\d[\d.,kKmM]*)\s*star/i);
+  return m ? m[1]! : null;
+}
+
+function parseTopRepos(html: string): TopRepo[] {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const items = Array.from(doc.querySelectorAll("li"));
+  const out: TopRepo[] = [];
+  for (const li of items) {
+    const a = li.querySelector<HTMLAnchorElement>("a[href]");
+    if (!a) continue;
+    const href = a.getAttribute("href") || "";
+    const m = href.match(/^\/([\w.-]+)\/([\w.-]+)$/);
+    if (!m) continue;
+    const slug = `${m[1]}/${m[2]}`;
+    const img = li.querySelector<HTMLImageElement>("img");
+    out.push({
+      slug,
+      href,
+      avatarUrl: img?.getAttribute("src") || null,
+    });
+  }
+  return out;
+}
+
+function parseChangelog(html: string): ChangelogItem[] {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const links = Array.from(doc.querySelectorAll<HTMLAnchorElement>("a[href]"));
+  const out: ChangelogItem[] = [];
+  const seen = new Set<string>();
+  for (const a of links) {
+    const href = a.getAttribute("href") || "";
+    if (!/changelog|github\.blog|github\.com/.test(href)) continue;
+    if (href.endsWith("/changelog") || href.endsWith("/changelog/")) continue;
+    const title = cleanText(a.textContent || "");
+    if (!title || title.length < 8) continue;
+    if (seen.has(href)) continue;
+    seen.add(href);
+    const wrapper = a.closest("li, div, article") || a;
+    const t = wrapper.querySelector("relative-time, time");
+    const date = t?.getAttribute("datetime") || null;
+    out.push({ title, href, date });
+    if (out.length >= 6) break;
+  }
+  return out;
+}
+
+function readViewerLogin(): string | null {
+  const meta = document.querySelector<HTMLMetaElement>("meta[name='user-login']");
+  const v = meta?.getAttribute("content");
+  return v ? v.trim() : null;
+}
+
+function cleanText(s: string): string {
+  return s.replace(/\s+/g, " ").trim();
+}

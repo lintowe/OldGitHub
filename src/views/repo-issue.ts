@@ -10,6 +10,7 @@ import {
   type ReactionCount,
 } from "@/adapters/repo-issue";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-issue";
 
@@ -19,33 +20,18 @@ export async function mountRepoIssue(
   number: number,
   kind: "issue" | "pull",
 ): Promise<void> {
-  let view: IssueDetail | PullDetail;
-  try {
-    view = kind === "pull"
-      ? await getPull(owner, repo, number)
-      : await getIssue(owner, repo, number);
-  } catch (err) {
-    unmountRepoIssue();
-    throw err;
-  }
-
-  unmountRepoIssue();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = kind === "pull"
+    ? await getPull(owner, repo, number)
+    : await getIssue(owner, repo, number);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view, kind);
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 }
 
 export function unmountRepoIssue(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function renderShell(v: IssueDetail | PullDetail, kind: "issue" | "pull"): string {

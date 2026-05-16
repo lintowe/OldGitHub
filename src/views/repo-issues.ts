@@ -1,6 +1,7 @@
 import { octicon } from "@/icons";
 import { getIssueList, type IssueListView, type IssueRow } from "@/adapters/repo-issues";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-issues";
 
@@ -10,31 +11,16 @@ export async function mountRepoIssues(
   rawQuery: string,
   kind: "issues" | "pulls",
 ): Promise<void> {
-  let view: IssueListView;
-  try {
-    view = await getIssueList(owner, repo, rawQuery, kind);
-  } catch (err) {
-    unmountRepoIssues();
-    throw err;
-  }
-
-  unmountRepoIssues();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = await getIssueList(owner, repo, rawQuery, kind);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view, kind);
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 }
 
 export function unmountRepoIssues(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function renderShell(v: IssueListView, kind: "issues" | "pulls"): string {

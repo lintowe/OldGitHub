@@ -1,4 +1,5 @@
 import { scrapeTopLevel, type TopLevelView } from "@/adapters/top-level";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-top-level";
 
@@ -10,16 +11,7 @@ export async function mountTopLevel(
   search: string,
   titleFallback: string,
 ): Promise<void> {
-  let view: TopLevelView;
-  try {
-    view = await scrapeTopLevel(pathname, search, titleFallback);
-  } catch (err) {
-    unmountTopLevel();
-    throw err;
-  }
-
-  unmountTopLevel();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = await scrapeTopLevel(pathname, search, titleFallback);
 
   const root = document.createElement("div");
   root.className = `${ROOT_CLASS} ${ROOT_CLASS}--${kind}`;
@@ -33,12 +25,11 @@ export async function mountTopLevel(
       </div>
     </div>
   `;
-  document.body.append(root);
+  adoptBodyRoot(root);
 }
 
 export function unmountTopLevel(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function escapeText(s: string): string {

@@ -1,6 +1,7 @@
 import { octicon } from "@/icons";
 import { getRepoCommits, type CommitEntry, type CommitsView, type PersonRef } from "@/adapters/repo-commits";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-commits";
 
@@ -10,31 +11,16 @@ export async function mountRepoCommits(
   refAndPath: string,
   query: string,
 ): Promise<void> {
-  let view: CommitsView;
-  try {
-    view = await getRepoCommits(owner, repo, refAndPath, query);
-  } catch (err) {
-    unmountRepoCommits();
-    throw err;
-  }
-
-  unmountRepoCommits();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = await getRepoCommits(owner, repo, refAndPath, query);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view);
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 }
 
 export function unmountRepoCommits(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function renderShell(v: CommitsView): string {

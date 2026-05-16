@@ -1,35 +1,21 @@
 import { getCommit, type CommitView, type PersonRef } from "@/adapters/repo-commit";
 import { absoluteTime, relativeTime } from "@/util/time";
 import { renderDiffFile, renderDiffSummary } from "./_diff-table";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-commit";
 
 export async function mountRepoCommit(owner: string, repo: string, sha: string): Promise<void> {
-  let view: CommitView;
-  try {
-    view = await getCommit(owner, repo, sha);
-  } catch (err) {
-    unmountRepoCommit();
-    throw err;
-  }
-
-  unmountRepoCommit();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = await getCommit(owner, repo, sha);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view);
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 }
 
 export function unmountRepoCommit(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function renderShell(c: CommitView): string {

@@ -1,4 +1,5 @@
 import { scrapeSection, type ScrapedSection } from "@/adapters/repo-section";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-section";
 
@@ -11,16 +12,7 @@ export async function mountRepoSection(
   subPath: string,
   titleFallback: string,
 ): Promise<void> {
-  let view: ScrapedSection;
-  try {
-    view = await scrapeSection(owner, repo, subPath, { titleFallback });
-  } catch (err) {
-    unmountRepoSection();
-    throw err;
-  }
-
-  unmountRepoSection();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = await scrapeSection(owner, repo, subPath, { titleFallback });
 
   const root = document.createElement("div");
   root.className = `${ROOT_CLASS} ${ROOT_CLASS}--${kind}`;
@@ -34,17 +26,11 @@ export async function mountRepoSection(
       </div>
     </div>
   `;
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 }
 
 export function unmountRepoSection(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function escapeText(s: string): string {

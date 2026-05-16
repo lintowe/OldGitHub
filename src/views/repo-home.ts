@@ -1,30 +1,17 @@
 import { octicon } from "@/icons";
 import { getRepoOverview, type RepoOverview } from "@/adapters/repo-overview";
 import { hydrateTreeTable, renderTreeTable } from "./_tree-table";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-home";
 
 export async function mountRepoHome(owner: string, repo: string): Promise<void> {
-  let overview: RepoOverview;
-  try {
-    overview = await getRepoOverview(owner, repo);
-  } catch (err) {
-    unmountRepoHome();
-    throw err;
-  }
-
-  unmountRepoHome();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const overview = await getRepoOverview(owner, repo);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(overview);
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 
   bindCloneTabs(root);
   bindCopyButtons(root);
@@ -38,8 +25,7 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
 }
 
 export function unmountRepoHome(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function renderShell(o: RepoOverview): string {

@@ -566,7 +566,19 @@ html[data-oldgh-hide-modern-repo-header] .UnderlineNav.js-repo-nav {
 html[data-oldgh-hide-modern-repo-body] react-app[app-name="react-code-view"],
 html[data-oldgh-hide-modern-repo-body] [data-pjax-container] > main,
 html[data-oldgh-hide-modern-repo-body] [data-pjax-container] > .repository-content,
-html[data-oldgh-hide-modern-repo-body] turbo-frame#repo-content-turbo-frame {
+html[data-oldgh-hide-modern-repo-body] turbo-frame#repo-content-turbo-frame,
+html[data-oldgh-hide-modern-repo-body] .application-main {
+  display: none !important;
+}
+
+/* master hide rule — set by dispatcher eagerly to prevent flash during route transitions */
+html[data-oldgh-mounted] .application-main,
+html[data-oldgh-mounted] react-app[app-name="react-code-view"],
+html[data-oldgh-mounted] react-app[app-name="profile"],
+html[data-oldgh-mounted] [data-pjax-container] > main,
+html[data-oldgh-mounted] [data-pjax-container] > .repository-content,
+html[data-oldgh-mounted] turbo-frame#repo-content-turbo-frame,
+html[data-oldgh-mounted] turbo-frame#user-profile-frame-wide {
   display: none !important;
 }
 
@@ -2523,3 +2535,316 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="4"] 
 .oldgh-profile__scraped a { color: var(--gh-link); }
 .oldgh-profile__scraped h2,
 .oldgh-profile__scraped h3 { color: var(--gh-fg); }
+
+/* ─── Dashboard (2013-style news feed) ─────────────────────────── */
+.oldgh-dashboard {
+  max-width: 980px;
+  margin: 20px auto;
+  padding: 0 10px;
+}
+.oldgh-dash__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 20px;
+  align-items: start;
+}
+.oldgh-dash__main {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-dash__feed-head {
+  padding: 10px 14px 0;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-dash__feed-head h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--gh-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.oldgh-dash__feed-tabs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0;
+}
+.oldgh-dash__feed-tabs li {
+  margin: 0;
+  padding: 0;
+}
+.oldgh-dash__feed-tabs a {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+}
+.oldgh-dash__feed-tabs a:hover {
+  color: var(--gh-fg);
+  text-decoration: none;
+}
+.oldgh-dash__feed-tabs li.is-active a {
+  color: var(--gh-fg);
+  border-bottom-color: #e36209;
+  font-weight: bold;
+}
+.oldgh-dash__feed-tabs .octicon {
+  margin-right: 4px;
+}
+
+.oldgh-dash__feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.oldgh-dash__feed-item {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-dash__feed-item:last-child {
+  border-bottom: 0;
+}
+.oldgh-dash__feed-icon {
+  flex: 0 0 26px;
+  color: var(--gh-fg-faint);
+  padding-top: 2px;
+  text-align: center;
+}
+.oldgh-dash__feed-body-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.oldgh-dash__feed-headline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.oldgh-dash__feed-avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.oldgh-dash__feed-text {
+  color: var(--gh-fg);
+  font-size: var(--gh-size-md);
+}
+.oldgh-dash__feed-actor {
+  font-weight: bold;
+  color: var(--gh-link);
+}
+.oldgh-dash__feed-time {
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-faint);
+  margin-left: auto;
+}
+.oldgh-dash__feed-title {
+  margin: 6px 0 0;
+  font-size: var(--gh-size-lg);
+  font-weight: bold;
+}
+.oldgh-dash__feed-title a {
+  color: var(--gh-fg);
+}
+.oldgh-dash__feed-title a:hover {
+  color: var(--gh-link);
+  text-decoration: underline;
+}
+.oldgh-dash__feed-body {
+  margin: 4px 0 0;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.oldgh-dash__repo-cards {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.oldgh-dash__repo-card {
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 8px 10px;
+  background: var(--gh-bg-subtle);
+}
+.oldgh-dash__repo-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.oldgh-dash__repo-card-slug {
+  font-weight: bold;
+  font-size: var(--gh-size-md);
+}
+.oldgh-dash__repo-card-stars {
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-faint);
+}
+.oldgh-dash__repo-card-desc {
+  margin-top: 4px;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+  line-height: 1.4;
+}
+.oldgh-dash__repo-card-lang {
+  margin-top: 4px;
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-faint);
+}
+
+/* right rail */
+.oldgh-dash__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.oldgh-dash__box {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  overflow: hidden;
+}
+.oldgh-dash__box-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+}
+.oldgh-dash__box-head h3 {
+  margin: 0;
+  font-size: var(--gh-size-md);
+  font-weight: bold;
+  color: var(--gh-fg);
+}
+.oldgh-dash__repo-filter {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  background: var(--gh-bg-subtle);
+}
+.oldgh-dash__repo-filter-input {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: var(--gh-size-sm);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  background: var(--gh-bg-elev);
+  color: var(--gh-fg);
+  box-sizing: border-box;
+}
+.oldgh-dash__repo-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.oldgh-dash__repo-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: var(--gh-size-md);
+}
+.oldgh-dash__repo-row .octicon {
+  color: var(--gh-fg-faint);
+  flex-shrink: 0;
+}
+.oldgh-dash__repo-row a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oldgh-dash__broadcast .oldgh-dash__box-head {
+  background: linear-gradient(to bottom, #fff5b1, #fde994);
+  border-bottom-color: #e6c200;
+  color: #735c0f;
+}
+.oldgh-dash__broadcast .oldgh-dash__box-head h3 {
+  color: #735c0f;
+}
+.oldgh-dash__broadcast-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+}
+.oldgh-dash__broadcast-list li {
+  padding: 4px 12px;
+  font-size: var(--gh-size-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.oldgh-dash__broadcast-list a {
+  color: var(--gh-link);
+  line-height: 1.3;
+}
+.oldgh-dash__broadcast-date {
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-faint);
+}
+
+.oldgh-dash__protip {
+  padding: 10px 12px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+  line-height: 1.5;
+}
+.oldgh-dash__protip strong {
+  color: var(--gh-fg);
+}
+.oldgh-dash__protip kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  margin: 0 1px;
+  font-family: var(--gh-font-mono);
+  font-size: 11px;
+  border: 1px solid var(--gh-border);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  background: var(--gh-bg-subtle);
+  color: var(--gh-fg);
+}
+
+.oldgh-dash__empty,
+.oldgh-dash__empty-row {
+  padding: 24px 14px;
+  color: var(--gh-fg-faint);
+  font-size: var(--gh-size-md);
+  text-align: center;
+}
+.oldgh-dash__empty-row {
+  padding: 12px;
+}
+
+[data-oldgh-theme="dark"] .oldgh-dash__broadcast .oldgh-dash__box-head {
+  background: linear-gradient(to bottom, #5a4a14, #443710);
+  border-bottom-color: #7a6520;
+  color: #f5e6a8;
+}
+[data-oldgh-theme="dark"] .oldgh-dash__broadcast .oldgh-dash__box-head h3 {
+  color: #f5e6a8;
+}

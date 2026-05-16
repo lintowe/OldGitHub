@@ -12,8 +12,12 @@ import { mountRepoWiki, unmountRepoWiki } from "@/views/repo-wiki";
 import { mountRepoActions, unmountRepoActions } from "@/views/repo-actions";
 import { mountRepoSection, unmountRepoSection } from "@/views/repo-section";
 import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-level";
+import { mountDashboard, unmountDashboard } from "@/views/dashboard";
 import { mountProfile, unmountProfile } from "@/views/profile";
+import { removeAllBodyRoots } from "@/views/_body";
 import { resolveRoute, type Route } from "./resolve";
+
+const MOUNTED_ATTR = "data-oldgh-mounted";
 
 type RepoKey = { owner: string; repo: string };
 
@@ -46,10 +50,16 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 
   void chrome.runtime.sendMessage({ type: "oldgh:route-change", pathname, search });
 
+  const willMount = route.kind !== "out-of-scope" && route.kind !== "todo";
+  if (willMount) {
+    document.documentElement.setAttribute(MOUNTED_ATTR, route.kind);
+  }
+
   try {
     if (route.kind === "out-of-scope") {
       await applyBodyState({ kind: "none" });
       teardownRepoHeader();
+      clearMounted();
       return;
     }
 
@@ -89,15 +99,22 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 
     await applyBodyState({ kind: "none" });
     teardownRepoHeader();
+    clearMounted();
   } catch (err) {
     if (err instanceof AdapterFailure) {
       console.debug("[oldgh] dispatch adapter failure:", err.name, err.message);
       await applyBodyState({ kind: "none" });
       teardownRepoHeader();
+      clearMounted();
       return;
     }
     throw err;
   }
+}
+
+function clearMounted(): void {
+  document.documentElement.removeAttribute(MOUNTED_ATTR);
+  removeAllBodyRoots();
 }
 
 function targetBodyForRoute(route: Route): BodyState {
@@ -136,7 +153,11 @@ function teardownRepoHeader(): void {
 
 async function applyBodyState(target: BodyState): Promise<void> {
   if (sameBody(bodyState, target)) return;
-  unmountBody();
+  if (target.kind === "none") {
+    unmountBody();
+    bodyState = { kind: "none" };
+    return;
+  }
   bodyState = { kind: "none" };
   if (target.kind === "home") {
     await mountRepoHome(target.owner, target.repo);
@@ -222,7 +243,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "top-level") {
-    await mountTopLevel(target.subkind, target.pathname, target.search, target.title);
+    if (target.subkind === "dashboard") {
+      await mountDashboard();
+    } else {
+      await mountTopLevel(target.subkind, target.pathname, target.search, target.title);
+    }
     bodyState = target;
     return;
   }
@@ -294,6 +319,7 @@ function unmountBody(): void {
   unmountRepoActions();
   unmountRepoSection();
   unmountTopLevel();
+  unmountDashboard();
   unmountProfile();
 }
 

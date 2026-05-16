@@ -1,35 +1,21 @@
 import { octicon } from "@/icons";
 import { getActions, type ActionsView, type WorkflowRun } from "@/adapters/repo-actions";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-actions";
 
 export async function mountRepoActions(owner: string, repo: string, query: string): Promise<void> {
-  let view: ActionsView;
-  try {
-    view = await getActions(owner, repo, query);
-  } catch (err) {
-    unmountRepoActions();
-    throw err;
-  }
-
-  unmountRepoActions();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = await getActions(owner, repo, query);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view);
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 }
 
 export function unmountRepoActions(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function renderShell(v: ActionsView): string {

@@ -1,34 +1,20 @@
 import { octicon } from "@/icons";
 import { getWiki, type WikiView } from "@/adapters/repo-wiki";
+import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-wiki";
 
 export async function mountRepoWiki(owner: string, repo: string, page: string): Promise<void> {
-  let view: WikiView;
-  try {
-    view = await getWiki(owner, repo, page);
-  } catch (err) {
-    unmountRepoWiki();
-    throw err;
-  }
-
-  unmountRepoWiki();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-body", "");
+  const view = await getWiki(owner, repo, page);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view);
-  const after = document.querySelector(".oldgh-repo-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.append(root);
-  }
+  adoptBodyRoot(root, ".oldgh-repo-header");
 }
 
 export function unmountRepoWiki(): void {
-  document.querySelectorAll(`.${ROOT_CLASS}`).forEach((el) => el.remove());
-  document.documentElement.removeAttribute("data-oldgh-hide-modern-repo-body");
+  removeAllBodyRoots();
 }
 
 function renderShell(v: WikiView): string {
