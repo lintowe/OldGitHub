@@ -84,7 +84,10 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
     if (!resp.ok) throw new Error(`status ${resp.status}`);
     const html = await resp.text();
     const doc = new DOMParser().parseFromString(html, "text/html");
-    const frame = doc.querySelector("turbo-frame#user-profile-frame, #user-profile-frame, [data-turbo-frame]");
+    const frame =
+      doc.querySelector("turbo-frame#user-profile-frame") ||
+      doc.querySelector("turbo-frame[id*='profile']") ||
+      doc.querySelector("turbo-frame[id]");
     if (!frame) {
       container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load this tab.</p>`;
       return;
