@@ -39,6 +39,8 @@ export async function mountProfile(login: string, tab: string, query: string): P
 
   if (tab === "repositories") {
     void hydrateRepos(root, login, query);
+  } else if (tab !== "overview") {
+    void hydrateScrapedTab(root, login, tab, query);
   }
 }
 
@@ -74,6 +76,9 @@ function renderTabBody(v: ProfileView, tab: string): string {
   if (tab === "repositories") {
     return `<div class="oldgh-profile__repos" data-state="loading">${renderReposLoading()}</div>`;
   }
+  if (tab !== "overview") {
+    return `<div class="oldgh-profile__scraped" data-state="loading"><p class="oldgh-profile__muted">Loading&hellip;</p></div>`;
+  }
   return `
     ${v.pinned.length > 0 ? renderPinned(v) : ""}
     ${renderContributions(v)}
@@ -82,6 +87,32 @@ function renderTabBody(v: ProfileView, tab: string): string {
 
 function renderReposLoading(): string {
   return `<p class="oldgh-profile__muted">Loading repositories&hellip;</p>`;
+}
+
+async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, query: string): Promise<void> {
+  const container = root.querySelector<HTMLElement>(".oldgh-profile__scraped");
+  if (!container) return;
+  const url = `https://github.com/${encodeURIComponent(login)}?tab=${encodeURIComponent(tab)}${query && !/^tab=/.test(query) ? "&" + query.replace(/^tab=[^&]*&?/, "") : ""}`;
+  try {
+    const resp = await fetch(url, { credentials: "include", headers: { Accept: "text/html" } });
+    if (!resp.ok) throw new Error(`status ${resp.status}`);
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const frame = doc.querySelector("turbo-frame#user-profile-frame, #user-profile-frame, [data-turbo-frame]");
+    if (!frame) {
+      container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load this tab.</p>`;
+      return;
+    }
+    for (const node of Array.from(frame.querySelectorAll("script, style"))) node.remove();
+    for (const node of Array.from(frame.querySelectorAll<HTMLElement>("*"))) {
+      for (const attr of Array.from(node.attributes)) {
+        if (/^on/i.test(attr.name)) node.removeAttribute(attr.name);
+      }
+    }
+    container.innerHTML = frame.innerHTML;
+  } catch {
+    container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load this tab.</p>`;
+  }
 }
 
 async function hydrateRepos(root: HTMLElement, login: string, query: string): Promise<void> {

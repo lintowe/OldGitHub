@@ -2487,3 +2487,39 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td[data-level="4"] 
 .oldgh-section__content h2,
 .oldgh-section__content h3,
 .oldgh-section__content h4 { color: var(--gh-fg); }
+
+/* ===== top-level scraped pages ===== */
+.oldgh-top-level {
+  margin-top: 16px;
+}
+.oldgh-top-level .oldgh-section__content .Box,
+.oldgh-top-level .oldgh-section__content .Box-row {
+  background: var(--gh-bg-elev);
+  border-color: var(--gh-border);
+  color: var(--gh-fg);
+}
+.oldgh-top-level .oldgh-section__content article {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  margin-bottom: 12px;
+  padding: 12px;
+}
+
+/* profile scraped tab */
+.oldgh-profile__scraped {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 16px;
+  min-height: 100px;
+}
+.oldgh-profile__scraped .Box,
+.oldgh-profile__scraped .Box-row {
+  background: var(--gh-bg-elev);
+  border-color: var(--gh-border);
+  color: var(--gh-fg);
+}
+.oldgh-profile__scraped a { color: var(--gh-link); }
+.oldgh-profile__scraped h2,
+.oldgh-profile__scraped h3 { color: var(--gh-fg); }

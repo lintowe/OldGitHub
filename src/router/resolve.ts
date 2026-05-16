@@ -16,6 +16,7 @@ export type Route =
   | { kind: "repo-security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
+  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching"; pathname: string; search: string; title: string }
   | { kind: "todo"; name: string };
 
 export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring";
@@ -81,10 +82,13 @@ export function resolveRoute(pathname: string, search: string): Route {
 
   const segs = pathname.split("/").filter(Boolean);
   if (segs.length === 0) {
-    return { kind: "todo", name: "dashboard" };
+    return { kind: "top-level", subkind: "dashboard", pathname, search, title: "Dashboard" };
   }
 
   const first = segs[0]!;
+  const topLevel = matchTopLevel(first, pathname, search);
+  if (topLevel) return topLevel;
+
   if (TOP_LEVEL_NON_REPO.has(first)) {
     return { kind: "todo", name: pathname };
   }
@@ -192,14 +196,29 @@ export function isCovered(pathname: string): boolean {
   return COVERED_REPO_KINDS.has(route.kind) || route.kind === "profile";
 }
 
-const COVERED_PROFILE_TABS = new Set<ProfileTab>(["overview", "repositories"]);
+const COVERED_PROFILE_TABS = new Set<ProfileTab>(["overview", "repositories", "stars", "followers", "following", "achievements", "projects", "packages", "sponsoring"]);
 
 export function isFullyCoveredUrl(pathname: string, search: string): boolean {
   const route = resolveRoute(pathname, search);
   if (route.kind === "profile") {
     return COVERED_PROFILE_TABS.has(route.tab);
   }
+  if (route.kind === "top-level") return true;
   return COVERED_REPO_KINDS.has(route.kind);
+}
+
+function matchTopLevel(first: string, pathname: string, search: string): Route | null {
+  switch (first) {
+    case "notifications": return { kind: "top-level", subkind: "notifications", pathname, search, title: "Notifications" };
+    case "search": return { kind: "top-level", subkind: "search", pathname, search, title: "Search" };
+    case "issues": return { kind: "top-level", subkind: "issues", pathname, search, title: "Your issues" };
+    case "pulls": return { kind: "top-level", subkind: "pulls", pathname, search, title: "Your pull requests" };
+    case "stars": return { kind: "top-level", subkind: "stars", pathname, search, title: "Your stars" };
+    case "explore": return { kind: "top-level", subkind: "explore", pathname, search, title: "Explore" };
+    case "trending": return { kind: "top-level", subkind: "trending", pathname, search, title: "Trending" };
+    case "watching": return { kind: "top-level", subkind: "watching", pathname, search, title: "Watching" };
+    default: return null;
+  }
 }
 
 function parseProfileTab(search: string): ProfileTab {

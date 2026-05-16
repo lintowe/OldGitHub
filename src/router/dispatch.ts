@@ -11,6 +11,7 @@ import { mountRepoIssue, unmountRepoIssue } from "@/views/repo-issue";
 import { mountRepoWiki, unmountRepoWiki } from "@/views/repo-wiki";
 import { mountRepoActions, unmountRepoActions } from "@/views/repo-actions";
 import { mountRepoSection, unmountRepoSection } from "@/views/repo-section";
+import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-level";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { resolveRoute, type Route } from "./resolve";
 
@@ -32,6 +33,7 @@ type BodyState =
   | { kind: "graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
   | { kind: "projects"; owner: string; repo: string; query: string }
   | { kind: "security"; owner: string; repo: string; subkind: "overview" | "advisories" }
+  | { kind: "top-level"; subkind: TopLevelKind; pathname: string; search: string; title: string }
   | { kind: "profile"; login: string; tab: string; query: string };
 
 let mountedRepo: RepoKey | null = null;
@@ -76,6 +78,12 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     if (route.kind === "profile") {
       teardownRepoHeader();
       await applyBodyState({ kind: "profile", login: route.login, tab: route.tab, query: route.query });
+      return;
+    }
+
+    if (route.kind === "top-level") {
+      teardownRepoHeader();
+      await applyBodyState({ kind: "top-level", subkind: route.subkind, pathname: route.pathname, search: route.search, title: route.title });
       return;
     }
 
@@ -213,6 +221,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "top-level") {
+    await mountTopLevel(target.subkind, target.pathname, target.search, target.title);
+    bodyState = target;
+    return;
+  }
 }
 
 function sameBody(a: BodyState, b: BodyState): boolean {
@@ -262,6 +275,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "profile" && b.kind === "profile") {
     return a.login === b.login && a.tab === b.tab && a.query === b.query;
   }
+  if (a.kind === "top-level" && b.kind === "top-level") {
+    return a.subkind === b.subkind && a.pathname === b.pathname && a.search === b.search;
+  }
   return a.kind === "none" && b.kind === "none";
 }
 
@@ -277,6 +293,7 @@ function unmountBody(): void {
   unmountRepoWiki();
   unmountRepoActions();
   unmountRepoSection();
+  unmountTopLevel();
   unmountProfile();
 }
 
