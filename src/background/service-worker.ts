@@ -113,17 +113,27 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   void disableForTab(tabId);
 });
 
-chrome.runtime.onMessage.addListener((msg, sender) => {
-  if (!msg || typeof msg !== "object") return;
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!msg || typeof msg !== "object") return undefined;
   const m = msg as { type?: unknown; pathname?: unknown; search?: unknown };
-  if (m.type !== "oldgh:route-change") return;
   const tabId = sender.tab?.id;
-  if (typeof tabId !== "number") return;
-  if (typeof m.pathname !== "string") return;
-  const search = typeof m.search === "string" ? m.search : "";
-  if (isFullyCoveredUrl(m.pathname, search)) {
-    void enableForTab(tabId);
-  } else {
-    void disableForTab(tabId);
+  if (typeof tabId !== "number") return undefined;
+
+  if (m.type === "oldgh:route-change") {
+    if (typeof m.pathname !== "string") return undefined;
+    const search = typeof m.search === "string" ? m.search : "";
+    if (isFullyCoveredUrl(m.pathname, search)) {
+      void enableForTab(tabId);
+    } else {
+      void disableForTab(tabId);
+    }
+    return undefined;
   }
+
+  if (m.type === "oldgh:pre-navigate-uncovered") {
+    disableForTab(tabId).finally(() => sendResponse({ ok: true }));
+    return true;
+  }
+
+  return undefined;
 });

@@ -56,9 +56,18 @@ function interceptClicks(): void {
 
       const search = url.search.startsWith("?") ? url.search.slice(1) : url.search;
       if (!isFullyCoveredUrl(url.pathname, search)) {
-        // not a fully-rebuilt route — let the browser do a full nav so modern
-        // GH can render its own body; our content script will re-mount the
-        // header on the new page load.
+        const currentSearch = window.location.search.startsWith("?")
+          ? window.location.search.slice(1)
+          : window.location.search;
+        if (isFullyCoveredUrl(window.location.pathname, currentSearch)) {
+          e.preventDefault();
+          void chrome.runtime
+            .sendMessage({ type: "oldgh:pre-navigate-uncovered" })
+            .catch(() => undefined)
+            .finally(() => {
+              window.location.assign(url.toString());
+            });
+        }
         return;
       }
 
