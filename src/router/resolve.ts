@@ -7,6 +7,13 @@ export type Route =
   | { kind: "repo-commit"; owner: string; repo: string; sha: string }
   | { kind: "repo-compare"; owner: string; repo: string; range: string }
   | { kind: "repo-issues"; owner: string; repo: string; query: string; subkind: "issues" | "pulls" }
+  | { kind: "repo-issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull" }
+  | { kind: "repo-wiki"; owner: string; repo: string; page: string }
+  | { kind: "repo-actions"; owner: string; repo: string; query: string }
+  | { kind: "repo-pulse"; owner: string; repo: string }
+  | { kind: "repo-graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
+  | { kind: "repo-projects"; owner: string; repo: string; query: string }
+  | { kind: "repo-security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
   | { kind: "todo"; name: string };
@@ -124,21 +131,59 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-issues", owner, repo, query: search, subkind: "pulls" };
   }
 
+  if ((segs[2] === "issues" || segs[2] === "pull") && segs.length >= 4) {
+    const num = parseInt(segs[3]!, 10);
+    if (!Number.isNaN(num)) {
+      return { kind: "repo-issue", owner, repo, number: num, subkind: segs[2] === "pull" ? "pull" : "issue" };
+    }
+  }
+
+  if (segs[2] === "wiki") {
+    const page = segs.slice(3).join("/") || "Home";
+    return { kind: "repo-wiki", owner, repo, page };
+  }
+
+  if (segs[2] === "actions") {
+    return { kind: "repo-actions", owner, repo, query: search };
+  }
+
+  if (segs[2] === "pulse") {
+    return { kind: "repo-pulse", owner, repo };
+  }
+
+  if (segs[2] === "graphs" && segs.length >= 4) {
+    const sub = segs[3]!;
+    if (sub === "contributors" || sub === "commit-activity" || sub === "code-frequency" || sub === "traffic") {
+      return { kind: "repo-graphs", owner, repo, subkind: sub };
+    }
+  }
+
+  if (segs[2] === "projects") {
+    return { kind: "repo-projects", owner, repo, query: search };
+  }
+
+  if (segs[2] === "security") {
+    const sub = segs[3];
+    return { kind: "repo-security", owner, repo, subkind: sub === "advisories" ? "advisories" : "overview" };
+  }
+
   return { kind: "repo-other", owner, repo };
 }
 
+const COVERED_REPO_KINDS = new Set<Route["kind"]>([
+  "repo-home",
+  "repo-tree",
+  "repo-blob",
+  "repo-commits",
+  "repo-commit",
+  "repo-compare",
+  "repo-issues",
+  "repo-issue",
+]);
+
 export function isCovered(pathname: string): boolean {
   const route = resolveRoute(pathname, "");
-  return (
-    route.kind === "repo-home" ||
-    route.kind === "repo-tree" ||
-    route.kind === "repo-blob" ||
-    route.kind === "repo-commits" ||
-    route.kind === "repo-commit" ||
-    route.kind === "repo-compare" ||
-    route.kind === "repo-issues" ||
-    route.kind === "profile"
-  );
+  return COVERED_REPO_KINDS.has(route.kind) || route.kind === "profile";
 }
 
 const COVERED_PROFILE_TABS = new Set<ProfileTab>(["overview", "repositories"]);
@@ -148,15 +193,7 @@ export function isFullyCoveredUrl(pathname: string, search: string): boolean {
   if (route.kind === "profile") {
     return COVERED_PROFILE_TABS.has(route.tab);
   }
-  return (
-    route.kind === "repo-home" ||
-    route.kind === "repo-tree" ||
-    route.kind === "repo-blob" ||
-    route.kind === "repo-commits" ||
-    route.kind === "repo-commit" ||
-    route.kind === "repo-compare" ||
-    route.kind === "repo-issues"
-  );
+  return COVERED_REPO_KINDS.has(route.kind);
 }
 
 function parseProfileTab(search: string): ProfileTab {
