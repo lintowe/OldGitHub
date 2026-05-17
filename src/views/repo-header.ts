@@ -19,6 +19,21 @@ type TabKey = (typeof TABS)[number]["key"];
 const ROOT_CLASS = "oldgh-repo-header";
 
 export async function mountRepoHeader(owner: string, repo: string): Promise<void> {
+  unmountRepoHeader();
+  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-header", "");
+
+  const skeleton = document.createElement("div");
+  skeleton.className = `${ROOT_CLASS} ${ROOT_CLASS}--skeleton`;
+  skeleton.dataset.oldghOwner = owner;
+  skeleton.dataset.oldghRepo = repo;
+  skeleton.setAttribute("aria-hidden", "true");
+  const after = document.querySelector(".oldgh-header");
+  if (after && after.parentNode) {
+    after.after(skeleton);
+  } else {
+    document.body.prepend(skeleton);
+  }
+
   let summary: RepoSummary;
   try {
     summary = await getRepoSummary(owner, repo);
@@ -27,21 +42,8 @@ export async function mountRepoHeader(owner: string, repo: string): Promise<void
     throw err;
   }
 
-  unmountRepoHeader();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-header", "");
-
-  const root = document.createElement("div");
-  root.className = ROOT_CLASS;
-  root.dataset.oldghOwner = owner;
-  root.dataset.oldghRepo = repo;
-  root.innerHTML = renderRepoHeaderHtml(summary, currentTabKey(owner, repo, window.location.pathname));
-
-  const after = document.querySelector(".oldgh-header");
-  if (after && after.parentNode) {
-    after.after(root);
-  } else {
-    document.body.prepend(root);
-  }
+  skeleton.classList.remove(`${ROOT_CLASS}--skeleton`);
+  skeleton.innerHTML = renderRepoHeaderHtml(summary, currentTabKey(owner, repo, window.location.pathname));
 }
 
 export function unmountRepoHeader(): void {

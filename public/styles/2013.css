@@ -5783,4 +5783,16 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   transition: width 180ms ease-out, opacity 220ms ease-out 80ms;
 }
 
+/* placeholder body root during async dispatch — keeps the page from
+   showing GitHub's native content in the gap between routes */
+.oldgh-body-placeholder {
+  min-height: 60vh;
+  background: var(--gh-bg);
+}
+.oldgh-repo-header--skeleton {
+  height: 102px;
+  background: linear-gradient(180deg, #fafbfc 0%, #f1f4f6 100%);
+  border-bottom: 1px solid var(--gh-border);
+}
+
 

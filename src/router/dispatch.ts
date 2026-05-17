@@ -60,6 +60,19 @@ let bodyState: BodyState = { kind: "none" };
 let progressBarEl: HTMLElement | null = null;
 let progressTimer: number | null = null;
 
+function insertBodyPlaceholder(): void {
+  if (document.querySelector(".oldgh-body-placeholder")) return;
+  const el = document.createElement("div");
+  el.className = "oldgh-body-placeholder oldgh-body-root";
+  el.setAttribute("aria-hidden", "true");
+  const after = document.querySelector(".oldgh-repo-header") || document.querySelector(".oldgh-header");
+  if (after && after.parentNode) {
+    after.after(el);
+  } else {
+    document.body.append(el);
+  }
+}
+
 function showProgress(): void {
   if (!progressBarEl) {
     progressBarEl = document.createElement("div");
@@ -125,20 +138,38 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       route.kind === "repo-discussion" ||
       route.kind === "repo-other"
     ) {
+      const target = targetBodyForRoute(route);
+      if (!sameBody(bodyState, target)) {
+        bodyState = { kind: "none" };
+        removeAllBodyRoots();
+        insertBodyPlaceholder();
+      }
       await ensureRepoHeader(route.owner, route.repo, pathname);
-      await applyBodyState(targetBodyForRoute(route));
+      await applyBodyState(target);
       return;
     }
 
     if (route.kind === "profile") {
+      const target: BodyState = { kind: "profile", login: route.login, tab: route.tab, query: route.query };
+      if (!sameBody(bodyState, target)) {
+        bodyState = { kind: "none" };
+        removeAllBodyRoots();
+        insertBodyPlaceholder();
+      }
       teardownRepoHeader();
-      await applyBodyState({ kind: "profile", login: route.login, tab: route.tab, query: route.query });
+      await applyBodyState(target);
       return;
     }
 
     if (route.kind === "top-level") {
+      const target: BodyState = { kind: "top-level", subkind: route.subkind, pathname: route.pathname, search: route.search, title: route.title };
+      if (!sameBody(bodyState, target)) {
+        bodyState = { kind: "none" };
+        removeAllBodyRoots();
+        insertBodyPlaceholder();
+      }
       teardownRepoHeader();
-      await applyBodyState({ kind: "top-level", subkind: route.subkind, pathname: route.pathname, search: route.search, title: route.title });
+      await applyBodyState(target);
       return;
     }
 
@@ -231,6 +262,8 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   bodyState = { kind: "none" };
+  removeAllBodyRoots();
+  insertBodyPlaceholder();
   if (target.kind === "home") {
     await mountRepoHome(target.owner, target.repo);
     bodyState = target;
