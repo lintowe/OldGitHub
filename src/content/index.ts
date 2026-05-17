@@ -2,6 +2,7 @@ import { killTurbo, mountRouter } from "@/router";
 import { isLoggedIn } from "@/auth/session";
 import { applyTheme, watchThemeChanges } from "@/theme";
 import { mountHeader } from "@/views/header";
+import { mountHovercards } from "@/views/hovercards";
 
 async function boot(): Promise<void> {
   if (document.readyState === "loading") {
@@ -29,6 +30,7 @@ async function run(): Promise<void> {
   watchThemeChanges();
   console.debug("[oldgh] mounting header + router");
   await mountHeader();
+  mountHovercards();
   mountRouter();
 }
 
