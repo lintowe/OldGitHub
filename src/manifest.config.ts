@@ -34,6 +34,7 @@ export const manifest: chrome.runtime.ManifestV3 = {
   host_permissions: [
     "https://github.com/*",
     "https://*.githubusercontent.com/*",
+    "http://localhost:7878/*",
   ],
 
   web_accessible_resources: [

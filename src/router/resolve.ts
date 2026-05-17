@@ -16,14 +16,13 @@ export type Route =
   | { kind: "repo-security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
-  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching"; pathname: string; search: string; title: string }
+  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings"; pathname: string; search: string; title: string }
   | { kind: "todo"; name: string };
 
 export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring";
 
 const OUT_OF_SCOPE_PREFIXES = [
   "/codespaces",
-  "/marketplace",
   "/sponsors",
   "/enterprises",
 ];
@@ -217,6 +216,8 @@ function matchTopLevel(first: string, pathname: string, search: string): Route |
     case "explore": return { kind: "top-level", subkind: "explore", pathname, search, title: "Explore" };
     case "trending": return { kind: "top-level", subkind: "trending", pathname, search, title: "Trending" };
     case "watching": return { kind: "top-level", subkind: "watching", pathname, search, title: "Watching" };
+    case "marketplace": return { kind: "top-level", subkind: "marketplace", pathname, search, title: "Marketplace" };
+    case "settings": return { kind: "top-level", subkind: "settings", pathname, search, title: "Settings" };
     default: return null;
   }
 }

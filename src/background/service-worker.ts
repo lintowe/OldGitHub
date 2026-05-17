@@ -113,6 +113,42 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   void disableForTab(tabId);
 });
 
+// dev auto-reload: poll the dev server build-stamp; reload extension when it changes.
+// silently no-ops in production (no server listening).
+{
+  const DEV_URL = "http://localhost:7878/build-id";
+  let lastStamp: string | null = null;
+  let consecutiveErrors = 0;
+  const tick = async (): Promise<void> => {
+    try {
+      const resp = await fetch(DEV_URL, { cache: "no-store" });
+      if (!resp.ok) {
+        consecutiveErrors++;
+        return;
+      }
+      consecutiveErrors = 0;
+      const stamp = (await resp.text()).trim();
+      if (lastStamp !== null && stamp && stamp !== lastStamp) {
+        console.info("[oldgh] dev rebuild detected, reloading extension");
+        chrome.runtime.reload();
+        return;
+      }
+      lastStamp = stamp;
+    } catch {
+      consecutiveErrors++;
+    }
+  };
+  // poll faster while connected, slow down after server stops responding
+  const fast = setInterval(() => {
+    void tick().then(() => {
+      if (consecutiveErrors > 5) {
+        clearInterval(fast);
+        setInterval(tick, 10_000);
+      }
+    });
+  }, 1_000);
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || typeof msg !== "object") return undefined;
   const m = msg as { type?: unknown; pathname?: unknown; search?: unknown };

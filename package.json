@@ -10,7 +10,9 @@
     "prebuild": "npm run build:icons",
     "predev": "npm run build:icons",
     "pretypecheck": "npm run build:icons",
-    "dev": "vite build --watch --mode development",
+    "dev": "node scripts/run-dev.mjs",
+    "dev:build": "vite build --watch --mode development",
+    "dev:reload": "node scripts/dev-reload.mjs",
     "build": "vite build",
     "typecheck": "tsc --noEmit"
   },

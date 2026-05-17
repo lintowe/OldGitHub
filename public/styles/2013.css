@@ -578,7 +578,10 @@ html[data-oldgh-mounted] react-app[app-name="profile"],
 html[data-oldgh-mounted] [data-pjax-container] > main,
 html[data-oldgh-mounted] [data-pjax-container] > .repository-content,
 html[data-oldgh-mounted] turbo-frame#repo-content-turbo-frame,
-html[data-oldgh-mounted] turbo-frame#user-profile-frame-wide {
+html[data-oldgh-mounted] turbo-frame#user-profile-frame-wide,
+html[data-oldgh-mounted] body > .logged-in > footer.footer,
+html[data-oldgh-mounted] body > footer.footer,
+html[data-oldgh-mounted] body > .logged-out > footer.footer {
   display: none !important;
 }
 

@@ -43,8 +43,20 @@ export async function scrapeTopLevel(
   }
   cleanScraped(main);
 
-  const title = doc.querySelector("h1.h2, h1.h3, h1")?.textContent?.trim() || titleFallback;
+  const title = pickTitle(doc, titleFallback);
   return { title, contentHtml: main.innerHTML, sourceUrl };
+}
+
+function pickTitle(doc: Document, fallback: string): string {
+  const candidates = doc.querySelectorAll<HTMLElement>("h1.h2, h1.h3, h1");
+  for (const h of Array.from(candidates)) {
+    if (h.classList.contains("sr-only")) continue;
+    if (h.getAttribute("aria-hidden") === "true") continue;
+    if (h.closest("dialog, modal-dialog, .Overlay--hidden, [hidden]")) continue;
+    const txt = h.textContent?.trim();
+    if (txt) return txt;
+  }
+  return fallback;
 }
 
 function cleanScraped(el: Element): void {
