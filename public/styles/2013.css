@@ -173,19 +173,6 @@ html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"] {
   color: var(--gh-header-fg);
   text-decoration: none;
 }
-html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"] {
-  font-weight: bold;
-  position: relative;
-}
-html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -19px;
-  height: 3px;
-  background: #4183c4;
-}
 
 /* button — 2013 gradient pill */
 .oldgh-btn {
@@ -2615,6 +2602,11 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   flex-shrink: 0;
   margin-top: 2px;
   color: #fff;
+  overflow: hidden;
+}
+.oldgh-actions__run-status svg {
+  width: 11px !important;
+  height: 11px !important;
 }
 .oldgh-actions__run-status--success { background: var(--gh-state-open); }
 .oldgh-actions__run-status--failure { background: var(--gh-state-closed); }
@@ -5343,6 +5335,11 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   height: 16px;
   border-radius: 50%;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.oldgh-actions-run__status svg {
+  width: 10px !important;
+  height: 10px !important;
 }
 .oldgh-actions-run__status--success {
   color: #ffffff;
