@@ -10,6 +10,7 @@ export type Route =
   | { kind: "repo-issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull"; tab: "conversation" | "files" | "commits" | "checks" }
   | { kind: "repo-wiki"; owner: string; repo: string; page: string }
   | { kind: "repo-actions"; owner: string; repo: string; query: string }
+  | { kind: "repo-actions-run"; owner: string; repo: string; runId: string }
   | { kind: "repo-pulse"; owner: string; repo: string }
   | { kind: "repo-graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
   | { kind: "repo-projects"; owner: string; repo: string; query: string }
@@ -162,6 +163,12 @@ export function resolveRoute(pathname: string, search: string): Route {
   }
 
   if (segs[2] === "actions") {
+    if (segs[3] === "runs" && segs.length >= 5) {
+      const id = segs[4]!;
+      if (/^\d+$/.test(id)) {
+        return { kind: "repo-actions-run", owner, repo, runId: id };
+      }
+    }
     return { kind: "repo-actions", owner, repo, query: search };
   }
 
@@ -212,6 +219,7 @@ const COVERED_REPO_KINDS = new Set<Route["kind"]>([
   "repo-discussion",
   "repo-wiki",
   "repo-actions",
+  "repo-actions-run",
   "repo-pulse",
   "repo-graphs",
   "repo-projects",
