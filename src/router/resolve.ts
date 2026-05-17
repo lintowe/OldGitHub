@@ -9,7 +9,7 @@ export type Route =
   | { kind: "repo-issues"; owner: string; repo: string; query: string; subkind: "issues" | "pulls" }
   | { kind: "repo-issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull"; tab: "conversation" | "files" | "commits" | "checks" }
   | { kind: "repo-wiki"; owner: string; repo: string; page: string }
-  | { kind: "repo-actions"; owner: string; repo: string; query: string }
+  | { kind: "repo-actions"; owner: string; repo: string; query: string; workflowPath?: string }
   | { kind: "repo-actions-run"; owner: string; repo: string; runId: string }
   | { kind: "repo-pulse"; owner: string; repo: string }
   | { kind: "repo-graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
@@ -168,6 +168,10 @@ export function resolveRoute(pathname: string, search: string): Route {
       if (/^\d+$/.test(id)) {
         return { kind: "repo-actions-run", owner, repo, runId: id };
       }
+    }
+    if (segs[3] === "workflows" && segs.length >= 5) {
+      const workflowPath = segs.slice(4).join("/");
+      return { kind: "repo-actions", owner, repo, query: search, workflowPath };
     }
     return { kind: "repo-actions", owner, repo, query: search };
   }

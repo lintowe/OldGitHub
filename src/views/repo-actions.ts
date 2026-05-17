@@ -5,8 +5,8 @@ import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-actions";
 
-export async function mountRepoActions(owner: string, repo: string, query: string): Promise<void> {
-  const view = await getActions(owner, repo, query);
+export async function mountRepoActions(owner: string, repo: string, query: string, workflowPath: string | null = null): Promise<void> {
+  const view = await getActions(owner, repo, query, workflowPath);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
@@ -25,15 +25,23 @@ function renderShell(v: ActionsView): string {
         <aside class="oldgh-actions__sidebar">
           <h3>${octicon("github-action", { size: 12 })} Workflows</h3>
           <ul class="oldgh-actions__workflows">
-            <li><a href="/${escapeAttr(v.owner)}/${escapeAttr(v.repo)}/actions" class="oldgh-actions__wf-all"><strong>All workflows</strong></a></li>
+            <li><a href="/${escapeAttr(v.owner)}/${escapeAttr(v.repo)}/actions" class="oldgh-actions__wf-all${v.selectedWorkflowId ? "" : " oldgh-actions__wf--selected"}"><strong>All workflows</strong></a></li>
             ${v.workflows.map((w) => `
-              <li><a href="${escapeAttr(w.href)}" title="${escapeAttr(w.filePath)}">${escapeText(w.name)}</a></li>
+              <li><a href="${escapeAttr(w.href)}" title="${escapeAttr(w.filePath)}" class="${String(w.id) === v.selectedWorkflowId ? "oldgh-actions__wf--selected" : ""}">${escapeText(w.name)}</a></li>
             `).join("")}
           </ul>
         </aside>
         <div class="oldgh-actions__main">
           <header class="oldgh-actions__header">
-            <h2>${formatCount(v.totalCount)} workflow ${v.totalCount === 1 ? "run" : "runs"}</h2>
+            ${v.selectedWorkflowName ? `
+              <h2>${escapeText(v.selectedWorkflowName)}</h2>
+              <p class="oldgh-actions__sub">
+                ${v.selectedWorkflowFilePath ? `<a href="/${escapeAttr(v.owner)}/${escapeAttr(v.repo)}/blob/HEAD/${escapeAttr(v.selectedWorkflowFilePath)}"><code>${escapeText(v.selectedWorkflowFilePath)}</code></a> · ` : ""}
+                ${formatCount(v.totalCount)} workflow ${v.totalCount === 1 ? "run" : "runs"}
+              </p>
+            ` : `
+              <h2>${formatCount(v.totalCount)} workflow ${v.totalCount === 1 ? "run" : "runs"}</h2>
+            `}
           </header>
           ${v.runs.length === 0 ? `<p class="oldgh-actions__empty">No workflow runs match the current filter.</p>` : `
             <ul class="oldgh-actions__runs">

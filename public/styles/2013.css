@@ -2520,6 +2520,22 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 .oldgh-actions__wf-all {
   background: var(--gh-bg-stripe);
 }
+.oldgh-actions__wf--selected {
+  background: #eaf5ff !important;
+  font-weight: bold;
+  color: var(--gh-fg-default);
+}
+.oldgh-actions__sub {
+  margin: 4px 0 0;
+  color: var(--gh-fg-muted);
+  font-size: 12px;
+}
+.oldgh-actions__sub code {
+  background: #f6f8fa;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+}
 .oldgh-actions__main {
   min-width: 0;
 }

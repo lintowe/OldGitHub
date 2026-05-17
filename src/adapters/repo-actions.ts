@@ -33,13 +33,15 @@ export type ActionsView = {
   runs: WorkflowRun[];
   totalCount: number;
   selectedWorkflowId: string;
+  selectedWorkflowName: string | null;
+  selectedWorkflowFilePath: string | null;
 };
 
 const API = "https://api.github.com";
 
-export async function getActions(owner: string, repo: string, query: string): Promise<ActionsView> {
+export async function getActions(owner: string, repo: string, query: string, workflowPath: string | null = null): Promise<ActionsView> {
   const params = new URLSearchParams(query);
-  const workflowId = params.get("workflow") ?? "";
+  const queryWorkflowId = params.get("workflow") ?? "";
   const page = Math.max(1, parseInt(params.get("page") ?? "1", 10) || 1);
 
   const workflowsResp = await fetch(`${API}/repos/${owner}/${repo}/actions/workflows?per_page=100`, {
@@ -62,8 +64,29 @@ export async function getActions(owner: string, repo: string, query: string): Pr
       id,
       name,
       filePath,
-      href: `/${owner}/${repo}/actions?workflow=${id}`,
+      href: filePath ? `/${owner}/${repo}/actions/workflows/${filePath.replace(/^\.github\/workflows\//, "")}` : `/${owner}/${repo}/actions?workflow=${id}`,
     });
+  }
+
+  let workflowId = queryWorkflowId;
+  let selectedWorkflowFilePath: string | null = null;
+  let selectedWorkflowName: string | null = null;
+  if (workflowPath) {
+    const normalized = workflowPath.startsWith(".github/workflows/") ? workflowPath : `.github/workflows/${workflowPath}`;
+    const match = workflows.find((w) => w.filePath === normalized);
+    if (match) {
+      workflowId = String(match.id);
+      selectedWorkflowFilePath = match.filePath;
+      selectedWorkflowName = match.name;
+    } else {
+      selectedWorkflowFilePath = normalized;
+    }
+  } else if (queryWorkflowId) {
+    const match = workflows.find((w) => String(w.id) === queryWorkflowId);
+    if (match) {
+      selectedWorkflowName = match.name;
+      selectedWorkflowFilePath = match.filePath;
+    }
   }
 
   const runsPath = workflowId
@@ -84,7 +107,17 @@ export async function getActions(owner: string, repo: string, query: string): Pr
   }
   const totalCount = typeof runsData.total_count === "number" ? runsData.total_count : runs.length;
 
-  return { owner, repo, query, workflows, runs, totalCount, selectedWorkflowId: workflowId };
+  return {
+    owner,
+    repo,
+    query,
+    workflows,
+    runs,
+    totalCount,
+    selectedWorkflowId: workflowId,
+    selectedWorkflowName,
+    selectedWorkflowFilePath,
+  };
 }
 
 function parseRun(raw: unknown, owner: string, repo: string): WorkflowRun | null {

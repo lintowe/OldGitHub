@@ -42,7 +42,7 @@ type BodyState =
   | { kind: "issues"; owner: string; repo: string; query: string; subkind: "issues" | "pulls" }
   | { kind: "issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull"; tab: "conversation" | "files" | "commits" | "checks" }
   | { kind: "wiki"; owner: string; repo: string; page: string }
-  | { kind: "actions"; owner: string; repo: string; query: string }
+  | { kind: "actions"; owner: string; repo: string; query: string; workflowPath: string | null }
   | { kind: "actions-run"; owner: string; repo: string; runId: string }
   | { kind: "pulse"; owner: string; repo: string }
   | { kind: "graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
@@ -144,7 +144,7 @@ function targetBodyForRoute(route: Route): BodyState {
   if (route.kind === "repo-issues") return { kind: "issues", owner: route.owner, repo: route.repo, query: route.query, subkind: route.subkind };
   if (route.kind === "repo-issue") return { kind: "issue", owner: route.owner, repo: route.repo, number: route.number, subkind: route.subkind, tab: route.tab };
   if (route.kind === "repo-wiki") return { kind: "wiki", owner: route.owner, repo: route.repo, page: route.page };
-  if (route.kind === "repo-actions") return { kind: "actions", owner: route.owner, repo: route.repo, query: route.query };
+  if (route.kind === "repo-actions") return { kind: "actions", owner: route.owner, repo: route.repo, query: route.query, workflowPath: route.workflowPath ?? null };
   if (route.kind === "repo-actions-run") return { kind: "actions-run", owner: route.owner, repo: route.repo, runId: route.runId };
   if (route.kind === "repo-pulse") return { kind: "pulse", owner: route.owner, repo: route.repo };
   if (route.kind === "repo-graphs") return { kind: "graphs", owner: route.owner, repo: route.repo, subkind: route.subkind };
@@ -247,7 +247,7 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "actions") {
-    await mountRepoActions(target.owner, target.repo, target.query);
+    await mountRepoActions(target.owner, target.repo, target.query, target.workflowPath);
     bodyState = target;
     return;
   }
@@ -362,7 +362,7 @@ function sameBody(a: BodyState, b: BodyState): boolean {
     return a.owner === b.owner && a.repo === b.repo && a.page === b.page;
   }
   if (a.kind === "actions" && b.kind === "actions") {
-    return a.owner === b.owner && a.repo === b.repo && a.query === b.query;
+    return a.owner === b.owner && a.repo === b.repo && a.query === b.query && a.workflowPath === b.workflowPath;
   }
   if (a.kind === "actions-run" && b.kind === "actions-run") {
     return a.owner === b.owner && a.repo === b.repo && a.runId === b.runId;
