@@ -14,6 +14,7 @@ import { mountRepoSection, unmountRepoSection } from "@/views/repo-section";
 import { mountRepoPulse, unmountRepoPulse } from "@/views/repo-pulse";
 import { mountRepoGraphs, unmountRepoGraphs } from "@/views/repo-graphs";
 import { mountRepoReleases, unmountRepoReleases } from "@/views/repo-releases";
+import { mountRepoList, unmountRepoList, type RepoListKind } from "@/views/repo-lists";
 import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-level";
 import { mountDashboard, unmountDashboard } from "@/views/dashboard";
 import { mountNotifications, unmountNotifications } from "@/views/notifications";
@@ -150,6 +151,14 @@ function targetBodyForRoute(route: Route): BodyState {
   return { kind: "none" };
 }
 
+function matchRepoList(subPath: string): RepoListKind | null {
+  const seg = subPath.replace(/^\//, "").split(/[\/?]/)[0];
+  if (seg === "tags" || seg === "branches" || seg === "forks" || seg === "stargazers" || seg === "labels" || seg === "milestones") {
+    return seg as RepoListKind;
+  }
+  return null;
+}
+
 function repoOtherPath(owner: string, repo: string): { pathname: string; search: string; title: string } {
   const pathname = window.location.pathname;
   const search = window.location.search.startsWith("?") ? window.location.search.slice(1) : window.location.search;
@@ -270,6 +279,12 @@ async function applyBodyState(target: BodyState): Promise<void> {
       bodyState = target;
       return;
     }
+    const listMatch = matchRepoList(subPath);
+    if (listMatch) {
+      await mountRepoList(target.owner, target.repo, listMatch, target.search);
+      bodyState = target;
+      return;
+    }
     const full = subPath + (target.search ? "?" + target.search : "");
     await mountRepoSection(target.owner, target.repo, "other", full || "/", target.title);
     bodyState = target;
@@ -373,6 +388,7 @@ function unmountBody(): void {
   unmountRepoPulse();
   unmountRepoGraphs();
   unmountRepoReleases();
+  unmountRepoList();
   unmountTopLevel();
   unmountDashboard();
   unmountNotifications();
