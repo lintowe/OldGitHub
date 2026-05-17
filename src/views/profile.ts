@@ -92,6 +92,10 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
       container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load this tab.</p>`;
       return;
     }
+    if (tab === "achievements") {
+      container.innerHTML = renderAchievementsFromFrame(frame);
+      return;
+    }
     for (const node of Array.from(frame.querySelectorAll("script, style"))) node.remove();
     for (const node of Array.from(frame.querySelectorAll<HTMLElement>("*"))) {
       for (const attr of Array.from(node.attributes)) {
@@ -102,6 +106,39 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
   } catch {
     container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load this tab.</p>`;
   }
+}
+
+function renderAchievementsFromFrame(frame: Element): string {
+  type A = { slug: string; name: string; iconUrl: string; tier: string | null };
+  const earned: A[] = [];
+  for (const d of Array.from(frame.querySelectorAll<HTMLElement>("details[data-achievement-slug]"))) {
+    const slug = d.getAttribute("data-achievement-slug") || "";
+    const img = d.querySelector<HTMLImageElement>("img");
+    const iconUrl = img?.getAttribute("src") || "";
+    const name = img?.getAttribute("alt")?.replace(/^Achievement:\s*/i, "").trim() || slug;
+    const tierEl = d.querySelector(".achievement-tier, [class*='tier']");
+    const tier = tierEl?.textContent?.trim() || null;
+    if (slug && iconUrl) earned.push({ slug, name, iconUrl, tier });
+  }
+  if (earned.length === 0) {
+    return `<p class="oldgh-profile__muted">No achievements yet.</p>`;
+  }
+  return `
+    <section class="oldgh-achievements">
+      <h3 class="oldgh-achievements__heading">Earned achievements</h3>
+      <ul class="oldgh-achievements__grid">
+        ${earned.map((a) => `
+          <li class="oldgh-achievements__item">
+            <img class="oldgh-achievements__icon" src="${escapeAttr(a.iconUrl)}" alt="${escapeAttr(a.name)}" width="96" height="96" />
+            <div class="oldgh-achievements__meta">
+              <span class="oldgh-achievements__name">${escapeText(a.name)}</span>
+              ${a.tier ? `<span class="oldgh-achievements__tier">${escapeText(a.tier)}</span>` : ""}
+            </div>
+          </li>
+        `).join("")}
+      </ul>
+    </section>
+  `;
 }
 
 async function hydrateRepos(root: HTMLElement, login: string, query: string): Promise<void> {
@@ -176,7 +213,7 @@ function renderRepoPagination(d: ProfileReposView): string {
 function renderSidebar(v: ProfileView): string {
   const avatar = `
     <div class="oldgh-profile__avatar">
-      <img src="${escapeAttr(v.avatarUrl)}" alt="${escapeAttr(v.displayName)}" width="210" height="210" />
+      <img src="${escapeAttr(v.avatarUrl)}" alt="${escapeAttr(v.displayName)}" />
     </div>
   `;
   const action = v.isViewer

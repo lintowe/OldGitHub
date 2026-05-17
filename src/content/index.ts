@@ -4,7 +4,15 @@ import { applyTheme, watchThemeChanges } from "@/theme";
 import { mountHeader } from "@/views/header";
 import { mountHovercards } from "@/views/hovercards";
 
+function eagerStyle(): void {
+  document.documentElement.setAttribute("data-oldgh", "active");
+  document.documentElement.setAttribute("data-oldgh-mounted", "pending");
+  forceLightColorMode();
+  injectThemeStylesheet();
+}
+
 async function boot(): Promise<void> {
+  eagerStyle();
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => void run(), { once: true });
   } else {
@@ -20,12 +28,11 @@ async function run(): Promise<void> {
     hasUserLoginMeta: !!document.querySelector('meta[name="user-login"]'),
   });
   if (!loggedIn) {
+    document.documentElement.removeAttribute("data-oldgh");
+    document.documentElement.removeAttribute("data-oldgh-mounted");
     return;
   }
   killTurbo();
-  document.documentElement.setAttribute("data-oldgh", "active");
-  forceLightColorMode();
-  injectThemeStylesheet();
   await applyTheme();
   watchThemeChanges();
   console.debug("[oldgh] mounting header + router");

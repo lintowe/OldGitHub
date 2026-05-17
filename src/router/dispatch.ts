@@ -57,6 +57,32 @@ type BodyState =
 
 let mountedRepo: RepoKey | null = null;
 let bodyState: BodyState = { kind: "none" };
+let progressBarEl: HTMLElement | null = null;
+let progressTimer: number | null = null;
+
+function showProgress(): void {
+  if (!progressBarEl) {
+    progressBarEl = document.createElement("div");
+    progressBarEl.className = "oldgh-progress-bar";
+    document.documentElement.appendChild(progressBarEl);
+  }
+  progressBarEl.classList.remove("oldgh-progress-bar--hide");
+  progressBarEl.classList.add("oldgh-progress-bar--show");
+  if (progressTimer != null) {
+    window.clearTimeout(progressTimer);
+    progressTimer = null;
+  }
+}
+
+function hideProgress(): void {
+  if (!progressBarEl) return;
+  progressBarEl.classList.remove("oldgh-progress-bar--show");
+  progressBarEl.classList.add("oldgh-progress-bar--hide");
+  if (progressTimer != null) window.clearTimeout(progressTimer);
+  progressTimer = window.setTimeout(() => {
+    if (progressBarEl) progressBarEl.classList.remove("oldgh-progress-bar--hide");
+  }, 300);
+}
 
 export async function dispatchRoute(loc: Location | URL): Promise<void> {
   const pathname = currentPath(loc);
@@ -68,6 +94,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
   const willMount = route.kind !== "out-of-scope" && route.kind !== "todo";
   if (willMount) {
     document.documentElement.setAttribute(MOUNTED_ATTR, route.kind);
+    showProgress();
   }
 
   try {
@@ -127,6 +154,8 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       return;
     }
     throw err;
+  } finally {
+    hideProgress();
   }
 }
 

@@ -1400,10 +1400,16 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
   flex-direction: column;
   gap: 12px;
 }
+.oldgh-profile__avatar {
+  display: block;
+  line-height: 0;
+}
 .oldgh-profile__avatar img {
+  display: block;
   width: 100%;
-  max-width: 220px;
   height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
   border: 1px solid var(--gh-border);
   border-radius: 4px;
   background: var(--gh-bg-elev);
@@ -1791,7 +1797,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 }
 .oldgh-profile__contribs-graph td.ContributionCalendar-day,
 .oldgh-profile__contribs-graph td.day {
-  width: 11px;
+  width: 11px !important;
   min-width: 11px;
   max-width: 11px;
   height: 11px;
@@ -1810,6 +1816,17 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 .oldgh-profile__contribs-graph td.day[data-level="4"] { background: #1e6823; }
 .oldgh-profile__contribs-graph td:not(.ContributionCalendar-day):not(.day) {
   padding: 0;
+  width: auto !important;
+}
+.oldgh-profile__contribs-graph .ContributionCalendar-label {
+  font-size: 9px !important;
+  color: var(--gh-fg-muted) !important;
+  font-weight: normal !important;
+  padding: 0 4px 0 0 !important;
+  text-align: left;
+}
+.oldgh-profile__contribs-graph thead .ContributionCalendar-label {
+  padding-bottom: 2px !important;
 }
 /* hide the modern "tooltip" / "scoping" auxiliary content that may render */
 .oldgh-profile__contribs-graph tool-tip,
@@ -5685,6 +5702,85 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   color: var(--gh-fg-faint);
   border: 1px dashed var(--gh-border-default);
   border-radius: 3px;
+}
+
+/* ======================= */
+/* profile achievements tab */
+/* ======================= */
+.oldgh-achievements {
+  margin-top: 4px;
+}
+.oldgh-achievements__heading {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--gh-fg-default);
+}
+.oldgh-achievements__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+.oldgh-achievements__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background: #ffffff;
+  border: 1px solid var(--gh-border);
+  border-radius: 4px;
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-achievements__icon {
+  width: 96px;
+  height: 96px;
+  display: block;
+}
+.oldgh-achievements__meta {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.oldgh-achievements__name {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--gh-fg-default);
+}
+.oldgh-achievements__tier {
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+
+/* ======================= */
+/* top progress bar */
+/* ======================= */
+.oldgh-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: #4183c4;
+  z-index: 99999;
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(65, 131, 196, 0.6);
+  transition: width 280ms ease-out, opacity 200ms ease-out;
+  opacity: 0;
+}
+.oldgh-progress-bar--show {
+  opacity: 1;
+  width: 70%;
+  transition: width 6s cubic-bezier(0.1, 0.95, 0.2, 1), opacity 120ms ease-in;
+}
+.oldgh-progress-bar--hide {
+  opacity: 0;
+  width: 100%;
+  transition: width 180ms ease-out, opacity 220ms ease-out 80ms;
 }
 
 
