@@ -71,15 +71,17 @@ function renderRun(r: WorkflowRun): string {
 function statusIcon(s: WorkflowRun["status"]): string {
   switch (s) {
     case "success": return octicon("check", { size: 14 });
-    case "failure": return octicon("x", { size: 14 });
+    case "failure":
+    case "timed_out": return octicon("x", { size: 14 });
     case "in_progress": return octicon("sync", { size: 14 });
     case "queued":
     case "pending": return octicon("primitive-dot", { size: 14 });
-    case "cancelled": return octicon("circle-slash", { size: 14 });
+    case "cancelled": return octicon("primitive-square", { size: 14 });
     case "skipped": return octicon("dash", { size: 14 });
     case "action_required": return octicon("alert", { size: 14 });
-    case "neutral": return octicon("dash", { size: 14 });
-    default: return octicon("question", { size: 14 });
+    case "neutral":
+    case "stale": return octicon("dash", { size: 14 });
+    default: return octicon("primitive-dot", { size: 14 });
   }
 }
 

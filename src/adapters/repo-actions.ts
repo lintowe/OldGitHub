@@ -1,7 +1,6 @@
 import { AdapterFailure } from "./index";
-import { parseRepoPage } from "./_page";
 
-export type WorkflowRunStatus = "success" | "failure" | "pending" | "queued" | "in_progress" | "cancelled" | "skipped" | "neutral" | "action_required" | "unknown";
+export type WorkflowRunStatus = "success" | "failure" | "pending" | "queued" | "in_progress" | "cancelled" | "skipped" | "neutral" | "action_required" | "timed_out" | "stale" | "unknown";
 
 export type WorkflowRun = {
   id: string;
@@ -20,6 +19,7 @@ export type WorkflowRun = {
 };
 
 export type WorkflowFile = {
+  id: number;
   name: string;
   filePath: string;
   href: string;
@@ -32,133 +32,136 @@ export type ActionsView = {
   workflows: WorkflowFile[];
   runs: WorkflowRun[];
   totalCount: number;
+  selectedWorkflowId: string;
 };
 
+const API = "https://api.github.com";
+
 export async function getActions(owner: string, repo: string, query: string): Promise<ActionsView> {
-  const url = `https://github.com/${owner}/${repo}/actions${query ? "?" + query : ""}`;
-  const resp = await fetch(url, {
-    credentials: "include",
-    headers: { Accept: "text/html" },
+  const params = new URLSearchParams(query);
+  const workflowId = params.get("workflow") ?? "";
+  const page = Math.max(1, parseInt(params.get("page") ?? "1", 10) || 1);
+
+  const workflowsResp = await fetch(`${API}/repos/${owner}/${repo}/actions/workflows?per_page=100`, {
+    credentials: "omit",
+    headers: { Accept: "application/vnd.github+json" },
   });
-  if (!resp.ok) {
-    throw new AdapterFailure("getActions", `${url} responded ${resp.status}`);
+  if (!workflowsResp.ok) {
+    throw new AdapterFailure("getActions", `workflows responded ${workflowsResp.status}`);
   }
-  const html = await resp.text();
-  const doc = parseRepoPage(html);
-
+  const workflowsData = (await workflowsResp.json()) as { workflows?: unknown[] };
   const workflows: WorkflowFile[] = [];
-  const seenWf = new Set<string>();
-  for (const a of Array.from(doc.querySelectorAll<HTMLAnchorElement>('a[href*="/actions/workflows/"]'))) {
-    const href = a.getAttribute("href") || "";
-    if (!href || seenWf.has(href)) continue;
-    seenWf.add(href);
-    const name = a.textContent?.trim() || href.split("/").pop() || "workflow";
-    const filePath = href.replace(/^.*\/actions\/workflows\//, "");
-    workflows.push({ name, filePath, href });
+  for (const w of workflowsData.workflows ?? []) {
+    if (!w || typeof w !== "object") continue;
+    const r = w as Record<string, unknown>;
+    const id = typeof r["id"] === "number" ? (r["id"] as number) : null;
+    const name = typeof r["name"] === "string" ? (r["name"] as string) : null;
+    if (id == null || !name) continue;
+    const filePath = typeof r["path"] === "string" ? (r["path"] as string) : "";
+    workflows.push({
+      id,
+      name,
+      filePath,
+      href: `/${owner}/${repo}/actions?workflow=${id}`,
+    });
   }
 
+  const runsPath = workflowId
+    ? `/repos/${owner}/${repo}/actions/workflows/${encodeURIComponent(workflowId)}/runs`
+    : `/repos/${owner}/${repo}/actions/runs`;
+  const runsResp = await fetch(`${API}${runsPath}?per_page=30&page=${page}`, {
+    credentials: "omit",
+    headers: { Accept: "application/vnd.github+json" },
+  });
+  if (!runsResp.ok) {
+    throw new AdapterFailure("getActions", `runs responded ${runsResp.status}`);
+  }
+  const runsData = (await runsResp.json()) as { workflow_runs?: unknown[]; total_count?: number };
   const runs: WorkflowRun[] = [];
-  for (const row of Array.from(doc.querySelectorAll<HTMLElement>(".Box-row"))) {
-    const parsed = parseRunRow(row);
+  for (const raw of runsData.workflow_runs ?? []) {
+    const parsed = parseRun(raw, owner, repo);
     if (parsed) runs.push(parsed);
   }
+  const totalCount = typeof runsData.total_count === "number" ? runsData.total_count : runs.length;
 
-  const countEl = doc.querySelector(".d-flex.flex-md-row .Box-header h2, h2.color-fg-muted");
-  const countText = countEl?.textContent || "";
-  const m = /([\d,]+)/.exec(countText);
-  const totalCount = m && m[1] ? parseInt(m[1].replace(/,/g, ""), 10) : runs.length;
-
-  return { owner, repo, query, workflows, runs, totalCount };
+  return { owner, repo, query, workflows, runs, totalCount, selectedWorkflowId: workflowId };
 }
 
-function parseRunRow(row: HTMLElement): WorkflowRun | null {
-  const id = row.id || "";
-  const titleAnchor = row.querySelector<HTMLAnchorElement>('a[href*="/actions/runs/"]');
-  if (!titleAnchor) return null;
-  const url = titleAnchor.getAttribute("href") || "";
-
-  const aria = titleAnchor.getAttribute("aria-label") || "";
-  const status = parseStatusFromAria(aria) ?? parseStatusFromIcon(row);
-
-  const titleText = titleAnchor.textContent?.replace(/\s+/g, " ").trim() || "";
-  const runMatch = /Run\s+(\d+)\s+of\s+(.+?)\.\s/i.exec(aria + " ") ?? /Run\s+(\d+)\s+of\s+(.+)/i.exec(aria);
-  const runNumber = runMatch && runMatch[1] ? parseInt(runMatch[1], 10) : null;
-  const workflowName = runMatch && runMatch[2] ? runMatch[2].replace(/\.\s*$/, "").split(".")[0]!.trim() : "Workflow";
-
-  const branchAnchor = row.querySelector<HTMLAnchorElement>('a[href*="/tree/"], a.commit-ref');
-  const branch = branchAnchor?.textContent?.trim() || null;
-  const branchUrl = branchAnchor?.getAttribute("href") || null;
-
-  const commitAnchor = row.querySelector<HTMLAnchorElement>('a[href*="/commit/"]');
-  const commitSha = commitAnchor?.textContent?.trim() || null;
-  const commitUrl = commitAnchor?.getAttribute("href") || null;
-
-  const actorAnchor = row.querySelector<HTMLAnchorElement>('a[href^="/"][rel*="contributor"], a img.avatar-user');
+function parseRun(raw: unknown, owner: string, repo: string): WorkflowRun | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const id = typeof r["id"] === "number" ? String(r["id"] as number) : "";
+  if (!id) return null;
+  const url = typeof r["html_url"] === "string" ? (r["html_url"] as string) : "";
+  const workflowName = typeof r["name"] === "string" ? (r["name"] as string) : "Workflow";
+  const displayTitle = typeof r["display_title"] === "string" ? (r["display_title"] as string) : workflowName;
+  const runNumber = typeof r["run_number"] === "number" ? (r["run_number"] as number) : null;
+  const branch = typeof r["head_branch"] === "string" ? (r["head_branch"] as string) : null;
+  const headSha = typeof r["head_sha"] === "string" ? (r["head_sha"] as string) : null;
+  const status = resolveStatus(typeof r["status"] === "string" ? (r["status"] as string) : "", typeof r["conclusion"] === "string" ? (r["conclusion"] as string) : null);
+  const actorRaw = r["actor"];
   let actor: WorkflowRun["actor"] = null;
-  const avatarImg = row.querySelector<HTMLImageElement>('img.avatar, img.avatar-user');
-  if (avatarImg) {
-    const alt = avatarImg.getAttribute("alt") || "";
-    const login = alt.startsWith("@") ? alt.slice(1) : alt.split(" ")[0]!;
+  if (actorRaw && typeof actorRaw === "object") {
+    const a = actorRaw as Record<string, unknown>;
+    const login = typeof a["login"] === "string" ? (a["login"] as string) : null;
     if (login) {
-      actor = { login, avatarUrl: avatarImg.getAttribute("src") || `https://github.com/${login}.png?size=40` };
+      actor = {
+        login,
+        avatarUrl: typeof a["avatar_url"] === "string" ? (a["avatar_url"] as string) : `https://github.com/${login}.png?size=40`,
+      };
     }
   }
-
-  const timeEl = row.querySelector("relative-time");
-  const startedAt = timeEl?.getAttribute("datetime") || null;
-
-  const durationEl = row.querySelector<HTMLElement>('span[title*="duration"], .duration-meta, .css-truncate-target');
-  const duration = durationEl?.textContent?.trim() || null;
+  const runStartedAt = typeof r["run_started_at"] === "string" ? (r["run_started_at"] as string) : null;
+  const updatedAt = typeof r["updated_at"] === "string" ? (r["updated_at"] as string) : null;
+  const duration = computeDuration(runStartedAt, updatedAt);
 
   return {
     id,
     url,
-    title: stripStatusPrefix(titleText, runNumber, workflowName),
+    title: displayTitle,
     workflowName,
     runNumber,
     status,
     branch,
-    branchUrl,
-    commitSha,
-    commitUrl,
+    branchUrl: branch ? `/${owner}/${repo}/tree/${encodeURIComponent(branch)}` : null,
+    commitSha: headSha ? headSha.slice(0, 7) : null,
+    commitUrl: headSha ? `/${owner}/${repo}/commit/${headSha}` : null,
     actor,
-    startedAt,
+    startedAt: runStartedAt,
     duration,
   };
 }
 
-function stripStatusPrefix(t: string, runNum: number | null, wfName: string): string {
-  let out = t.replace(/^[\s ]+/, "").replace(/[\s ]+$/, "");
-  if (runNum !== null) {
-    const re = new RegExp(`^.*?Run\\s+${runNum}\\s+of\\s+${wfName.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\.?`, "i");
-    out = out.replace(re, "").trim();
+function resolveStatus(status: string, conclusion: string | null): WorkflowRunStatus {
+  if (status !== "completed") {
+    if (status === "queued") return "queued";
+    if (status === "in_progress") return "in_progress";
+    if (status === "pending" || status === "waiting") return "pending";
+    return "pending";
   }
-  return out || wfName;
+  switch (conclusion) {
+    case "success": return "success";
+    case "failure": return "failure";
+    case "timed_out": return "timed_out";
+    case "action_required": return "action_required";
+    case "cancelled": return "cancelled";
+    case "skipped": return "skipped";
+    case "neutral": return "neutral";
+    case "stale": return "stale";
+    default: return "unknown";
+  }
 }
 
-function parseStatusFromAria(aria: string): WorkflowRunStatus | null {
-  const lower = aria.toLowerCase();
-  if (lower.startsWith("succeeded") || lower.startsWith("success") || lower.startsWith("passed")) return "success";
-  if (lower.startsWith("failed") || lower.startsWith("failure")) return "failure";
-  if (lower.startsWith("queued")) return "queued";
-  if (lower.startsWith("in_progress") || lower.startsWith("in progress") || lower.startsWith("running")) return "in_progress";
-  if (lower.startsWith("pending")) return "pending";
-  if (lower.startsWith("cancelled") || lower.startsWith("canceled")) return "cancelled";
-  if (lower.startsWith("skipped")) return "skipped";
-  if (lower.startsWith("neutral")) return "neutral";
-  if (lower.startsWith("requires action") || lower.startsWith("action_required")) return "action_required";
-  return null;
-}
-
-function parseStatusFromIcon(row: HTMLElement): WorkflowRunStatus {
-  const svg = row.querySelector("svg");
-  if (!svg) return "unknown";
-  const cls = svg.getAttribute("class") || "";
-  if (/check-circle|success/.test(cls)) return "success";
-  if (/x-circle|failure|stop/.test(cls)) return "failure";
-  if (/dot-fill-pending|clock/.test(cls)) return "pending";
-  if (/sync|in-progress/.test(cls)) return "in_progress";
-  if (/skip/.test(cls)) return "skipped";
-  if (/alert|warning/.test(cls)) return "action_required";
-  return "unknown";
+function computeDuration(startIso: string | null, endIso: string | null): string | null {
+  if (!startIso || !endIso) return null;
+  const start = new Date(startIso).getTime();
+  const end = new Date(endIso).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return null;
+  const sec = Math.round((end - start) / 1000);
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  const rest = sec % 60;
+  if (min < 60) return `${min}m ${rest}s`;
+  const hr = Math.floor(min / 60);
+  return `${hr}h ${min % 60}m`;
 }
