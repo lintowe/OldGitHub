@@ -1,5 +1,6 @@
 import { AdapterFailure } from "@/adapters";
 import { mountRepoHeader, unmountRepoHeader, updateActiveTab } from "@/views/repo-header";
+import { updateTopNavActive } from "@/views/header";
 import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
 import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
@@ -79,12 +80,21 @@ function showProgress(): void {
     progressBarEl.className = "oldgh-progress-bar";
     document.documentElement.appendChild(progressBarEl);
   }
-  progressBarEl.classList.remove("oldgh-progress-bar--hide");
-  progressBarEl.classList.add("oldgh-progress-bar--show");
   if (progressTimer != null) {
     window.clearTimeout(progressTimer);
     progressTimer = null;
   }
+  // hard reset to 0 width with no transition so the show animation always
+  // starts from the left edge, even on back-to-back navigations
+  progressBarEl.classList.remove("oldgh-progress-bar--show", "oldgh-progress-bar--hide");
+  progressBarEl.style.transition = "none";
+  progressBarEl.style.width = "0";
+  progressBarEl.style.opacity = "0";
+  void progressBarEl.offsetWidth;
+  progressBarEl.style.transition = "";
+  progressBarEl.style.width = "";
+  progressBarEl.style.opacity = "";
+  progressBarEl.classList.add("oldgh-progress-bar--show");
 }
 
 function hideProgress(): void {
@@ -93,8 +103,16 @@ function hideProgress(): void {
   progressBarEl.classList.add("oldgh-progress-bar--hide");
   if (progressTimer != null) window.clearTimeout(progressTimer);
   progressTimer = window.setTimeout(() => {
-    if (progressBarEl) progressBarEl.classList.remove("oldgh-progress-bar--hide");
-  }, 300);
+    if (!progressBarEl) return;
+    progressBarEl.classList.remove("oldgh-progress-bar--hide");
+    progressBarEl.style.transition = "none";
+    progressBarEl.style.width = "0";
+    progressBarEl.style.opacity = "0";
+    void progressBarEl.offsetWidth;
+    progressBarEl.style.transition = "";
+    progressBarEl.style.width = "";
+    progressBarEl.style.opacity = "";
+  }, 400);
 }
 
 export async function dispatchRoute(loc: Location | URL): Promise<void> {
@@ -109,6 +127,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     document.documentElement.setAttribute(MOUNTED_ATTR, route.kind);
     showProgress();
   }
+  updateTopNavActive(pathname);
 
   try {
     if (route.kind === "out-of-scope") {

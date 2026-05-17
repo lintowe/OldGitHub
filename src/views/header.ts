@@ -50,11 +50,11 @@ function renderHeaderHtml(me: Me): string {
       />
       <input type="hidden" name="ref" value="cmdform" />
     </form>
-    <nav class="oldgh-header__nav" aria-label="Primary">
-      <a href="/pulls">Pull requests</a>
-      <a href="/issues">Issues</a>
-      <a href="/marketplace">Marketplace</a>
-      <a href="/explore">Explore</a>
+    <nav class="oldgh-header__nav" aria-label="Primary" data-oldgh-topnav>
+      <a href="/pulls" data-topnav-key="pulls">Pull requests</a>
+      <a href="/issues" data-topnav-key="issues">Issues</a>
+      <a href="/marketplace" data-topnav-key="marketplace">Marketplace</a>
+      <a href="/explore" data-topnav-key="explore">Explore</a>
     </nav>
     <div class="oldgh-header__actions">
       <a class="oldgh-header__bell" href="/notifications" aria-label="Notifications">
@@ -157,6 +157,23 @@ async function startNotificationPolling(root: HTMLElement): Promise<void> {
   window.setInterval(() => {
     void update();
   }, POLL_INTERVAL_MS);
+}
+
+export function updateTopNavActive(pathname: string): void {
+  const nav = document.querySelector<HTMLElement>("[data-oldgh-topnav]");
+  if (!nav) return;
+  let key: string | null = null;
+  if (pathname === "/pulls" || pathname.startsWith("/pulls/")) key = "pulls";
+  else if (pathname === "/issues" || pathname.startsWith("/issues/")) key = "issues";
+  else if (pathname === "/marketplace" || pathname.startsWith("/marketplace/")) key = "marketplace";
+  else if (pathname === "/explore" || pathname.startsWith("/explore/") || pathname === "/trending" || pathname.startsWith("/trending/")) key = "explore";
+  for (const a of Array.from(nav.querySelectorAll<HTMLAnchorElement>("a[data-topnav-key]"))) {
+    if (key && a.dataset["topnavKey"] === key) {
+      a.setAttribute("aria-current", "page");
+    } else {
+      a.removeAttribute("aria-current");
+    }
+  }
 }
 
 function hideModernHeader(): void {

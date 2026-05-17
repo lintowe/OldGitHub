@@ -173,6 +173,19 @@ html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"] {
   color: var(--gh-header-fg);
   text-decoration: none;
 }
+html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"] {
+  font-weight: bold;
+  position: relative;
+}
+html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -19px;
+  height: 3px;
+  background: #4183c4;
+}
 
 /* button — 2013 gradient pill */
 .oldgh-btn {
