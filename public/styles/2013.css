@@ -3477,3 +3477,91 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 .oldgh-pr-commits__sha a {
   color: var(--gh-fg-muted);
 }
+
+/* PR Checks */
+.oldgh-pr-checks { margin: 14px 0; }
+.oldgh-pr-checks__summary {
+  padding: 10px 14px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  margin-bottom: 14px;
+  font-size: var(--gh-size-md);
+}
+.oldgh-pr-checks__pill {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+}
+.oldgh-pr-checks__pill--success { background: #6cc644; }
+.oldgh-pr-checks__pill--failure { background: #bd2c00; }
+.oldgh-pr-checks__pill--neutral { background: #999; }
+.oldgh-pr-checks__pill--pending { background: #cea61b; }
+
+.oldgh-pr-checks__group { margin-bottom: 18px; }
+.oldgh-pr-checks__app {
+  margin: 14px 0 6px;
+  padding-bottom: 4px;
+  font-size: var(--gh-size-md);
+  font-weight: normal;
+  color: var(--gh-fg-muted);
+  border-bottom: 1px dashed var(--gh-border);
+}
+.oldgh-pr-checks__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-elev);
+}
+.oldgh-pr-checks__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-pr-checks__row:last-child { border-bottom: 0; }
+.oldgh-pr-checks__icon {
+  flex: 0 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+}
+.oldgh-pr-checks__row--success .oldgh-pr-checks__icon { background: #6cc644; }
+.oldgh-pr-checks__row--failure .oldgh-pr-checks__icon { background: #bd2c00; }
+.oldgh-pr-checks__row--pending .oldgh-pr-checks__icon { background: #cea61b; }
+.oldgh-pr-checks__row--cancelled .oldgh-pr-checks__icon { background: #888; }
+.oldgh-pr-checks__row--neutral .oldgh-pr-checks__icon { background: #bbb; color: #555; }
+.oldgh-pr-checks__main { flex: 1; min-width: 0; }
+.oldgh-pr-checks__name {
+  display: block;
+  color: var(--gh-fg);
+  font-weight: bold;
+  font-size: var(--gh-size-md);
+}
+.oldgh-pr-checks__output {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-pr-checks__meta {
+  flex: 0 0 auto;
+  text-align: right;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-pr-checks__state { text-transform: capitalize; }
+.oldgh-pr-checks__duration {
+  display: block;
+  color: var(--gh-fg-faint);
+}

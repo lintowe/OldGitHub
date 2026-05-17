@@ -27,11 +27,13 @@ export async function scrapeSection(
   const doc = parseRepoPage(html);
 
   const candidates = options.selectors ?? [
+    "turbo-frame#repo-content-turbo-frame",
     "[data-pjax='#repo-content-pjax-container']",
     "#repo-content-pjax-container",
     "#js-repo-pjax-container",
     "[data-turbo-body]",
     "main #repo-content-turbo-frame",
+    ".application-main",
     "main",
   ];
 
@@ -50,7 +52,11 @@ export async function scrapeSection(
 
   cleanScrapedContent(main);
 
-  const title = doc.querySelector("h1.h2, h1.h3, .pagehead-tabs-item.selected, h1")?.textContent?.trim() || options.titleFallback;
+  const inMainH1 = main.querySelector("h1");
+  const titleFromMain = inMainH1?.textContent?.trim() || "";
+  const docTitleRaw = doc.querySelector("title")?.textContent?.trim() || "";
+  const docTitleClean = docTitleRaw.split("·")[0]?.trim() || "";
+  const title = titleFromMain || options.titleFallback || docTitleClean || "Other";
 
   return {
     owner,

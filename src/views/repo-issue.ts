@@ -4,6 +4,7 @@ import {
   getPull,
   getPullFiles,
   getPullCommits,
+  getPullChecks,
   type IssueDetail,
   type PullDetail,
   type TimelineNode,
@@ -12,6 +13,7 @@ import {
   type ReactionCount,
   type PullFile,
   type PullCommit,
+  type CheckRun,
 } from "@/adapters/repo-issue";
 import { AdapterFailure } from "@/adapters";
 import { absoluteTime, relativeTime } from "@/util/time";
@@ -189,7 +191,8 @@ async function hydrateSubTab(
       return;
     }
     if (tab === "checks") {
-      container.innerHTML = `<div class="oldgh-issue__subtab-checks"><p class="oldgh-issue__subtab-empty">Checks view isn't built yet — use the modern GitHub UI for now.</p></div>`;
+      const checks = await getPullChecks(owner, repo, number);
+      container.innerHTML = renderPullChecks(checks);
       return;
     }
   } catch {
@@ -315,6 +318,110 @@ function renderPullCommitRow(owner: string, repo: string, c: PullCommit): string
       </div>
     </li>
   `;
+}
+
+function renderPullChecks(checks: CheckRun[]): string {
+  if (checks.length === 0) {
+    return `<p class="oldgh-issue__subtab-empty">No checks ran for this pull request.</p>`;
+  }
+  const counts = countChecks(checks);
+  const summary = `
+    <div class="oldgh-pr-checks__summary">
+      ${counts.success > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--success">${counts.success} passed</span>` : ""}
+      ${counts.failure > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--failure">${counts.failure} failing</span>` : ""}
+      ${counts.skipped > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--neutral">${counts.skipped} skipped</span>` : ""}
+      ${counts.pending > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--pending">${counts.pending} pending</span>` : ""}
+      ${counts.other > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--neutral">${counts.other} other</span>` : ""}
+    </div>
+  `;
+  const groups = groupBy(checks, (c) => c.appName || "Unknown");
+  const sections: string[] = [];
+  for (const [appName, runs] of groups) {
+    const rows = runs.map((r) => renderCheckRow(r)).join("");
+    sections.push(`
+      <div class="oldgh-pr-checks__group">
+        <h3 class="oldgh-pr-checks__app">${escapeText(appName)}</h3>
+        <ul class="oldgh-pr-checks__list">${rows}</ul>
+      </div>
+    `);
+  }
+  return `<div class="oldgh-pr-checks">${summary}${sections.join("")}</div>`;
+}
+
+function renderCheckRow(c: CheckRun): string {
+  const { icon, label, cls } = checkStateView(c);
+  const duration = checkDuration(c);
+  return `
+    <li class="oldgh-pr-checks__row ${cls}">
+      <span class="oldgh-pr-checks__icon">${icon}</span>
+      <div class="oldgh-pr-checks__main">
+        <a class="oldgh-pr-checks__name" href="${escapeAttr(c.htmlUrl || c.detailsUrl)}">${escapeText(c.name)}</a>
+        ${c.outputTitle ? `<div class="oldgh-pr-checks__output">${escapeText(c.outputTitle)}</div>` : ""}
+      </div>
+      <div class="oldgh-pr-checks__meta">
+        <span class="oldgh-pr-checks__state">${escapeText(label)}</span>
+        ${duration ? `<span class="oldgh-pr-checks__duration">${escapeText(duration)}</span>` : ""}
+      </div>
+    </li>
+  `;
+}
+
+function checkStateView(c: CheckRun): { icon: string; label: string; cls: string } {
+  if (c.status !== "completed") {
+    return { icon: octicon("primitive-dot", { size: 14 }), label: c.status.replace(/_/g, " "), cls: "oldgh-pr-checks__row--pending" };
+  }
+  switch (c.conclusion) {
+    case "success":
+      return { icon: octicon("check", { size: 14 }), label: "passed", cls: "oldgh-pr-checks__row--success" };
+    case "failure":
+    case "timed_out":
+    case "action_required":
+      return { icon: octicon("x", { size: 14 }), label: c.conclusion.replace(/_/g, " "), cls: "oldgh-pr-checks__row--failure" };
+    case "cancelled":
+      return { icon: octicon("primitive-square", { size: 14 }), label: "cancelled", cls: "oldgh-pr-checks__row--cancelled" };
+    case "skipped":
+      return { icon: octicon("dash", { size: 14 }), label: "skipped", cls: "oldgh-pr-checks__row--neutral" };
+    case "neutral":
+    case "stale":
+      return { icon: octicon("primitive-dot", { size: 14 }), label: c.conclusion, cls: "oldgh-pr-checks__row--neutral" };
+    default:
+      return { icon: octicon("primitive-dot", { size: 14 }), label: "completed", cls: "oldgh-pr-checks__row--neutral" };
+  }
+}
+
+function checkDuration(c: CheckRun): string | null {
+  if (!c.startedAt || !c.completedAt) return null;
+  const start = new Date(c.startedAt).getTime();
+  const end = new Date(c.completedAt).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return null;
+  const sec = Math.round((end - start) / 1000);
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  const rest = sec % 60;
+  return `${min}m ${rest}s`;
+}
+
+function countChecks(checks: CheckRun[]): { success: number; failure: number; skipped: number; pending: number; other: number } {
+  let success = 0, failure = 0, skipped = 0, pending = 0, other = 0;
+  for (const c of checks) {
+    if (c.status !== "completed") { pending++; continue; }
+    if (c.conclusion === "success") success++;
+    else if (c.conclusion === "failure" || c.conclusion === "timed_out" || c.conclusion === "action_required") failure++;
+    else if (c.conclusion === "skipped" || c.conclusion === "cancelled") skipped++;
+    else other++;
+  }
+  return { success, failure, skipped, pending, other };
+}
+
+function groupBy<T, K>(items: T[], keyFn: (t: T) => K): Map<K, T[]> {
+  const out = new Map<K, T[]>();
+  for (const item of items) {
+    const k = keyFn(item);
+    const list = out.get(k) ?? [];
+    list.push(item);
+    out.set(k, list);
+  }
+  return out;
 }
 
 function formatDateHeading(yyyyMmDd: string): string {

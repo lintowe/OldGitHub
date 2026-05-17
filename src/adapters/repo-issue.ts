@@ -119,6 +119,20 @@ export type PullCommit = {
   commentCount: number;
 };
 
+export type CheckRun = {
+  id: number;
+  name: string;
+  appName: string | null;
+  status: "queued" | "in_progress" | "completed" | "waiting" | "pending" | "requested";
+  conclusion: "success" | "failure" | "neutral" | "cancelled" | "skipped" | "timed_out" | "action_required" | "stale" | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  htmlUrl: string;
+  detailsUrl: string;
+  outputTitle: string | null;
+  outputSummary: string | null;
+};
+
 export async function getPullFiles(owner: string, repo: string, number: number): Promise<PullFile[]> {
   const pages = await apiFetchAll(`/repos/${owner}/${repo}/pulls/${number}/files`);
   return pages.map((r) => parsePullFile(r)).filter((f): f is PullFile => f !== null);
@@ -127,6 +141,55 @@ export async function getPullFiles(owner: string, repo: string, number: number):
 export async function getPullCommits(owner: string, repo: string, number: number): Promise<PullCommit[]> {
   const pages = await apiFetchAll(`/repos/${owner}/${repo}/pulls/${number}/commits`);
   return pages.map((r) => parsePullCommit(r)).filter((c): c is PullCommit => c !== null);
+}
+
+export async function getPullChecks(owner: string, repo: string, number: number): Promise<CheckRun[]> {
+  const prRaw = await apiFetch(`/repos/${owner}/${repo}/pulls/${number}`);
+  if (!prRaw || typeof prRaw !== "object") {
+    throw new AdapterFailure("getPullChecks", "pull request not found");
+  }
+  const head = readObj((prRaw as Record<string, unknown>)["head"]);
+  const sha = head ? readString(head, "sha") : null;
+  if (!sha) {
+    throw new AdapterFailure("getPullChecks", "head sha missing");
+  }
+  const resp = await fetch(`${API}/repos/${owner}/${repo}/commits/${sha}/check-runs?per_page=100`, {
+    credentials: "omit",
+    headers: { Accept: HTML_ACCEPT },
+  });
+  if (!resp.ok) {
+    throw new AdapterFailure("getPullChecks", `check-runs responded ${resp.status}`);
+  }
+  const data = (await resp.json()) as { check_runs?: unknown };
+  const runs = Array.isArray(data.check_runs) ? data.check_runs : [];
+  return runs.map((r) => parseCheckRun(r)).filter((c): c is CheckRun => c !== null);
+}
+
+function parseCheckRun(raw: unknown): CheckRun | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const id = readNumber(r, "id");
+  const name = readString(r, "name");
+  if (id == null || !name) return null;
+  const statusStr = readString(r, "status") ?? "queued";
+  const status = (["queued", "in_progress", "completed", "waiting", "pending", "requested"] as const).find((s) => s === statusStr) ?? "queued";
+  const conclusionStr = readString(r, "conclusion");
+  const conclusion = (["success", "failure", "neutral", "cancelled", "skipped", "timed_out", "action_required", "stale"] as const).find((s) => s === conclusionStr) ?? null;
+  const app = readObj(r["app"]);
+  const output = readObj(r["output"]);
+  return {
+    id,
+    name,
+    appName: app ? readString(app, "name") : null,
+    status,
+    conclusion,
+    startedAt: readString(r, "started_at"),
+    completedAt: readString(r, "completed_at"),
+    htmlUrl: readString(r, "html_url") ?? "",
+    detailsUrl: readString(r, "details_url") ?? "",
+    outputTitle: output ? readString(output, "title") : null,
+    outputSummary: output ? readString(output, "summary") : null,
+  };
 }
 
 function parsePullFile(raw: unknown): PullFile | null {

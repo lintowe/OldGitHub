@@ -39,6 +39,7 @@ type BodyState =
   | { kind: "projects"; owner: string; repo: string; query: string }
   | { kind: "security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "discussions"; owner: string; repo: string; subPath: string; query: string }
+  | { kind: "repo-other"; owner: string; repo: string; pathname: string; search: string; title: string }
   | { kind: "top-level"; subkind: TopLevelKind; pathname: string; search: string; title: string }
   | { kind: "profile"; login: string; tab: string; query: string };
 
@@ -136,7 +137,21 @@ function targetBodyForRoute(route: Route): BodyState {
   if (route.kind === "repo-projects") return { kind: "projects", owner: route.owner, repo: route.repo, query: route.query };
   if (route.kind === "repo-security") return { kind: "security", owner: route.owner, repo: route.repo, subkind: route.subkind };
   if (route.kind === "repo-discussions") return { kind: "discussions", owner: route.owner, repo: route.repo, subPath: route.subPath, query: route.query };
+  if (route.kind === "repo-other") {
+    const path = repoOtherPath(route.owner, route.repo);
+    return { kind: "repo-other", owner: route.owner, repo: route.repo, pathname: path.pathname, search: path.search, title: path.title };
+  }
   return { kind: "none" };
+}
+
+function repoOtherPath(owner: string, repo: string): { pathname: string; search: string; title: string } {
+  const pathname = window.location.pathname;
+  const search = window.location.search.startsWith("?") ? window.location.search.slice(1) : window.location.search;
+  const prefix = `/${owner}/${repo}/`;
+  const rest = pathname.startsWith(prefix) ? pathname.slice(prefix.length) : pathname;
+  const first = rest.split("/")[0] || "Other";
+  const title = first.charAt(0).toUpperCase() + first.slice(1);
+  return { pathname, search, title };
 }
 
 async function ensureRepoHeader(owner: string, repo: string, pathname: string): Promise<void> {
@@ -247,6 +262,14 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "repo-other") {
+    const prefix = `/${target.owner}/${target.repo}`;
+    const subPath = target.pathname.startsWith(prefix) ? target.pathname.slice(prefix.length) : target.pathname;
+    const full = subPath + (target.search ? "?" + target.search : "");
+    await mountRepoSection(target.owner, target.repo, "other", full || "/", target.title);
+    bodyState = target;
+    return;
+  }
   if (target.kind === "profile") {
     await mountProfile(target.login, target.tab, target.query);
     bodyState = target;
@@ -311,6 +334,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   }
   if (a.kind === "discussions" && b.kind === "discussions") {
     return a.owner === b.owner && a.repo === b.repo && a.subPath === b.subPath && a.query === b.query;
+  }
+  if (a.kind === "repo-other" && b.kind === "repo-other") {
+    return a.owner === b.owner && a.repo === b.repo && a.pathname === b.pathname && a.search === b.search;
   }
   if (a.kind === "profile" && b.kind === "profile") {
     return a.login === b.login && a.tab === b.tab && a.query === b.query;
