@@ -73,7 +73,18 @@ export async function mountSearch(_pathname: string, search: string): Promise<vo
       resultsEl.innerHTML = renderTopicResults(summary, items);
     }
   } catch (err) {
-    resultsEl.innerHTML = `<div class="oldgh-search__empty"><p>Couldn't load results: ${escapeText(err instanceof Error ? err.message : String(err))}</p></div>`;
+    const msg = err instanceof Error ? err.message : String(err);
+    if (type === "code" && /401/.test(msg)) {
+      resultsEl.innerHTML = `
+        <div class="oldgh-search__empty">
+          ${octicon("lock", { size: 36 })}
+          <p>GitHub's code search REST endpoint requires an authenticated token.</p>
+          <p><a href="https://github.com/search?q=${encodeURIComponent(query)}&type=code">Open code search on modern GitHub</a></p>
+        </div>
+      `;
+      return;
+    }
+    resultsEl.innerHTML = `<div class="oldgh-search__empty"><p>Couldn't load results: ${escapeText(msg)}</p></div>`;
   }
 }
 
