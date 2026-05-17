@@ -38,6 +38,7 @@ type BodyState =
   | { kind: "graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
   | { kind: "projects"; owner: string; repo: string; query: string }
   | { kind: "security"; owner: string; repo: string; subkind: "overview" | "advisories" }
+  | { kind: "discussions"; owner: string; repo: string; subPath: string; query: string }
   | { kind: "top-level"; subkind: TopLevelKind; pathname: string; search: string; title: string }
   | { kind: "profile"; login: string; tab: string; query: string };
 
@@ -79,6 +80,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       route.kind === "repo-graphs" ||
       route.kind === "repo-projects" ||
       route.kind === "repo-security" ||
+      route.kind === "repo-discussions" ||
       route.kind === "repo-other"
     ) {
       await ensureRepoHeader(route.owner, route.repo, pathname);
@@ -133,6 +135,7 @@ function targetBodyForRoute(route: Route): BodyState {
   if (route.kind === "repo-graphs") return { kind: "graphs", owner: route.owner, repo: route.repo, subkind: route.subkind };
   if (route.kind === "repo-projects") return { kind: "projects", owner: route.owner, repo: route.repo, query: route.query };
   if (route.kind === "repo-security") return { kind: "security", owner: route.owner, repo: route.repo, subkind: route.subkind };
+  if (route.kind === "repo-discussions") return { kind: "discussions", owner: route.owner, repo: route.repo, subPath: route.subPath, query: route.query };
   return { kind: "none" };
 }
 
@@ -238,6 +241,12 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "discussions") {
+    const subPath = target.subPath + (target.query ? "?" + target.query : "");
+    await mountRepoSection(target.owner, target.repo, "discussions", subPath, "Discussions");
+    bodyState = target;
+    return;
+  }
   if (target.kind === "profile") {
     await mountProfile(target.login, target.tab, target.query);
     bodyState = target;
@@ -299,6 +308,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   }
   if (a.kind === "security" && b.kind === "security") {
     return a.owner === b.owner && a.repo === b.repo && a.subkind === b.subkind;
+  }
+  if (a.kind === "discussions" && b.kind === "discussions") {
+    return a.owner === b.owner && a.repo === b.repo && a.subPath === b.subPath && a.query === b.query;
   }
   if (a.kind === "profile" && b.kind === "profile") {
     return a.login === b.login && a.tab === b.tab && a.query === b.query;

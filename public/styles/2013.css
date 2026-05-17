@@ -2826,6 +2826,164 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 .oldgh-notif__empty .octicon { color: var(--gh-state-open); }
 .oldgh-notif__empty p { margin: 8px 0 0; }
 
+/* ─── Scraped-section reskin pass ─────────────────────────────── */
+/* Applies to every place we drop modern HTML inside our 2013 shell:
+   marketplace / settings / explore / search / discussions / pulse /
+   projects / security / pr-subtab fallback / notifications-error. */
+.oldgh-section__content,
+.oldgh-issue__subtab,
+.oldgh-profile__scraped {
+  font-family: var(--gh-font-sans);
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg);
+}
+.oldgh-section__content a,
+.oldgh-issue__subtab a,
+.oldgh-profile__scraped a { color: var(--gh-link); }
+
+.oldgh-section__content .Box,
+.oldgh-section__content .Box-row,
+.oldgh-section__content .Box-header,
+.oldgh-section__content .Box-footer,
+.oldgh-issue__subtab .Box,
+.oldgh-issue__subtab .Box-row,
+.oldgh-issue__subtab .Box-header,
+.oldgh-issue__subtab .Box-footer,
+.oldgh-profile__scraped .Box,
+.oldgh-profile__scraped .Box-row {
+  background: var(--gh-bg-elev);
+  border-color: var(--gh-border) !important;
+  border-radius: var(--gh-radius);
+  color: var(--gh-fg);
+  box-shadow: none;
+}
+.oldgh-section__content .Box-header,
+.oldgh-issue__subtab .Box-header {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  font-weight: bold;
+  padding: 8px 12px;
+}
+.oldgh-section__content .Box-row + .Box-row,
+.oldgh-issue__subtab .Box-row + .Box-row {
+  border-top: 1px solid var(--gh-border-faint);
+}
+
+/* Buttons (Primer .btn, .Button, .prc-Button) inside scraped content */
+.oldgh-section__content .btn,
+.oldgh-section__content .Button,
+.oldgh-section__content button.Button,
+.oldgh-section__content [class*="prc-Button-"],
+.oldgh-issue__subtab .btn,
+.oldgh-issue__subtab .Button,
+.oldgh-issue__subtab [class*="prc-Button-"] {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
+  border: 1px solid var(--gh-btn-border) !important;
+  border-radius: var(--gh-radius) !important;
+  color: var(--gh-btn-fg) !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: var(--gh-shadow-inset);
+  padding: 3px 10px !important;
+  font-size: var(--gh-size-md) !important;
+  font-weight: bold;
+  line-height: 20px;
+  min-height: unset !important;
+}
+[data-oldgh-theme="dark"] .oldgh-section__content .btn,
+[data-oldgh-theme="dark"] .oldgh-section__content .Button,
+[data-oldgh-theme="dark"] .oldgh-section__content [class*="prc-Button-"],
+[data-oldgh-theme="dark"] .oldgh-issue__subtab [class*="prc-Button-"] {
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+.oldgh-section__content .btn-primary,
+.oldgh-section__content .Button--primary,
+.oldgh-section__content [class*="prc-Button-Button-"][data-variant="primary"] {
+  background: linear-gradient(to bottom, var(--gh-btn-primary-bg-top), var(--gh-btn-primary-bg-bottom)) !important;
+  border-color: var(--gh-btn-primary-border) !important;
+  color: var(--gh-btn-primary-fg) !important;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Counter labels / counts */
+.oldgh-section__content .Counter,
+.oldgh-section__content .CounterLabel,
+.oldgh-issue__subtab .Counter,
+.oldgh-issue__subtab .CounterLabel {
+  background: var(--gh-bg-stripe);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 10px;
+  color: var(--gh-fg-muted);
+  padding: 1px 7px;
+  font-size: var(--gh-size-xs);
+  font-weight: bold;
+}
+
+/* State labels (Open / Closed / Merged badges) */
+.oldgh-section__content .State,
+.oldgh-section__content [class*="prc-Label-Label"][data-state="open"],
+.oldgh-issue__subtab .State {
+  border-radius: var(--gh-radius);
+  padding: 2px 7px;
+  font-weight: bold;
+  font-size: var(--gh-size-xs);
+}
+
+/* Inputs */
+.oldgh-section__content .form-control,
+.oldgh-section__content input.FormControl-input,
+.oldgh-section__content textarea,
+.oldgh-section__content select,
+.oldgh-issue__subtab .form-control,
+.oldgh-issue__subtab input.FormControl-input,
+.oldgh-issue__subtab textarea {
+  background: var(--gh-bg-elev) !important;
+  border: 1px solid var(--gh-border) !important;
+  border-radius: var(--gh-radius) !important;
+  color: var(--gh-fg) !important;
+  padding: 4px 8px !important;
+  font-size: var(--gh-size-md) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Underline tab navs that survived stripping (e.g. inner secondary navs) */
+.oldgh-section__content .UnderlineNav,
+.oldgh-issue__subtab .UnderlineNav,
+.oldgh-profile__scraped .UnderlineNav {
+  border-bottom: 1px solid var(--gh-border);
+  background: transparent;
+}
+.oldgh-section__content .UnderlineNav-item,
+.oldgh-issue__subtab .UnderlineNav-item,
+.oldgh-profile__scraped .UnderlineNav-item {
+  color: var(--gh-fg-muted);
+  padding: 8px 12px;
+}
+.oldgh-section__content .UnderlineNav-item.selected,
+.oldgh-section__content .UnderlineNav-item[aria-current],
+.oldgh-issue__subtab .UnderlineNav-item.selected,
+.oldgh-issue__subtab .UnderlineNav-item[aria-current],
+.oldgh-profile__scraped .UnderlineNav-item.selected,
+.oldgh-profile__scraped .UnderlineNav-item[aria-current] {
+  color: var(--gh-fg);
+  font-weight: bold;
+  border-bottom: 2px solid #e36209;
+}
+
+/* Avatars retain their roundness in 2013 we used border-radius:3px instead */
+.oldgh-section__content .avatar,
+.oldgh-section__content img[class*="avatar"],
+.oldgh-issue__subtab .avatar,
+.oldgh-issue__subtab img[class*="avatar"] {
+  border-radius: 3px;
+}
+
+/* Hide modern decorative chrome that often slips through scraping */
+.oldgh-section__content .js-feature-preview-indicator-container,
+.oldgh-section__content [aria-label="Help"],
+.oldgh-section__content [data-component="UpgradeBanner"],
+.oldgh-issue__subtab [data-component="UpgradeBanner"] {
+  display: none;
+}
+
 /* ─── Dashboard (2013-style news feed) ─────────────────────────── */
 .oldgh-dashboard {
   max-width: 980px;

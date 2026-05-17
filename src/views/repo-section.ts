@@ -3,7 +3,7 @@ import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-section";
 
-export type SectionKind = "pulse" | "graphs" | "projects" | "security";
+export type SectionKind = "pulse" | "graphs" | "projects" | "security" | "discussions";
 
 export async function mountRepoSection(
   owner: string,
