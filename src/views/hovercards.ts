@@ -30,6 +30,25 @@ type RepoCard = {
   isArchived: boolean;
 };
 
+type IssueCard = {
+  owner: string;
+  repo: string;
+  number: number;
+  title: string;
+  state: "open" | "closed";
+  stateReason: string | null;
+  isPull: boolean;
+  merged: boolean;
+  draft: boolean;
+  authorLogin: string;
+  authorAvatar: string;
+  createdAt: string;
+  bodyHtml: string;
+  htmlUrl: string;
+};
+
+const issueCache = new Map<string, Promise<IssueCard | null>>();
+
 const userCache = new Map<string, Promise<UserCard | null>>();
 const repoCache = new Map<string, Promise<RepoCard | null>>();
 const negativeCache = new Set<string>();
@@ -65,6 +84,7 @@ export function mountHovercards(): void {
 function onMouseOver(e: MouseEvent): void {
   const target = e.target as Element | null;
   if (!target) return;
+  if (popoverEl && popoverEl.contains(target)) return;
   const anchor = target.closest<HTMLAnchorElement>("a");
   if (!anchor) return;
   if (anchor === activeAnchor) return;
@@ -115,7 +135,10 @@ function clearHideTimer(): void {
   }
 }
 
-type HoverTarget = { kind: "user"; login: string } | { kind: "repo"; owner: string; repo: string };
+type HoverTarget =
+  | { kind: "user"; login: string }
+  | { kind: "repo"; owner: string; repo: string }
+  | { kind: "issue"; owner: string; repo: string; number: number; isPull: boolean };
 
 function resolveTarget(a: HTMLAnchorElement): HoverTarget | null {
   if (!a.href || a.dataset["oldghNoHover"] === "1") return null;
@@ -140,6 +163,13 @@ function resolveTarget(a: HTMLAnchorElement): HoverTarget | null {
     const second = segs[1]!;
     if (!/^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,99})$/.test(second)) return null;
     if (RESERVED.has(second)) return { kind: "user", login: first };
+    if (segs.length >= 4 && (segs[2] === "issues" || segs[2] === "pull")) {
+      const num = parseInt(segs[3]!, 10);
+      if (!Number.isNaN(num)) {
+        if (negativeCache.has(`i:${first}/${second}#${num}`)) return null;
+        return { kind: "issue", owner: first, repo: second, number: num, isPull: segs[2] === "pull" };
+      }
+    }
     if (negativeCache.has(`r:${first}/${second}`)) return null;
     return { kind: "repo", owner: first, repo: second };
   }
@@ -158,11 +188,16 @@ async function showCard(anchor: HTMLAnchorElement, target: HoverTarget): Promise
       if (!card) { hideNow(); return; }
       if (activeAnchor !== anchor) return;
       popoverEl.innerHTML = renderUserCard(card);
-    } else {
+    } else if (target.kind === "repo") {
       const card = await fetchRepo(target.owner, target.repo);
       if (!card) { hideNow(); return; }
       if (activeAnchor !== anchor) return;
       popoverEl.innerHTML = renderRepoCard(card);
+    } else {
+      const card = await fetchIssue(target.owner, target.repo, target.number);
+      if (!card) { hideNow(); return; }
+      if (activeAnchor !== anchor) return;
+      popoverEl.innerHTML = renderIssueCard(card);
     }
     positionPopover(anchor);
   } catch {
@@ -266,6 +301,51 @@ async function fetchRepo(owner: string, repo: string): Promise<RepoCard | null> 
   return p;
 }
 
+async function fetchIssue(owner: string, repo: string, number: number): Promise<IssueCard | null> {
+  const key = `${owner}/${repo}#${number}`;
+  const cached = issueCache.get(key);
+  if (cached) return cached;
+  const p = (async (): Promise<IssueCard | null> => {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${number}`, {
+        credentials: "omit",
+        headers: { Accept: "application/vnd.github.html+json" },
+      });
+      if (r.status === 404) {
+        negativeCache.add(`i:${key}`);
+        return null;
+      }
+      if (!r.ok) return null;
+      const d = (await r.json()) as Record<string, unknown>;
+      const userObj = d["user"] && typeof d["user"] === "object" ? (d["user"] as Record<string, unknown>) : null;
+      const pull = d["pull_request"] && typeof d["pull_request"] === "object" ? (d["pull_request"] as Record<string, unknown>) : null;
+      const isPull = !!pull;
+      const merged = pull ? typeof pull["merged_at"] === "string" && pull["merged_at"] !== null : false;
+      return {
+        owner,
+        repo,
+        number,
+        title: readString(d, "title") ?? "",
+        state: readString(d, "state") === "closed" ? "closed" : "open",
+        stateReason: readString(d, "state_reason"),
+        isPull,
+        merged,
+        draft: d["draft"] === true,
+        authorLogin: userObj ? (readString(userObj, "login") ?? "") : "",
+        authorAvatar: userObj ? (readString(userObj, "avatar_url") ?? "") : "",
+        createdAt: readString(d, "created_at") ?? "",
+        bodyHtml: readString(d, "body_html") ?? "",
+        htmlUrl: readString(d, "html_url") ?? `https://github.com/${key}`,
+      };
+    } catch {
+      return null;
+    }
+  })();
+  trim(issueCache);
+  issueCache.set(key, p);
+  return p;
+}
+
 function trim(cache: Map<string, unknown>): void {
   if (cache.size <= MAX_CACHE) return;
   const firstKey = cache.keys().next().value;
@@ -318,6 +398,86 @@ function renderRepoCard(c: RepoCard): string {
       <li>${octicon("repo-forked", { size: 12 })} ${formatCount(c.forks)}</li>
     </ul>
   `;
+}
+
+function renderIssueCard(c: IssueCard): string {
+  let stateIcon = octicon("issue-opened", { size: 14 });
+  let stateLabel = "Open";
+  let stateCls = "oldgh-hovercard__state--open";
+  if (c.isPull) {
+    if (c.merged) {
+      stateIcon = octicon("git-merge", { size: 14 });
+      stateLabel = "Merged";
+      stateCls = "oldgh-hovercard__state--merged";
+    } else if (c.state === "closed") {
+      stateIcon = octicon("git-pull-request", { size: 14 });
+      stateLabel = "Closed";
+      stateCls = "oldgh-hovercard__state--closed";
+    } else if (c.draft) {
+      stateIcon = octicon("git-pull-request", { size: 14 });
+      stateLabel = "Draft";
+      stateCls = "oldgh-hovercard__state--draft";
+    } else {
+      stateIcon = octicon("git-pull-request", { size: 14 });
+      stateLabel = "Open";
+    }
+  } else if (c.state === "closed") {
+    stateIcon = octicon("issue-closed", { size: 14 });
+    stateLabel = c.stateReason === "not_planned" ? "Closed (not planned)" : "Closed";
+    stateCls = "oldgh-hovercard__state--closed";
+  }
+  const dateNote = c.createdAt ? ` · opened ${formatRelative(c.createdAt)}` : "";
+  const bodyExcerpt = c.bodyHtml ? `<div class="oldgh-hovercard__issue-body">${truncateHtml(c.bodyHtml, 320)}</div>` : "";
+  return `
+    <header class="oldgh-hovercard__head">
+      <span class="oldgh-hovercard__state ${stateCls}">${stateIcon}</span>
+      <div class="oldgh-hovercard__head-text">
+        <a class="oldgh-hovercard__issue-title" href="${escapeAttr(c.htmlUrl)}">${escapeText(c.title)}</a>
+        <div class="oldgh-hovercard__issue-meta">
+          <span class="oldgh-hovercard__state-label">${escapeText(stateLabel)}</span>
+          · ${escapeText(c.owner)}/${escapeText(c.repo)}#${c.number}${dateNote}
+        </div>
+      </div>
+    </header>
+    ${c.authorLogin ? `
+      <div class="oldgh-hovercard__issue-author">
+        <img src="${escapeAttr(c.authorAvatar)}" width="20" height="20" alt="" />
+        <a href="/${escapeAttr(c.authorLogin)}">${escapeText(c.authorLogin)}</a>
+      </div>
+    ` : ""}
+    ${bodyExcerpt}
+  `;
+}
+
+function truncateHtml(html: string, maxChars: number): string {
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  const text = tmp.textContent || "";
+  if (text.length <= maxChars) {
+    // strip any embedded styles / scripts as a safety
+    return tmp.innerHTML
+      .replace(/<\/?(script|style|iframe)[^>]*>/gi, "")
+      .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+  }
+  return escapeText(text.slice(0, maxChars).trim() + "…");
+}
+
+function formatRelative(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return iso;
+  const diff = Date.now() - t;
+  const s = Math.round(diff / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  if (d < 30) return `${d}d ago`;
+  const mo = Math.round(d / 30);
+  if (mo < 12) return `${mo}mo ago`;
+  const y = Math.round(mo / 12);
+  return `${y}y ago`;
 }
 
 function languageColor(lang: string): string {

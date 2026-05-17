@@ -4815,6 +4815,58 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 }
 .oldgh-hovercard__stats strong { color: var(--gh-fg); }
 
+.oldgh-hovercard__state {
+  flex: 0 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  margin-top: 2px;
+}
+.oldgh-hovercard__state--open { background: #6cc644; }
+.oldgh-hovercard__state--closed { background: #bd2c00; }
+.oldgh-hovercard__state--merged { background: #6e5494; }
+.oldgh-hovercard__state--draft { background: #6a737d; }
+.oldgh-hovercard__issue-title {
+  display: block;
+  font-size: var(--gh-size-lg);
+  font-weight: bold;
+  color: var(--gh-fg);
+  line-height: 1.25;
+}
+.oldgh-hovercard__issue-title:hover { color: var(--gh-link); }
+.oldgh-hovercard__issue-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-hovercard__state-label {
+  font-weight: bold;
+}
+.oldgh-hovercard__issue-author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-hovercard__issue-author img { border-radius: 3px; }
+.oldgh-hovercard__issue-body {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gh-border-faint);
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg);
+  line-height: 1.4;
+  max-height: 140px;
+  overflow: hidden;
+}
+.oldgh-hovercard__issue-body p { margin: 0 0 4px; }
+
 /* Stars page */
 .oldgh-stars { padding-top: 14px; }
 .oldgh-stars__header {
