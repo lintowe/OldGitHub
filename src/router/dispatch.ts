@@ -11,6 +11,8 @@ import { mountRepoIssue, unmountRepoIssue } from "@/views/repo-issue";
 import { mountRepoWiki, unmountRepoWiki } from "@/views/repo-wiki";
 import { mountRepoActions, unmountRepoActions } from "@/views/repo-actions";
 import { mountRepoSection, unmountRepoSection } from "@/views/repo-section";
+import { mountRepoPulse, unmountRepoPulse } from "@/views/repo-pulse";
+import { mountRepoGraphs, unmountRepoGraphs } from "@/views/repo-graphs";
 import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-level";
 import { mountDashboard, unmountDashboard } from "@/views/dashboard";
 import { mountNotifications, unmountNotifications } from "@/views/notifications";
@@ -230,18 +232,12 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "pulse") {
-    await mountRepoSection(target.owner, target.repo, "pulse", "/pulse", "Pulse");
+    await mountRepoPulse(target.owner, target.repo);
     bodyState = target;
     return;
   }
   if (target.kind === "graphs") {
-    const titleMap = {
-      "contributors": "Contributors",
-      "commit-activity": "Commit activity",
-      "code-frequency": "Code frequency",
-      "traffic": "Traffic",
-    } as const;
-    await mountRepoSection(target.owner, target.repo, "graphs", `/graphs/${target.subkind}`, titleMap[target.subkind]);
+    await mountRepoGraphs(target.owner, target.repo, target.subkind);
     bodyState = target;
     return;
   }
@@ -362,6 +358,8 @@ function unmountBody(): void {
   unmountRepoWiki();
   unmountRepoActions();
   unmountRepoSection();
+  unmountRepoPulse();
+  unmountRepoGraphs();
   unmountTopLevel();
   unmountDashboard();
   unmountNotifications();
