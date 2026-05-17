@@ -95,6 +95,23 @@ function cleanScrapedContent(el: Element): void {
       node.remove();
     }
   }
+  // Strip the "Welcome to Projects" marketing card. Only remove the small
+  // promotional card itself, identified by short text + a 'Learn more' link.
+  // Walk from the innermost matching heading up to the smallest containing
+  // card (max ~6 ancestors) so we don't accidentally remove the project list.
+  for (const heading of Array.from(el.querySelectorAll<HTMLElement>("h2, h3, h4"))) {
+    const txt = (heading.textContent || "").trim();
+    if (!/^Welcome to Projects$/i.test(txt)) continue;
+    let card: HTMLElement | null = heading;
+    for (let i = 0; i < 6 && card; i++) {
+      const parent = card.parentElement;
+      if (!parent) break;
+      const parentText = (parent.textContent || "").trim();
+      if (parentText.length > 800) break;
+      card = parent;
+    }
+    if (card && card !== el) card.remove();
+  }
   // Strip on* event handlers as a precaution.
   for (const node of Array.from(el.querySelectorAll<HTMLElement>("*"))) {
     for (const attr of Array.from(node.attributes)) {

@@ -43,13 +43,13 @@ function renderShell(v: IssueListView, kind: "issues" | "pulls"): string {
         <li>
           <a href="${escapeAttr(openHref)}"${!showsClosed ? ' aria-current="page"' : ""}>
             ${octicon(kind === "pulls" ? "git-pull-request" : "issue-opened", { size: 14 })}
-            <strong>${showsClosed ? "" : formatCount(v.totalCount) + " "}Open</strong>
+            <strong>${v.openCount != null ? formatCount(v.openCount) + " " : ""}Open</strong>
           </a>
         </li>
         <li>
           <a href="${escapeAttr(closedHref)}"${showsClosed ? ' aria-current="page"' : ""}>
             ${octicon("check", { size: 14 })}
-            <strong>${showsClosed ? formatCount(v.totalCount) + " " : ""}Closed</strong>
+            <strong>${v.closedCount != null ? formatCount(v.closedCount) + " " : ""}Closed</strong>
           </a>
         </li>
       </ul>
@@ -76,9 +76,11 @@ function renderSearch(v: IssueListView, kind: "issues" | "pulls"): string {
 function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): string {
   const stateIcon = r.state === "OPEN"
     ? octicon(kind === "pulls" ? "git-pull-request" : "issue-opened", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--open" })
-    : (kind === "pulls"
+    : (kind === "pulls" && r.merged
       ? octicon("git-merge", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--merged" })
-      : octicon("issue-closed", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--closed" }));
+      : (kind === "pulls"
+        ? octicon("git-pull-request", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--closed" })
+        : octicon("issue-closed", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--closed" })));
 
   const labels = r.labels.length > 0
     ? `<span class="oldgh-issues__labels">${r.labels.map((l) => `<a class="oldgh-issues__label" href="/${v.owner}/${v.repo}/${kind}?q=is:open+label:${encodeURIComponent('"' + l.name + '"')}" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(l.name)}</a>`).join("")}</span>`
@@ -90,10 +92,16 @@ function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): str
 
   const opened = r.state === "OPEN"
     ? `opened ${relativeTimeLink(r.createdAt, `/${v.owner}/${v.repo}/${kind === "pulls" ? "pull" : "issues"}/${r.number}`)} by ${author}`
-    : `by ${author} was closed ${relativeTimeLink(r.closedAt ?? r.createdAt)}`;
+    : (kind === "pulls" && r.merged
+      ? `by ${author} was merged ${relativeTimeLink(r.closedAt ?? r.createdAt)}`
+      : `by ${author} was closed ${relativeTimeLink(r.closedAt ?? r.createdAt)}`);
 
   const assignees = r.assignees.length > 0
     ? `<span class="oldgh-issues__assignees">${r.assignees.slice(0, 3).map((a) => `<a href="/${escapeAttr(a.login)}" title="@${escapeAttr(a.login)}"><img src="${escapeAttr(a.avatarUrl)}" alt="" width="20" height="20" /></a>`).join("")}</span>`
+    : "";
+
+  const commentsBadge = r.comments > 0
+    ? `<a class="oldgh-issues__comments" href="${escapeAttr(`/${v.owner}/${v.repo}/${kind === "pulls" ? "pull" : "issues"}/${r.number}`)}" title="${r.comments} comment${r.comments === 1 ? "" : "s"}">${octicon("comment", { size: 14 })}<span>${r.comments}</span></a>`
     : "";
 
   const href = `/${v.owner}/${v.repo}/${kind === "pulls" ? "pull" : "issues"}/${r.number}`;
@@ -112,6 +120,7 @@ function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): str
         </p>
       </div>
       ${assignees}
+      ${commentsBadge}
     </li>
   `;
 }
