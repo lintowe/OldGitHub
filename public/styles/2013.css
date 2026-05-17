@@ -4208,3 +4208,127 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   text-align: center;
   color: var(--gh-fg-faint);
 }
+
+/* Trending page */
+.oldgh-trending { padding-top: 14px; }
+.oldgh-trending__header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  margin-bottom: 14px;
+}
+.oldgh-trending__header h1 {
+  font-size: var(--gh-size-h1);
+  font-weight: normal;
+  margin: 0;
+}
+.oldgh-trending__sub {
+  margin: 6px 0 0;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+}
+.oldgh-trending__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+}
+.oldgh-trending__tabs {
+  display: flex;
+  gap: 12px;
+}
+.oldgh-trending__tabs a {
+  padding: 4px 10px;
+  border-radius: 3px;
+  color: var(--gh-link);
+  font-size: var(--gh-size-md);
+}
+.oldgh-trending__tabs a.is-active {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  color: var(--gh-fg);
+  font-weight: bold;
+}
+.oldgh-trending__lang {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-trending__lang input {
+  padding: 3px 6px;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: #fff;
+  font-size: var(--gh-size-sm);
+  width: 100px;
+}
+
+.oldgh-trending__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-elev);
+}
+.oldgh-trending__row {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-trending__row:last-child { border-bottom: 0; }
+.oldgh-trending__rank {
+  font-family: var(--gh-font-mono);
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+  text-align: right;
+  padding-top: 2px;
+}
+.oldgh-trending__avatar {
+  vertical-align: middle;
+  border-radius: 3px;
+  margin-right: 4px;
+}
+.oldgh-trending__name {
+  margin: 0 0 4px;
+  font-size: var(--gh-size-lg);
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.oldgh-trending__desc {
+  margin: 4px 0;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg);
+}
+.oldgh-trending__meta {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 6px 0 0;
+  padding: 0;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-trending__meta li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.oldgh-trending__loading,
+.oldgh-trending__empty {
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--gh-fg-faint);
+}
