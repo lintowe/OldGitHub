@@ -15,6 +15,7 @@ import { mountRepoPulse, unmountRepoPulse } from "@/views/repo-pulse";
 import { mountRepoGraphs, unmountRepoGraphs } from "@/views/repo-graphs";
 import { mountRepoReleases, unmountRepoReleases } from "@/views/repo-releases";
 import { mountRepoList, unmountRepoList, type RepoListKind } from "@/views/repo-lists";
+import { mountRepoDiscussion, unmountRepoDiscussion } from "@/views/repo-discussion";
 import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-level";
 import { mountDashboard, unmountDashboard } from "@/views/dashboard";
 import { mountNotifications, unmountNotifications } from "@/views/notifications";
@@ -46,6 +47,7 @@ type BodyState =
   | { kind: "projects"; owner: string; repo: string; query: string }
   | { kind: "security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "discussions"; owner: string; repo: string; subPath: string; query: string }
+  | { kind: "discussion"; owner: string; repo: string; number: number }
   | { kind: "repo-other"; owner: string; repo: string; pathname: string; search: string; title: string }
   | { kind: "top-level"; subkind: TopLevelKind; pathname: string; search: string; title: string }
   | { kind: "profile"; login: string; tab: string; query: string };
@@ -89,6 +91,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       route.kind === "repo-projects" ||
       route.kind === "repo-security" ||
       route.kind === "repo-discussions" ||
+      route.kind === "repo-discussion" ||
       route.kind === "repo-other"
     ) {
       await ensureRepoHeader(route.owner, route.repo, pathname);
@@ -144,6 +147,7 @@ function targetBodyForRoute(route: Route): BodyState {
   if (route.kind === "repo-projects") return { kind: "projects", owner: route.owner, repo: route.repo, query: route.query };
   if (route.kind === "repo-security") return { kind: "security", owner: route.owner, repo: route.repo, subkind: route.subkind };
   if (route.kind === "repo-discussions") return { kind: "discussions", owner: route.owner, repo: route.repo, subPath: route.subPath, query: route.query };
+  if (route.kind === "repo-discussion") return { kind: "discussion", owner: route.owner, repo: route.repo, number: route.number };
   if (route.kind === "repo-other") {
     const path = repoOtherPath(route.owner, route.repo);
     return { kind: "repo-other", owner: route.owner, repo: route.repo, pathname: path.pathname, search: path.search, title: path.title };
@@ -271,6 +275,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "discussion") {
+    await mountRepoDiscussion(target.owner, target.repo, target.number);
+    bodyState = target;
+    return;
+  }
   if (target.kind === "repo-other") {
     const prefix = `/${target.owner}/${target.repo}`;
     const subPath = target.pathname.startsWith(prefix) ? target.pathname.slice(prefix.length) : target.pathname;
@@ -361,6 +370,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "discussions" && b.kind === "discussions") {
     return a.owner === b.owner && a.repo === b.repo && a.subPath === b.subPath && a.query === b.query;
   }
+  if (a.kind === "discussion" && b.kind === "discussion") {
+    return a.owner === b.owner && a.repo === b.repo && a.number === b.number;
+  }
   if (a.kind === "repo-other" && b.kind === "repo-other") {
     return a.owner === b.owner && a.repo === b.repo && a.pathname === b.pathname && a.search === b.search;
   }
@@ -389,6 +401,7 @@ function unmountBody(): void {
   unmountRepoGraphs();
   unmountRepoReleases();
   unmountRepoList();
+  unmountRepoDiscussion();
   unmountTopLevel();
   unmountDashboard();
   unmountNotifications();

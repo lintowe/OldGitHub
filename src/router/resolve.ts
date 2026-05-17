@@ -15,6 +15,7 @@ export type Route =
   | { kind: "repo-projects"; owner: string; repo: string; query: string }
   | { kind: "repo-security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "repo-discussions"; owner: string; repo: string; subPath: string; query: string }
+  | { kind: "repo-discussion"; owner: string; repo: string; number: number }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
   | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "other"; pathname: string; search: string; title: string }
@@ -185,6 +186,12 @@ export function resolveRoute(pathname: string, search: string): Route {
   }
 
   if (segs[2] === "discussions") {
+    if (segs.length >= 4) {
+      const num = parseInt(segs[3]!, 10);
+      if (!Number.isNaN(num)) {
+        return { kind: "repo-discussion", owner, repo, number: num };
+      }
+    }
     const subPath = "/" + segs.slice(2).join("/");
     return { kind: "repo-discussions", owner, repo, subPath, query: search };
   }
@@ -202,6 +209,7 @@ const COVERED_REPO_KINDS = new Set<Route["kind"]>([
   "repo-issues",
   "repo-issue",
   "repo-discussions",
+  "repo-discussion",
   "repo-wiki",
   "repo-actions",
   "repo-pulse",
