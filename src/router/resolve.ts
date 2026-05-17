@@ -7,7 +7,7 @@ export type Route =
   | { kind: "repo-commit"; owner: string; repo: string; sha: string }
   | { kind: "repo-compare"; owner: string; repo: string; range: string }
   | { kind: "repo-issues"; owner: string; repo: string; query: string; subkind: "issues" | "pulls" }
-  | { kind: "repo-issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull" }
+  | { kind: "repo-issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull"; tab: "conversation" | "files" | "commits" | "checks" }
   | { kind: "repo-wiki"; owner: string; repo: string; page: string }
   | { kind: "repo-actions"; owner: string; repo: string; query: string }
   | { kind: "repo-pulse"; owner: string; repo: string }
@@ -137,7 +137,17 @@ export function resolveRoute(pathname: string, search: string): Route {
   if ((segs[2] === "issues" || segs[2] === "pull") && segs.length >= 4) {
     const num = parseInt(segs[3]!, 10);
     if (!Number.isNaN(num)) {
-      return { kind: "repo-issue", owner, repo, number: num, subkind: segs[2] === "pull" ? "pull" : "issue" };
+      const sub = segs[4];
+      const tab: "conversation" | "files" | "commits" | "checks" =
+        sub === "files" ? "files" : sub === "commits" ? "commits" : sub === "checks" ? "checks" : "conversation";
+      return {
+        kind: "repo-issue",
+        owner,
+        repo,
+        number: num,
+        subkind: segs[2] === "pull" ? "pull" : "issue",
+        tab,
+      };
     }
   }
 

@@ -1965,9 +1965,79 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 }
 .oldgh-issue__header {
   border-bottom: 1px solid var(--gh-border);
-  padding-bottom: 12px;
+  padding-bottom: 0;
   margin-bottom: 18px;
 }
+.oldgh-issue__pr-tabs {
+  margin-top: 14px;
+}
+.oldgh-issue__pr-tabs ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0;
+  border-bottom: 0;
+}
+.oldgh-issue__pr-tabs li { margin: 0; }
+.oldgh-issue__pr-tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-top-left-radius: var(--gh-radius);
+  border-top-right-radius: var(--gh-radius);
+  text-decoration: none;
+  position: relative;
+  top: 1px;
+}
+.oldgh-issue__pr-tabs a:hover {
+  color: var(--gh-fg);
+  text-decoration: none;
+}
+.oldgh-issue__pr-tabs li.is-active a {
+  color: var(--gh-fg);
+  font-weight: bold;
+  background: var(--gh-bg);
+  border-color: var(--gh-border);
+}
+.oldgh-issue__pr-tab-count {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: var(--gh-size-xs);
+  font-weight: normal;
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg-stripe);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 10px;
+}
+
+.oldgh-issue__subtab {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  padding: 14px 16px;
+  min-height: 200px;
+}
+.oldgh-issue__subtab-empty {
+  color: var(--gh-fg-faint);
+  margin: 16px 0;
+  text-align: center;
+}
+.oldgh-issue__subtab .Box,
+.oldgh-issue__subtab .Box-row,
+.oldgh-issue__subtab .file-info,
+.oldgh-issue__subtab .file-header {
+  background: var(--gh-bg-elev);
+  color: var(--gh-fg);
+  border-color: var(--gh-border);
+}
+.oldgh-issue__subtab a { color: var(--gh-link); }
+
 .oldgh-issue__title {
   font-size: 24px;
   font-weight: 300;

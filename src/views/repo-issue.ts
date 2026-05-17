@@ -9,32 +9,212 @@ import {
   type Label,
   type ReactionCount,
 } from "@/adapters/repo-issue";
+import { AdapterFailure } from "@/adapters";
 import { absoluteTime, relativeTime } from "@/util/time";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-issue";
+
+export type IssueTab = "conversation" | "files" | "commits" | "checks";
 
 export async function mountRepoIssue(
   owner: string,
   repo: string,
   number: number,
   kind: "issue" | "pull",
+  tab: IssueTab = "conversation",
 ): Promise<void> {
-  const view = kind === "pull"
-    ? await getPull(owner, repo, number)
-    : await getIssue(owner, repo, number);
+  let view: IssueDetail | PullDetail | null = null;
+  try {
+    view = kind === "pull"
+      ? await getPull(owner, repo, number)
+      : await getIssue(owner, repo, number);
+  } catch (err) {
+    if (!(err instanceof AdapterFailure)) throw err;
+  }
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
-  root.innerHTML = renderShell(view, kind);
+  if (view) {
+    root.innerHTML = renderShell(view, kind, tab);
+  } else {
+    root.innerHTML = renderScrapedShell(owner, repo, number, kind, tab);
+  }
   adoptBodyRoot(root, ".oldgh-repo-header");
+
+  if (!view) {
+    void hydrateScrapedBody(root, owner, repo, number, kind, tab);
+  } else if (kind === "pull" && tab !== "conversation") {
+    void hydrateSubTab(root, owner, repo, number, tab);
+  }
+}
+
+function renderScrapedShell(
+  owner: string,
+  repo: string,
+  number: number,
+  kind: "issue" | "pull",
+  tab: IssueTab,
+): string {
+  const isPull = kind === "pull";
+  const tabsNav = isPull ? renderScrapedPrTabs(owner, repo, number, tab) : "";
+  return `
+    <div class="oldgh-page oldgh-issue">
+      <header class="oldgh-issue__header">
+        <h1 class="oldgh-issue__title">
+          ${escapeText(isPull ? "Pull request" : "Issue")}
+          <span class="oldgh-issue__number">#${number}</span>
+        </h1>
+        ${tabsNav}
+      </header>
+      <div class="oldgh-issue__subtab" data-tab="${escapeAttr(tab)}">
+        <p class="oldgh-issue__subtab-empty">Loading…</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderScrapedPrTabs(
+  owner: string,
+  repo: string,
+  number: number,
+  active: IssueTab,
+): string {
+  const base = `/${escapeAttr(owner)}/${escapeAttr(repo)}/pull/${number}`;
+  const tabs: { key: IssueTab; label: string; icon: string }[] = [
+    { key: "conversation", label: "Conversation", icon: "comment-discussion" },
+    { key: "commits", label: "Commits", icon: "git-commit" },
+    { key: "checks", label: "Checks", icon: "check" },
+    { key: "files", label: "Files changed", icon: "diff" },
+  ];
+  return `
+    <nav class="oldgh-issue__pr-tabs" aria-label="Pull request sections">
+      <ul>
+        ${tabs.map((t) => `
+          <li class="${active === t.key ? "is-active" : ""}">
+            <a href="${base}${t.key === "conversation" ? "" : "/" + t.key}">
+              ${octicon(t.icon, { size: 14 })}
+              <span>${escapeText(t.label)}</span>
+            </a>
+          </li>
+        `).join("")}
+      </ul>
+    </nav>
+  `;
+}
+
+async function hydrateScrapedBody(
+  root: HTMLElement,
+  owner: string,
+  repo: string,
+  number: number,
+  kind: "issue" | "pull",
+  tab: IssueTab,
+): Promise<void> {
+  const container = root.querySelector<HTMLElement>(".oldgh-issue__subtab");
+  if (!container) return;
+  const segment = kind === "pull" ? "pull" : "issues";
+  const sub = tab === "conversation" ? "" : "/" + tab;
+  const url = `https://github.com/${owner}/${repo}/${segment}/${number}${sub}`;
+  try {
+    const resp = await fetch(url, { credentials: "include", headers: { Accept: "text/html" } });
+    if (!resp.ok) throw new Error(`status ${resp.status}`);
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const inner =
+      doc.querySelector("turbo-frame#repo-content-turbo-frame") ||
+      doc.querySelector("[data-pjax-container]") ||
+      doc.querySelector(".application-main") ||
+      doc.querySelector("main");
+    if (!inner) {
+      container.innerHTML = `<p class="oldgh-issue__subtab-empty">Couldn't load this view.</p>`;
+      return;
+    }
+    for (const sel of [
+      "header.AppHeader",
+      "header[role='banner']",
+      "footer",
+      "#repository-container-header",
+      ".pagehead",
+      ".UnderlineNav.js-repo-nav",
+      "[class*='PageLayout-Header-']",
+      "[class*='PageHeader-']",
+      ".tabnav",
+      ".UnderlineNav",
+      ".gh-header",
+      ".gh-header-actions",
+      ".gh-header-meta",
+      ".pull-discussion-timeline > header",
+      "[data-component='HeaderMeta']",
+      "[data-component='Page::Title']",
+      "[aria-label*='error' i][role='alert']",
+      "script",
+      "style",
+    ]) {
+      inner.querySelectorAll(sel).forEach((n) => n.remove());
+    }
+    for (const node of Array.from(inner.querySelectorAll<HTMLElement>("*"))) {
+      for (const attr of Array.from(node.attributes)) {
+        if (/^on/i.test(attr.name)) node.removeAttribute(attr.name);
+      }
+    }
+    container.innerHTML = inner.innerHTML;
+  } catch {
+    container.innerHTML = `<p class="oldgh-issue__subtab-empty">Couldn't load this view.</p>`;
+  }
+}
+
+async function hydrateSubTab(
+  root: HTMLElement,
+  owner: string,
+  repo: string,
+  number: number,
+  tab: IssueTab,
+): Promise<void> {
+  const container = root.querySelector<HTMLElement>(".oldgh-issue__subtab");
+  if (!container) return;
+  const url = `https://github.com/${owner}/${repo}/pull/${number}/${tab}`;
+  try {
+    const resp = await fetch(url, { credentials: "include", headers: { Accept: "text/html" } });
+    if (!resp.ok) throw new Error(`status ${resp.status}`);
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const inner =
+      doc.querySelector("turbo-frame#repo-content-turbo-frame") ||
+      doc.querySelector("[data-pjax-container]") ||
+      doc.querySelector("main");
+    if (!inner) {
+      container.innerHTML = `<p class="oldgh-issue__subtab-empty">Couldn't load this tab.</p>`;
+      return;
+    }
+    for (const sel of [
+      "header.AppHeader",
+      "header[role='banner']",
+      "footer",
+      "#repository-container-header",
+      ".pagehead",
+      ".UnderlineNav.js-repo-nav",
+      "script",
+      "style",
+    ]) {
+      inner.querySelectorAll(sel).forEach((n) => n.remove());
+    }
+    for (const node of Array.from(inner.querySelectorAll<HTMLElement>("*"))) {
+      for (const attr of Array.from(node.attributes)) {
+        if (/^on/i.test(attr.name)) node.removeAttribute(attr.name);
+      }
+    }
+    container.innerHTML = inner.innerHTML;
+  } catch {
+    container.innerHTML = `<p class="oldgh-issue__subtab-empty">Couldn't load this tab.</p>`;
+  }
 }
 
 export function unmountRepoIssue(): void {
   removeAllBodyRoots();
 }
 
-function renderShell(v: IssueDetail | PullDetail, kind: "issue" | "pull"): string {
+function renderShell(v: IssueDetail | PullDetail, kind: "issue" | "pull", tab: IssueTab): string {
   const isPull = kind === "pull";
   const pull = isPull ? (v as PullDetail) : null;
 
@@ -54,17 +234,47 @@ function renderShell(v: IssueDetail | PullDetail, kind: "issue" | "pull"): strin
             · ${v.totalTimelineCount} ${v.totalTimelineCount === 1 ? "comment" : "comments"}
           </span>
         </div>
+        ${isPull && pull ? renderPrTabs(pull, tab) : ""}
       </header>
 
-      <div class="oldgh-issue__layout">
-        <div class="oldgh-issue__main">
-          ${renderTimelineGroup(v)}
+      ${tab !== "conversation" && isPull
+        ? `<div class="oldgh-issue__subtab" data-tab="${escapeAttr(tab)}"><p class="oldgh-issue__subtab-empty">Loading…</p></div>`
+        : `
+        <div class="oldgh-issue__layout">
+          <div class="oldgh-issue__main">
+            ${renderTimelineGroup(v)}
+          </div>
+          <aside class="oldgh-issue__sidebar">
+            ${renderSidebar(v)}
+          </aside>
         </div>
-        <aside class="oldgh-issue__sidebar">
-          ${renderSidebar(v)}
-        </aside>
-      </div>
+      `}
     </div>
+  `;
+}
+
+function renderPrTabs(p: PullDetail, active: IssueTab): string {
+  const base = `/${escapeAttr(p.owner)}/${escapeAttr(p.repo)}/pull/${p.number}`;
+  const tabs: { key: IssueTab; label: string; icon: string; count?: number | string }[] = [
+    { key: "conversation", label: "Conversation", icon: "comment-discussion", count: p.totalTimelineCount },
+    { key: "commits", label: "Commits", icon: "git-commit", count: p.commitsCount ?? undefined },
+    { key: "checks", label: "Checks", icon: "check" },
+    { key: "files", label: "Files changed", icon: "diff", count: p.changedFiles ?? undefined },
+  ];
+  return `
+    <nav class="oldgh-issue__pr-tabs" aria-label="Pull request sections">
+      <ul>
+        ${tabs.map((t) => `
+          <li class="${active === t.key ? "is-active" : ""}">
+            <a href="${base}${t.key === "conversation" ? "" : "/" + t.key}">
+              ${octicon(t.icon, { size: 14 })}
+              <span>${escapeText(t.label)}</span>
+              ${t.count != null ? `<span class="oldgh-issue__pr-tab-count">${escapeText(String(t.count))}</span>` : ""}
+            </a>
+          </li>
+        `).join("")}
+      </ul>
+    </nav>
   `;
 }
 

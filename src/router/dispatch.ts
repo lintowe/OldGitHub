@@ -31,7 +31,7 @@ type BodyState =
   | { kind: "commit"; owner: string; repo: string; sha: string }
   | { kind: "compare"; owner: string; repo: string; range: string }
   | { kind: "issues"; owner: string; repo: string; query: string; subkind: "issues" | "pulls" }
-  | { kind: "issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull" }
+  | { kind: "issue"; owner: string; repo: string; number: number; subkind: "issue" | "pull"; tab: "conversation" | "files" | "commits" | "checks" }
   | { kind: "wiki"; owner: string; repo: string; page: string }
   | { kind: "actions"; owner: string; repo: string; query: string }
   | { kind: "pulse"; owner: string; repo: string }
@@ -126,7 +126,7 @@ function targetBodyForRoute(route: Route): BodyState {
   if (route.kind === "repo-commit") return { kind: "commit", owner: route.owner, repo: route.repo, sha: route.sha };
   if (route.kind === "repo-compare") return { kind: "compare", owner: route.owner, repo: route.repo, range: route.range };
   if (route.kind === "repo-issues") return { kind: "issues", owner: route.owner, repo: route.repo, query: route.query, subkind: route.subkind };
-  if (route.kind === "repo-issue") return { kind: "issue", owner: route.owner, repo: route.repo, number: route.number, subkind: route.subkind };
+  if (route.kind === "repo-issue") return { kind: "issue", owner: route.owner, repo: route.repo, number: route.number, subkind: route.subkind, tab: route.tab };
   if (route.kind === "repo-wiki") return { kind: "wiki", owner: route.owner, repo: route.repo, page: route.page };
   if (route.kind === "repo-actions") return { kind: "actions", owner: route.owner, repo: route.repo, query: route.query };
   if (route.kind === "repo-pulse") return { kind: "pulse", owner: route.owner, repo: route.repo };
@@ -196,7 +196,7 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "issue") {
-    await mountRepoIssue(target.owner, target.repo, target.number, target.subkind);
+    await mountRepoIssue(target.owner, target.repo, target.number, target.subkind, target.tab);
     bodyState = target;
     return;
   }
@@ -280,7 +280,7 @@ function sameBody(a: BodyState, b: BodyState): boolean {
     return a.owner === b.owner && a.repo === b.repo && a.query === b.query && a.subkind === b.subkind;
   }
   if (a.kind === "issue" && b.kind === "issue") {
-    return a.owner === b.owner && a.repo === b.repo && a.number === b.number && a.subkind === b.subkind;
+    return a.owner === b.owner && a.repo === b.repo && a.number === b.number && a.subkind === b.subkind && a.tab === b.tab;
   }
   if (a.kind === "wiki" && b.kind === "wiki") {
     return a.owner === b.owner && a.repo === b.repo && a.page === b.page;
