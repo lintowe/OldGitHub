@@ -5,6 +5,14 @@ export function isLoggedIn(): boolean {
   return false;
 }
 
+export function currentUserLogin(): string | null {
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="user-login"]');
+  const fromMeta = meta?.content?.trim();
+  if (fromMeta) return fromMeta;
+  const m = /(?:^|;\s*)dotcom_user=([^;]+)/.exec(document.cookie);
+  return m && m[1] ? decodeURIComponent(m[1]) : null;
+}
+
 export function readCsrfToken(doc: Document = document): string | null {
   const meta = doc.querySelector<HTMLMetaElement>('meta[name="csrf-token"]');
   return meta?.content ?? null;

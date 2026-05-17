@@ -17,6 +17,7 @@ import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-l
 import { mountDashboard, unmountDashboard } from "@/views/dashboard";
 import { mountNotifications, unmountNotifications } from "@/views/notifications";
 import { mountSearch, unmountSearch } from "@/views/search";
+import { mountStars, unmountStars } from "@/views/stars";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
 import { resolveRoute, type Route } from "./resolve";
@@ -279,6 +280,8 @@ async function applyBodyState(target: BodyState): Promise<void> {
       await mountNotifications(target.search);
     } else if (target.subkind === "search") {
       await mountSearch(target.pathname, target.search);
+    } else if (target.subkind === "stars") {
+      await mountStars(target.pathname, target.search);
     } else {
       await mountTopLevel(target.subkind, target.pathname, target.search, target.title);
     }
@@ -364,6 +367,7 @@ function unmountBody(): void {
   unmountDashboard();
   unmountNotifications();
   unmountSearch();
+  unmountStars();
   unmountProfile();
 }
 
