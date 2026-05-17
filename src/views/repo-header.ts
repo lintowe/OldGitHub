@@ -71,8 +71,20 @@ function renderRepoHeaderHtml(s: RepoSummary, activeTab: TabKey): string {
     ? `<div class="oldgh-repo-header__fork-of">forked from <a href="/${escapeAttr(s.parentNwo)}">${escapeText(s.parentNwo)}</a></div>`
     : "";
 
-  const description = s.description
-    ? `<p class="oldgh-repo-header__description">${escapeText(s.description)}</p>`
+  const descBits: string[] = [];
+  if (s.description) descBits.push(`<span class="oldgh-repo-header__description-text">${escapeText(s.description)}</span>`);
+  if (s.homepage) {
+    const href = /^https?:\/\//.test(s.homepage) ? s.homepage : `https://${s.homepage}`;
+    descBits.push(`<a class="oldgh-repo-header__homepage" href="${escapeAttr(href)}" rel="noopener noreferrer nofollow">${octicon("link", { size: 12 })} ${escapeText(s.homepage.replace(/^https?:\/\//, ""))}</a>`);
+  }
+  const description = descBits.length > 0
+    ? `<p class="oldgh-repo-header__description">${descBits.join(" ")}${s.isArchived ? ` <span class="oldgh-repo-header__archived">Archived</span>` : ""}</p>`
+    : s.isArchived
+      ? `<p class="oldgh-repo-header__description"><span class="oldgh-repo-header__archived">Archived</span></p>`
+      : "";
+
+  const topics = s.topics.length > 0
+    ? `<p class="oldgh-repo-header__topics">${s.topics.slice(0, 12).map((t) => `<a class="oldgh-repo-header__topic" href="/topics/${escapeAttr(t)}">${escapeText(t)}</a>`).join("")}</p>`
     : "";
 
   const watchersText = formatCount(s.watchers);
@@ -114,6 +126,7 @@ function renderRepoHeaderHtml(s: RepoSummary, activeTab: TabKey): string {
       </div>
       ${forkOf}
       ${description}
+      ${topics}
       <nav class="oldgh-repo-tabs" aria-label="Repository">
         <ul class="oldgh-tabs">
           ${TABS.map((t) => renderTab(s, t, activeTab)).join("")}

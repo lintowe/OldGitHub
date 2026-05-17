@@ -494,6 +494,46 @@ html[data-oldgh-hide-modern-repo-header] .UnderlineNav.js-repo-nav {
   color: var(--gh-fg);
   max-width: 70ch;
 }
+.oldgh-repo-header__homepage {
+  margin-left: 8px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-link);
+  vertical-align: middle;
+}
+.oldgh-repo-header__archived {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  background: #fff8e1;
+  border: 1px solid #ebc97e;
+  border-radius: 3px;
+  color: #b87000;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+.oldgh-repo-header__topics {
+  margin: 8px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 80ch;
+}
+.oldgh-repo-header__topic {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 11px;
+  border: 1px solid #d1e3f5;
+  border-radius: 999px;
+  background: #f1f8ff;
+  color: #0366d6;
+}
+.oldgh-repo-header__topic:hover {
+  background: #e1efff;
+  text-decoration: none;
+}
 
 .oldgh-repo-header__actions {
   display: flex;
@@ -4633,6 +4673,47 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   padding: 36px 24px;
   text-align: center;
   color: var(--gh-fg-faint);
+}
+
+/* Repo home language bar */
+.oldgh-repo-home__langs {
+  margin: 10px 0 14px;
+}
+.oldgh-repo-home__lang-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+}
+.oldgh-repo-home__lang-seg {
+  display: block;
+  height: 100%;
+}
+.oldgh-repo-home__lang-labels {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-home__lang-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.oldgh-repo-home__lang-label strong {
+  color: var(--gh-fg);
+  font-weight: bold;
+}
+.oldgh-repo-home__lang-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.12);
 }
 
 /* Stars page */

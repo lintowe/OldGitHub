@@ -1,5 +1,6 @@
 import { octicon } from "@/icons";
 import { getRepoOverview, type RepoOverview } from "@/adapters/repo-overview";
+import { getRepoLanguages } from "@/adapters/repo";
 import { hydrateTreeTable, renderTreeTable } from "./_tree-table";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
@@ -22,6 +23,49 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
     branch: overview.branch,
     basePath: "",
   });
+
+  void hydrateLanguagesBar(root, owner, repo);
+}
+
+async function hydrateLanguagesBar(root: HTMLElement, owner: string, repo: string): Promise<void> {
+  try {
+    const langs = await getRepoLanguages(owner, repo);
+    if (langs.length === 0) return;
+    const slot = root.querySelector<HTMLElement>(".oldgh-repo-home__langs-slot");
+    if (!slot) return;
+    slot.innerHTML = renderLanguageBar(langs);
+  } catch {
+    // ignore — language bar is decorative
+  }
+}
+
+function renderLanguageBar(langs: Array<{ name: string; bytes: number; percent: number }>): string {
+  const top = langs.slice(0, 8);
+  const restPercent = langs.slice(8).reduce((s, l) => s + l.percent, 0);
+  const segs = top.map((l) => `<span class="oldgh-repo-home__lang-seg" style="width:${l.percent.toFixed(2)}%;background:${languageColor(l.name)}" title="${escapeAttr(l.name)} ${l.percent.toFixed(1)}%"></span>`).join("");
+  const otherSeg = restPercent > 0.1 ? `<span class="oldgh-repo-home__lang-seg" style="width:${restPercent.toFixed(2)}%;background:#ccc" title="Other ${restPercent.toFixed(1)}%"></span>` : "";
+  const labels = top.map((l) => `<span class="oldgh-repo-home__lang-label"><span class="oldgh-repo-home__lang-dot" style="background:${languageColor(l.name)}"></span>${escapeText(l.name)} <strong>${l.percent.toFixed(1)}%</strong></span>`).join(" ");
+  return `
+    <div class="oldgh-repo-home__langs">
+      <div class="oldgh-repo-home__lang-bar">${segs}${otherSeg}</div>
+      <div class="oldgh-repo-home__lang-labels">${labels}${restPercent > 0.1 ? ` <span class="oldgh-repo-home__lang-label"><span class="oldgh-repo-home__lang-dot" style="background:#ccc"></span>Other <strong>${restPercent.toFixed(1)}%</strong></span>` : ""}</div>
+    </div>
+  `;
+}
+
+function languageColor(lang: string): string {
+  const map: Record<string, string> = {
+    "TypeScript": "#2b7489", "JavaScript": "#f1e05a", "Python": "#3572A5", "Rust": "#dea584",
+    "Go": "#00ADD8", "Java": "#b07219", "C": "#555555", "C++": "#f34b7d", "C#": "#178600",
+    "Ruby": "#701516", "PHP": "#4F5D95", "Swift": "#ffac45", "Kotlin": "#A97BFF", "Shell": "#89e051",
+    "HTML": "#e34c26", "CSS": "#563d7c", "SCSS": "#c6538c", "Vue": "#41b883", "Dart": "#00B4AB",
+    "Elixir": "#6e4a7e", "Lua": "#000080", "Scala": "#c22d40", "Haskell": "#5e5086",
+    "R": "#198CE7", "Perl": "#0298c3", "Objective-C": "#438eff", "Makefile": "#427819",
+    "Dockerfile": "#384d54", "Vim Script": "#199f4b", "Jupyter Notebook": "#DA5B0B",
+    "MDX": "#fcb32c", "Markdown": "#083fa1", "TeX": "#3D6117", "Nix": "#7e7eff",
+    "Zig": "#ec915c", "Astro": "#ff5a03",
+  };
+  return map[lang] ?? "#ccc";
 }
 
 export function unmountRepoHome(): void {
@@ -32,6 +76,7 @@ function renderShell(o: RepoOverview): string {
   return `
     <div class="oldgh-page">
       ${renderTopBar(o)}
+      <div class="oldgh-repo-home__langs-slot"></div>
       ${renderTreeTable({ owner: o.owner, repo: o.repo, branch: o.branch, basePath: "" }, o.tree)}
       ${renderReadme(o)}
     </div>
