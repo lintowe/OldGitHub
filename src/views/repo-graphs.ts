@@ -1,4 +1,12 @@
-import { getRepoContributors, type ContributorsView, type ContributorEntry } from "@/adapters/repo-graphs";
+import {
+  getRepoContributors,
+  getRepoCommitActivity,
+  getRepoCodeFrequency,
+  type ContributorsView,
+  type ContributorEntry,
+  type CommitActivityView,
+  type CodeFrequencyView,
+} from "@/adapters/repo-graphs";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 import { renderInsightsNav } from "./repo-pulse";
 
@@ -18,11 +26,22 @@ export async function mountRepoGraphs(owner: string, repo: string, subkind: Grap
     if (subkind === "contributors") {
       const view = await getRepoContributors(owner, repo);
       main.innerHTML = renderContributors(view);
+    } else if (subkind === "commit-activity") {
+      const view = await getRepoCommitActivity(owner, repo);
+      main.innerHTML = renderCommitActivity(view);
+    } else if (subkind === "code-frequency") {
+      const view = await getRepoCodeFrequency(owner, repo);
+      main.innerHTML = renderCodeFrequency(view);
     } else {
       main.innerHTML = `<div class="oldgh-graphs__empty">${escapeText(graphTitle(subkind))} view isn't built natively yet — open the modern GitHub page <a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/graphs/${escapeAttr(subkind)}">here</a>.</div>`;
     }
   } catch (err) {
-    main.innerHTML = `<div class="oldgh-graphs__empty">Couldn't load: ${escapeText(err instanceof Error ? err.message : String(err))}</div>`;
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/422/.test(msg)) {
+      main.innerHTML = `<div class="oldgh-graphs__empty">This repository is too large for the stats endpoint to return — open the modern view <a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/graphs/${escapeAttr(subkind)}">here</a>.</div>`;
+    } else {
+      main.innerHTML = `<div class="oldgh-graphs__empty">Couldn't load: ${escapeText(msg)}</div>`;
+    }
   }
 }
 
@@ -100,6 +119,106 @@ function renderSparkline(weeks: Array<{ ts: number; commits: number }>): string 
     .map((w) => `<span class="oldgh-spark-bar" style="height:${Math.max(2, Math.round((w.commits / max) * 24))}px" title="${w.commits} commits week of ${new Date(w.ts * 1000).toISOString().slice(0, 10)}"></span>`)
     .join("");
   return `<div class="oldgh-spark">${bars}</div>`;
+}
+
+function renderCommitActivity(v: CommitActivityView): string {
+  if (v.status === "computing") {
+    return `<div class="oldgh-graphs__empty"><p>GitHub is computing commit activity stats. Refresh the page in a moment.</p></div>`;
+  }
+  if (v.weeks.length === 0) {
+    return `<div class="oldgh-graphs__empty">No commit activity recorded.</div>`;
+  }
+  const max = Math.max(1, ...v.weeks.map((w) => w.total));
+  const total = v.weeks.reduce((s, w) => s + w.total, 0);
+  const avg = Math.round(total / Math.max(1, v.weeks.length));
+  return `
+    <header class="oldgh-graphs__header">
+      <h1>Commit activity</h1>
+      <p class="oldgh-graphs__sub">
+        <strong>${total.toLocaleString()}</strong> commits over the last 52 weeks
+        · average <strong>${avg}</strong> per week
+      </p>
+    </header>
+    <div class="oldgh-graphs__activity">
+      ${renderActivityChart(v.weeks, max)}
+      <ol class="oldgh-graphs__week-list">
+        ${v.weeks.slice().reverse().slice(0, 12).map(renderWeekRow).join("")}
+      </ol>
+    </div>
+  `;
+}
+
+function renderActivityChart(weeks: CommitActivityView["weeks"], max: number): string {
+  const bars = weeks
+    .map((w) => `<span class="oldgh-activity-bar" style="height:${Math.max(2, Math.round((w.total / max) * 110))}px" title="${w.total} commits — week of ${formatWeek(w.ts)}"></span>`)
+    .join("");
+  return `<div class="oldgh-activity-chart">${bars}</div>`;
+}
+
+function renderWeekRow(w: CommitActivityView["weeks"][number]): string {
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const peak = Math.max(0, ...w.days);
+  const days = w.days
+    .map((c, i) => `<span class="oldgh-week-day" title="${escapeText(dayNames[i] ?? "")}: ${c} commits"><span class="oldgh-week-day-bar" style="height:${peak > 0 ? Math.max(2, Math.round((c / peak) * 18)) : 2}px"></span></span>`)
+    .join("");
+  return `
+    <li class="oldgh-graphs__week-row">
+      <span class="oldgh-graphs__week-date">Week of ${escapeText(formatWeek(w.ts))}</span>
+      <span class="oldgh-graphs__week-count">${w.total} commits</span>
+      <div class="oldgh-week-days">${days}</div>
+    </li>
+  `;
+}
+
+function renderCodeFrequency(v: CodeFrequencyView): string {
+  if (v.status === "computing") {
+    return `<div class="oldgh-graphs__empty"><p>GitHub is computing code frequency stats. Refresh the page in a moment.</p></div>`;
+  }
+  if (v.points.length === 0) {
+    return `<div class="oldgh-graphs__empty">No code frequency data recorded.</div>`;
+  }
+  const totalAdd = v.points.reduce((s, p) => s + p.additions, 0);
+  const totalDel = v.points.reduce((s, p) => s + Math.abs(p.deletions), 0);
+  const maxAbs = Math.max(1, ...v.points.map((p) => Math.max(p.additions, Math.abs(p.deletions))));
+  return `
+    <header class="oldgh-graphs__header">
+      <h1>Code frequency</h1>
+      <p class="oldgh-graphs__sub">
+        Total <span class="oldgh-graphs__add">+${totalAdd.toLocaleString()}</span>
+        / <span class="oldgh-graphs__del">−${totalDel.toLocaleString()}</span>
+        across <strong>${v.points.length}</strong> weeks
+      </p>
+    </header>
+    <div class="oldgh-codefreq">
+      ${renderCodeFreqChart(v.points, maxAbs)}
+      <div class="oldgh-codefreq__legend">
+        <span><span class="oldgh-codefreq__swatch oldgh-codefreq__swatch--add"></span> Additions</span>
+        <span><span class="oldgh-codefreq__swatch oldgh-codefreq__swatch--del"></span> Deletions</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderCodeFreqChart(points: CodeFrequencyView["points"], maxAbs: number): string {
+  const tail = points.slice(-104); // up to 2 years
+  return `
+    <div class="oldgh-codefreq__chart">
+      ${tail.map((p) => `
+        <div class="oldgh-codefreq__col" title="Week of ${formatWeek(p.ts)} — +${p.additions} / −${Math.abs(p.deletions)}">
+          <span class="oldgh-codefreq__add" style="height:${Math.round((p.additions / maxAbs) * 60)}px"></span>
+          <span class="oldgh-codefreq__zero"></span>
+          <span class="oldgh-codefreq__del" style="height:${Math.round((Math.abs(p.deletions) / maxAbs) * 60)}px"></span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function formatWeek(ts: number): string {
+  if (!ts) return "";
+  const d = new Date(ts * 1000);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 function graphTitle(subkind: GraphsSubkind): string {

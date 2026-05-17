@@ -19,6 +19,95 @@ export type ContributorsView = {
   entries: ContributorEntry[];
 };
 
+export type CommitActivityWeek = {
+  ts: number;
+  total: number;
+  days: number[]; // Sun..Sat
+};
+
+export type CommitActivityView = {
+  owner: string;
+  repo: string;
+  status: "ok" | "computing";
+  weeks: CommitActivityWeek[];
+};
+
+export type CodeFrequencyPoint = {
+  ts: number;
+  additions: number;
+  deletions: number;
+};
+
+export type CodeFrequencyView = {
+  owner: string;
+  repo: string;
+  status: "ok" | "computing";
+  points: CodeFrequencyPoint[];
+};
+
+export async function getRepoCommitActivity(owner: string, repo: string): Promise<CommitActivityView> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const resp = await fetch(`${API}/repos/${owner}/${repo}/stats/commit_activity`, {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (resp.status === 202) {
+      if (attempt < 2) {
+        await sleep(2000 * (attempt + 1));
+        continue;
+      }
+      return { owner, repo, status: "computing", weeks: [] };
+    }
+    if (!resp.ok) {
+      throw new AdapterFailure("getRepoCommitActivity", `responded ${resp.status}`);
+    }
+    const data = (await resp.json()) as unknown;
+    const arr = Array.isArray(data) ? data : [];
+    const weeks: CommitActivityWeek[] = [];
+    for (const w of arr) {
+      if (!w || typeof w !== "object") continue;
+      const o = w as Record<string, unknown>;
+      const ts = typeof o["week"] === "number" ? (o["week"] as number) : 0;
+      const total = typeof o["total"] === "number" ? (o["total"] as number) : 0;
+      const days = Array.isArray(o["days"]) ? (o["days"] as unknown[]).map((x) => (typeof x === "number" ? x : 0)) : [];
+      weeks.push({ ts, total, days });
+    }
+    return { owner, repo, status: "ok", weeks };
+  }
+  return { owner, repo, status: "computing", weeks: [] };
+}
+
+export async function getRepoCodeFrequency(owner: string, repo: string): Promise<CodeFrequencyView> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const resp = await fetch(`${API}/repos/${owner}/${repo}/stats/code_frequency`, {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (resp.status === 202) {
+      if (attempt < 2) {
+        await sleep(2000 * (attempt + 1));
+        continue;
+      }
+      return { owner, repo, status: "computing", points: [] };
+    }
+    if (!resp.ok) {
+      throw new AdapterFailure("getRepoCodeFrequency", `responded ${resp.status}`);
+    }
+    const data = (await resp.json()) as unknown;
+    const arr = Array.isArray(data) ? data : [];
+    const points: CodeFrequencyPoint[] = [];
+    for (const p of arr) {
+      if (!Array.isArray(p) || p.length < 3) continue;
+      const ts = typeof p[0] === "number" ? (p[0] as number) : 0;
+      const additions = typeof p[1] === "number" ? (p[1] as number) : 0;
+      const deletions = typeof p[2] === "number" ? (p[2] as number) : 0;
+      points.push({ ts, additions, deletions });
+    }
+    return { owner, repo, status: "ok", points };
+  }
+  return { owner, repo, status: "computing", points: [] };
+}
+
 export async function getRepoContributors(owner: string, repo: string): Promise<ContributorsView> {
   // 202 = stats are being computed. Retry up to 3 times with backoff.
   for (let attempt = 0; attempt < 3; attempt++) {

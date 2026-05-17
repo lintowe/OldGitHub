@@ -4145,6 +4145,127 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   padding-bottom: 8px;
 }
 
+/* Commit activity chart */
+.oldgh-graphs__activity {
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-elev);
+  padding: 12px;
+}
+.oldgh-activity-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 130px;
+  padding: 8px 4px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 3px;
+}
+.oldgh-activity-bar {
+  flex: 1;
+  min-width: 4px;
+  background: linear-gradient(to bottom, #6cc644, #4a934a);
+  border-radius: 2px 2px 0 0;
+}
+.oldgh-graphs__week-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+.oldgh-graphs__week-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 140px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  font-size: var(--gh-size-md);
+}
+.oldgh-graphs__week-row:last-child { border-bottom: 0; }
+.oldgh-graphs__week-date { color: var(--gh-fg); }
+.oldgh-graphs__week-count { color: var(--gh-fg-muted); font-size: 11px; }
+.oldgh-week-days {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 22px;
+}
+.oldgh-week-day {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  flex: 1;
+  height: 100%;
+}
+.oldgh-week-day-bar {
+  display: block;
+  width: 100%;
+  background: #6cc644;
+  border-radius: 1px;
+}
+
+/* Code frequency chart */
+.oldgh-codefreq {
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-elev);
+  padding: 12px;
+}
+.oldgh-codefreq__chart {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  height: 130px;
+  padding: 4px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 3px;
+}
+.oldgh-codefreq__col {
+  flex: 1;
+  min-width: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  height: 100%;
+}
+.oldgh-codefreq__add {
+  display: block;
+  margin-top: auto;
+  background: #6cc644;
+  border-radius: 1px 1px 0 0;
+}
+.oldgh-codefreq__del {
+  display: block;
+  margin-bottom: auto;
+  background: #bd2c00;
+  border-radius: 0 0 1px 1px;
+}
+.oldgh-codefreq__zero {
+  height: 1px;
+  background: var(--gh-border);
+}
+.oldgh-codefreq__legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-codefreq__swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.oldgh-codefreq__swatch--add { background: #6cc644; }
+.oldgh-codefreq__swatch--del { background: #bd2c00; }
+
 /* Stars page */
 .oldgh-stars { padding-top: 14px; }
 .oldgh-stars__header {
