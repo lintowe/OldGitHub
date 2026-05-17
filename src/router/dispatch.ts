@@ -13,6 +13,7 @@ import { mountRepoActions, unmountRepoActions } from "@/views/repo-actions";
 import { mountRepoSection, unmountRepoSection } from "@/views/repo-section";
 import { mountRepoPulse, unmountRepoPulse } from "@/views/repo-pulse";
 import { mountRepoGraphs, unmountRepoGraphs } from "@/views/repo-graphs";
+import { mountRepoReleases, unmountRepoReleases } from "@/views/repo-releases";
 import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-level";
 import { mountDashboard, unmountDashboard } from "@/views/dashboard";
 import { mountNotifications, unmountNotifications } from "@/views/notifications";
@@ -264,6 +265,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
   if (target.kind === "repo-other") {
     const prefix = `/${target.owner}/${target.repo}`;
     const subPath = target.pathname.startsWith(prefix) ? target.pathname.slice(prefix.length) : target.pathname;
+    if (subPath === "/releases" || subPath.startsWith("/releases?") || subPath === "/releases/" || subPath.startsWith("/releases/latest")) {
+      await mountRepoReleases(target.owner, target.repo, target.search);
+      bodyState = target;
+      return;
+    }
     const full = subPath + (target.search ? "?" + target.search : "");
     await mountRepoSection(target.owner, target.repo, "other", full || "/", target.title);
     bodyState = target;
@@ -366,6 +372,7 @@ function unmountBody(): void {
   unmountRepoSection();
   unmountRepoPulse();
   unmountRepoGraphs();
+  unmountRepoReleases();
   unmountTopLevel();
   unmountDashboard();
   unmountNotifications();

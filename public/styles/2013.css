@@ -4266,6 +4266,167 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 .oldgh-codefreq__swatch--add { background: #6cc644; }
 .oldgh-codefreq__swatch--del { background: #bd2c00; }
 
+/* Releases page */
+.oldgh-repo-releases { padding-top: 14px; }
+.oldgh-releases__header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  margin-bottom: 14px;
+}
+.oldgh-releases__header h1 {
+  font-size: var(--gh-size-h1);
+  font-weight: normal;
+  margin: 0;
+}
+.oldgh-releases__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.oldgh-releases__row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 18px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-releases__row:last-child { border-bottom: 0; }
+.oldgh-releases__side {
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-releases__date,
+.oldgh-releases__author,
+.oldgh-releases__tag,
+.oldgh-releases__target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.oldgh-releases__author img { border-radius: 3px; }
+.oldgh-releases__tag a {
+  font-family: var(--gh-font-mono);
+  font-size: 12px;
+  padding: 1px 6px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  color: var(--gh-fg);
+}
+.oldgh-releases__sha {
+  font-family: var(--gh-font-mono);
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+
+.oldgh-releases__card {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  padding: 14px 18px;
+}
+.oldgh-releases__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.oldgh-releases__title {
+  margin: 0;
+  font-size: var(--gh-size-h2);
+  font-weight: bold;
+}
+.oldgh-releases__title a { color: var(--gh-fg); }
+.oldgh-releases__title a:hover { color: var(--gh-link); }
+.oldgh-releases__badges { display: flex; gap: 6px; }
+.oldgh-releases__badge {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+}
+.oldgh-releases__badge--latest { background: #6cc644; }
+.oldgh-releases__badge--pre { background: #cea61b; }
+.oldgh-releases__badge--draft { background: #999; }
+
+.oldgh-releases__body {
+  font-size: var(--gh-size-md);
+  line-height: 1.5;
+}
+.oldgh-releases__plain {
+  white-space: pre-wrap;
+  font-family: var(--gh-font-mono);
+  font-size: 12px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 3px;
+  padding: 10px 12px;
+}
+.oldgh-releases__no-body {
+  color: var(--gh-fg-faint);
+  font-style: italic;
+}
+
+.oldgh-releases__assets {
+  margin-top: 14px;
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 3px;
+  background: var(--gh-bg-subtle);
+}
+.oldgh-releases__assets summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  font-weight: bold;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg);
+  list-style: revert;
+}
+.oldgh-releases__asset-count {
+  color: var(--gh-fg-muted);
+  font-weight: normal;
+  margin-left: 6px;
+  font-size: 11px;
+}
+.oldgh-releases__assets ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--gh-border-faint);
+}
+.oldgh-releases__asset {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  font-size: var(--gh-size-md);
+}
+.oldgh-releases__asset:last-child { border-bottom: 0; }
+.oldgh-releases__asset-size,
+.oldgh-releases__asset-downloads {
+  color: var(--gh-fg-muted);
+  font-size: 11px;
+  margin-left: auto;
+}
+.oldgh-releases__asset-downloads { margin-left: 8px; }
+.oldgh-releases__pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+}
+.oldgh-releases__loading,
+.oldgh-releases__empty {
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--gh-fg-faint);
+}
+
 /* Stars page */
 .oldgh-stars { padding-top: 14px; }
 .oldgh-stars__header {
