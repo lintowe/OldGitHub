@@ -3565,3 +3565,289 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   display: block;
   color: var(--gh-fg-faint);
 }
+
+/* Native search results */
+.oldgh-search { padding-top: 14px; }
+.oldgh-search__header {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-search__title {
+  font-size: var(--gh-size-h1);
+  font-weight: normal;
+  margin: 0 0 10px;
+  color: var(--gh-fg);
+}
+.oldgh-search__title em { font-style: italic; color: var(--gh-fg); }
+.oldgh-search__form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.oldgh-search__form input[type="search"] {
+  flex: 1;
+  max-width: 560px;
+  padding: 6px 10px;
+  font-size: var(--gh-size-md);
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--gh-fg);
+}
+.oldgh-search__layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+}
+.oldgh-search__rail-box {
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-elev);
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-search__rail-box h3 {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: var(--gh-size-sm);
+  font-weight: bold;
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg-stripe);
+  border-bottom: 1px solid var(--gh-border-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.oldgh-search__tabs {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.oldgh-search__tabs li a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  color: var(--gh-link);
+  font-size: var(--gh-size-md);
+}
+.oldgh-search__tabs li a:hover {
+  background: var(--gh-bg-stripe);
+  text-decoration: none;
+}
+.oldgh-search__tabs li.is-active a {
+  background: var(--gh-bg-stripe);
+  color: var(--gh-fg);
+  font-weight: bold;
+}
+
+.oldgh-search__count {
+  padding: 6px 0 12px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-search__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.oldgh-search__row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-search__row:last-child { border-bottom: 0; }
+.oldgh-search__name {
+  margin: 0 0 6px;
+  font-size: var(--gh-size-lg);
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.oldgh-search__avatar {
+  vertical-align: middle;
+  border-radius: 3px;
+  margin-right: 4px;
+}
+.oldgh-search__name a {
+  color: var(--gh-link);
+}
+.oldgh-search__tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg-subtle);
+  text-transform: uppercase;
+}
+.oldgh-search__tag--warn { color: #d9822b; border-color: #ebc97e; background: #fff8e1; }
+.oldgh-search__desc {
+  margin: 4px 0 6px;
+  color: var(--gh-fg);
+  font-size: var(--gh-size-md);
+  line-height: 1.45;
+}
+.oldgh-search__topics {
+  margin: 4px 0;
+}
+.oldgh-search__topic {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 8px;
+  font-size: 11px;
+  border: 1px solid #d1e3f5;
+  border-radius: 999px;
+  background: #f1f8ff;
+  color: #0366d6;
+}
+.oldgh-search__topic:hover { background: #e1efff; text-decoration: none; }
+.oldgh-search__meta {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 8px 0 0;
+  padding: 0;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-search__meta li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.oldgh-search__lang-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+/* issue/PR results */
+.oldgh-search__row--issue {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.oldgh-search__state {
+  flex: 0 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+  margin-top: 2px;
+}
+.oldgh-search__state--open { background: #6cc644; }
+.oldgh-search__state--closed { background: #bd2c00; }
+.oldgh-search__state--merged { background: #6e5494; }
+.oldgh-search__state--draft { background: #6a737d; }
+.oldgh-search__issue-main { flex: 1; min-width: 0; }
+.oldgh-search__issue-title {
+  display: block;
+  font-weight: bold;
+  color: var(--gh-fg);
+  font-size: var(--gh-size-lg);
+}
+.oldgh-search__issue-title:hover { color: var(--gh-link); text-decoration: none; }
+.oldgh-search__labels {
+  margin-top: 4px;
+}
+.oldgh-search__label {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 3px;
+}
+.oldgh-search__issue-meta {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+
+/* user results */
+.oldgh-search__list--users {}
+.oldgh-search__row--user {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.oldgh-search__user-avatar img {
+  border-radius: 3px;
+  border: 1px solid var(--gh-border-faint);
+}
+.oldgh-search__user-name { font-size: var(--gh-size-lg); }
+.oldgh-search__user-type {
+  display: block;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+  margin-top: 2px;
+}
+
+/* code results */
+.oldgh-search__row--code .oldgh-search__name code {
+  background: var(--gh-bg-subtle);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--gh-font-mono);
+  font-size: 12px;
+}
+.oldgh-search__code-snippet {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 3px;
+  font-family: var(--gh-font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* commit results */
+.oldgh-search__row--commit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.oldgh-search__commit-main { flex: 1; min-width: 0; }
+.oldgh-search__commit-title {
+  display: block;
+  font-weight: bold;
+  color: var(--gh-fg);
+  font-size: var(--gh-size-md);
+}
+.oldgh-search__commit-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-search__sha {
+  font-family: var(--gh-font-mono);
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-subtle);
+}
+.oldgh-search__sha a { color: var(--gh-fg-muted); }
+
+/* empty/loading */
+.oldgh-search__empty,
+.oldgh-search__loading {
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--gh-fg-faint);
+  font-size: var(--gh-size-md);
+}
+.oldgh-search__empty p { margin: 8px 0 0; }
