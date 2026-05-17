@@ -253,6 +253,9 @@ function prettyTitleFromPath(pathname: string): string {
 
 function matchTopLevel(first: string, pathname: string, search: string): Route | null {
   switch (first) {
+    case "dashboard":
+    case "home":
+    case "feed": return { kind: "top-level", subkind: "dashboard", pathname, search, title: "Dashboard" };
     case "notifications": return { kind: "top-level", subkind: "notifications", pathname, search, title: "Notifications" };
     case "search": return { kind: "top-level", subkind: "search", pathname, search, title: "Search" };
     case "issues": return { kind: "top-level", subkind: "issues", pathname, search, title: "Your issues" };

@@ -1,6 +1,5 @@
 import { AdapterFailure } from "@/adapters";
 import { mountRepoHeader, unmountRepoHeader, updateActiveTab } from "@/views/repo-header";
-import { updateTopNavActive } from "@/views/header";
 import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
 import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
@@ -61,6 +60,43 @@ let bodyState: BodyState = { kind: "none" };
 let progressBarEl: HTMLElement | null = null;
 let progressTimer: number | null = null;
 
+function insertBodyError(message: string): void {
+  document.querySelectorAll(".oldgh-body-placeholder, .oldgh-body-error").forEach((n) => n.remove());
+  const el = document.createElement("div");
+  el.className = "oldgh-body-root oldgh-body-error";
+  el.innerHTML = `
+    <div class="oldgh-page oldgh-body-error__page">
+      <h2>Couldn't render this page natively.</h2>
+      <p>The OldGitHub adapter for this URL didn't return data we could use, so the original GitHub UI is hidden to avoid showing two skins at once.</p>
+      <p class="oldgh-body-error__detail"><code>${escapeText(message)}</code></p>
+      <p><a href="${escapeAttr(window.location.href)}">Reload</a> or <a href="javascript:void(0)" data-oldgh-show-native>show GitHub's native page instead</a>.</p>
+    </div>
+  `;
+  el.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.matches("[data-oldgh-show-native]")) {
+      e.preventDefault();
+      document.documentElement.removeAttribute("data-oldgh-mounted");
+      document.querySelectorAll(".oldgh-body-root").forEach((n) => n.remove());
+    }
+  });
+  const after = document.querySelector(".oldgh-repo-header") || document.querySelector(".oldgh-header");
+  if (after && after.parentNode) {
+    after.after(el);
+  } else {
+    document.body.append(el);
+  }
+}
+
+function escapeText(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
 function insertBodyPlaceholder(): void {
   if (document.querySelector(".oldgh-body-placeholder")) return;
   const el = document.createElement("div");
@@ -80,21 +116,12 @@ function showProgress(): void {
     progressBarEl.className = "oldgh-progress-bar";
     document.documentElement.appendChild(progressBarEl);
   }
+  progressBarEl.classList.remove("oldgh-progress-bar--hide");
+  progressBarEl.classList.add("oldgh-progress-bar--show");
   if (progressTimer != null) {
     window.clearTimeout(progressTimer);
     progressTimer = null;
   }
-  // hard reset to 0 width with no transition so the show animation always
-  // starts from the left edge, even on back-to-back navigations
-  progressBarEl.classList.remove("oldgh-progress-bar--show", "oldgh-progress-bar--hide");
-  progressBarEl.style.transition = "none";
-  progressBarEl.style.width = "0";
-  progressBarEl.style.opacity = "0";
-  void progressBarEl.offsetWidth;
-  progressBarEl.style.transition = "";
-  progressBarEl.style.width = "";
-  progressBarEl.style.opacity = "";
-  progressBarEl.classList.add("oldgh-progress-bar--show");
 }
 
 function hideProgress(): void {
@@ -103,16 +130,8 @@ function hideProgress(): void {
   progressBarEl.classList.add("oldgh-progress-bar--hide");
   if (progressTimer != null) window.clearTimeout(progressTimer);
   progressTimer = window.setTimeout(() => {
-    if (!progressBarEl) return;
-    progressBarEl.classList.remove("oldgh-progress-bar--hide");
-    progressBarEl.style.transition = "none";
-    progressBarEl.style.width = "0";
-    progressBarEl.style.opacity = "0";
-    void progressBarEl.offsetWidth;
-    progressBarEl.style.transition = "";
-    progressBarEl.style.width = "";
-    progressBarEl.style.opacity = "";
-  }, 400);
+    if (progressBarEl) progressBarEl.classList.remove("oldgh-progress-bar--hide");
+  }, 300);
 }
 
 export async function dispatchRoute(loc: Location | URL): Promise<void> {
@@ -127,7 +146,6 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     document.documentElement.setAttribute(MOUNTED_ATTR, route.kind);
     showProgress();
   }
-  updateTopNavActive(pathname);
 
   try {
     if (route.kind === "out-of-scope") {
@@ -198,9 +216,9 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
   } catch (err) {
     if (err instanceof AdapterFailure) {
       console.debug("[oldgh] dispatch adapter failure:", err.name, err.message);
-      await applyBodyState({ kind: "none" });
-      teardownRepoHeader();
-      clearMounted();
+      bodyState = { kind: "none" };
+      removeAllBodyRoots();
+      insertBodyError(err.message);
       return;
     }
     throw err;

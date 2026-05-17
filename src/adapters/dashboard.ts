@@ -38,11 +38,15 @@ export type DashboardView = {
 };
 
 export async function getDashboard(): Promise<DashboardView> {
-  const [feedHtml, topReposHtml, changelogHtml] = await Promise.all([
+  const [feedRes, topRes, changeRes] = await Promise.allSettled([
     fetchFragment("/conduit/for_you_feed"),
     fetchFragment("/dashboard/my_top_repositories"),
     fetchFragment("/dashboard/changelog"),
   ]);
+
+  const feedHtml = feedRes.status === "fulfilled" ? feedRes.value : "";
+  const topReposHtml = topRes.status === "fulfilled" ? topRes.value : "";
+  const changelogHtml = changeRes.status === "fulfilled" ? changeRes.value : "";
 
   const allFeed = parseFeed(feedHtml);
   const trendingRepos: FeedRepoCard[] = [];

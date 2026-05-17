@@ -5819,4 +5819,30 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   border-bottom: 1px solid var(--gh-border);
 }
 
+.oldgh-body-error {
+  min-height: 60vh;
+}
+.oldgh-body-error__page {
+  padding-top: 60px;
+  text-align: center;
+  color: var(--gh-fg-muted);
+}
+.oldgh-body-error__page h2 {
+  margin: 0 0 12px;
+  color: var(--gh-fg-default);
+  font-weight: normal;
+}
+.oldgh-body-error__page p {
+  margin: 8px auto;
+  max-width: 560px;
+  line-height: 1.5;
+}
+.oldgh-body-error__detail code {
+  background: #f6f8fa;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: var(--gh-fg-default);
+}
+
 

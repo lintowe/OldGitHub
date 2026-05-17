@@ -7,13 +7,21 @@ import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-profile";
 
-const TABS: { key: string; label: string }[] = [
+const USER_TABS: { key: string; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "repositories", label: "Repositories" },
   { key: "stars", label: "Stars" },
   { key: "followers", label: "Followers" },
   { key: "following", label: "Following" },
   { key: "achievements", label: "Achievements" },
+];
+
+const ORG_TABS: { key: string; label: string }[] = [
+  { key: "overview", label: "Overview" },
+  { key: "repositories", label: "Repositories" },
+  { key: "projects", label: "Projects" },
+  { key: "packages", label: "Packages" },
+  { key: "people", label: "People" },
 ];
 
 export async function mountProfile(login: string, tab: string, query: string): Promise<void> {
@@ -50,7 +58,8 @@ function renderShell(v: ProfileView, tab: string): string {
 }
 
 function renderTabNav(v: ProfileView, tab: string): string {
-  const items = TABS.map((t) => {
+  const tabs = v.kind === "org" ? ORG_TABS : USER_TABS;
+  const items = tabs.map((t) => {
     const href = t.key === "overview" ? `/${v.login}` : `/${v.login}?tab=${t.key}`;
     const active = tab === t.key ? ' aria-current="page"' : "";
     return `<li class="oldgh-tabs__item"><a class="oldgh-tabs__link" href="${escapeAttr(href)}"${active}>${escapeText(t.label)}</a></li>`;
