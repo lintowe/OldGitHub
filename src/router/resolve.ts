@@ -17,7 +17,7 @@ export type Route =
   | { kind: "repo-discussions"; owner: string; repo: string; subPath: string; query: string }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
-  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings"; pathname: string; search: string; title: string }
+  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "other"; pathname: string; search: string; title: string }
   | { kind: "todo"; name: string };
 
 export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring";
@@ -90,7 +90,7 @@ export function resolveRoute(pathname: string, search: string): Route {
   if (topLevel) return topLevel;
 
   if (TOP_LEVEL_NON_REPO.has(first)) {
-    return { kind: "todo", name: pathname };
+    return { kind: "top-level", subkind: "other", pathname, search, title: prettyTitleFromPath(pathname) };
   }
 
   if (segs.length === 1) {
@@ -224,6 +224,11 @@ export function isFullyCoveredUrl(pathname: string, search: string): boolean {
   }
   if (route.kind === "top-level") return true;
   return COVERED_REPO_KINDS.has(route.kind);
+}
+
+function prettyTitleFromPath(pathname: string): string {
+  const seg = pathname.split("/").filter(Boolean)[0] ?? "";
+  return seg.charAt(0).toUpperCase() + seg.slice(1);
 }
 
 function matchTopLevel(first: string, pathname: string, search: string): Route | null {
