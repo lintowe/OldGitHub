@@ -13,6 +13,7 @@ import { mountRepoActions, unmountRepoActions } from "@/views/repo-actions";
 import { mountRepoSection, unmountRepoSection } from "@/views/repo-section";
 import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-level";
 import { mountDashboard, unmountDashboard } from "@/views/dashboard";
+import { mountNotifications, unmountNotifications } from "@/views/notifications";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
 import { resolveRoute, type Route } from "./resolve";
@@ -245,6 +246,8 @@ async function applyBodyState(target: BodyState): Promise<void> {
   if (target.kind === "top-level") {
     if (target.subkind === "dashboard") {
       await mountDashboard();
+    } else if (target.subkind === "notifications") {
+      await mountNotifications(target.search);
     } else {
       await mountTopLevel(target.subkind, target.pathname, target.search, target.title);
     }
@@ -320,6 +323,7 @@ function unmountBody(): void {
   unmountRepoSection();
   unmountTopLevel();
   unmountDashboard();
+  unmountNotifications();
   unmountProfile();
 }
 
