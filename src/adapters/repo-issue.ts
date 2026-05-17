@@ -92,6 +92,98 @@ export type PullDetail = Omit<IssueDetail, "state"> & {
 const API = "https://api.github.com";
 const HTML_ACCEPT = "application/vnd.github.html+json";
 
+export type PullFile = {
+  filename: string;
+  previousFilename: string | null;
+  status: "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch: string | null;
+  blobUrl: string;
+  rawUrl: string;
+  sha: string;
+};
+
+export type PullCommit = {
+  sha: string;
+  abbrevSha: string;
+  message: string;
+  headline: string;
+  body: string;
+  authorName: string;
+  authorLogin: string | null;
+  authorAvatarUrl: string;
+  authorDate: string;
+  committerDate: string;
+  commentCount: number;
+};
+
+export async function getPullFiles(owner: string, repo: string, number: number): Promise<PullFile[]> {
+  const pages = await apiFetchAll(`/repos/${owner}/${repo}/pulls/${number}/files`);
+  return pages.map((r) => parsePullFile(r)).filter((f): f is PullFile => f !== null);
+}
+
+export async function getPullCommits(owner: string, repo: string, number: number): Promise<PullCommit[]> {
+  const pages = await apiFetchAll(`/repos/${owner}/${repo}/pulls/${number}/commits`);
+  return pages.map((r) => parsePullCommit(r)).filter((c): c is PullCommit => c !== null);
+}
+
+function parsePullFile(raw: unknown): PullFile | null {
+  if (!raw || typeof raw !== "object") return null;
+  const f = raw as Record<string, unknown>;
+  const filename = readString(f, "filename");
+  if (!filename) return null;
+  const statusStr = readString(f, "status") ?? "modified";
+  const status = (["added", "removed", "modified", "renamed", "copied", "changed", "unchanged"] as const).find((s) => s === statusStr) ?? "modified";
+  return {
+    filename,
+    previousFilename: readString(f, "previous_filename"),
+    status,
+    additions: readNumber(f, "additions") ?? 0,
+    deletions: readNumber(f, "deletions") ?? 0,
+    changes: readNumber(f, "changes") ?? 0,
+    patch: readString(f, "patch"),
+    blobUrl: readString(f, "blob_url") ?? "",
+    rawUrl: readString(f, "raw_url") ?? "",
+    sha: readString(f, "sha") ?? "",
+  };
+}
+
+function parsePullCommit(raw: unknown): PullCommit | null {
+  if (!raw || typeof raw !== "object") return null;
+  const c = raw as Record<string, unknown>;
+  const sha = readString(c, "sha");
+  if (!sha) return null;
+  const commitObj = readObj(c["commit"]);
+  const message = (commitObj && readString(commitObj, "message")) ?? "";
+  const lines = message.split("\n");
+  const headline = lines[0] ?? "";
+  const body = lines.slice(1).join("\n").trim();
+  const authorObj = commitObj ? readObj(commitObj["author"]) : null;
+  const authorName = (authorObj && readString(authorObj, "name")) ?? "";
+  const authorDate = (authorObj && readString(authorObj, "date")) ?? "";
+  const committerObj = commitObj ? readObj(commitObj["committer"]) : null;
+  const committerDate = (committerObj && readString(committerObj, "date")) ?? authorDate;
+  const ghAuthor = readObj(c["author"]);
+  const authorLogin = ghAuthor ? readString(ghAuthor, "login") : null;
+  const authorAvatarUrl = (ghAuthor && readString(ghAuthor, "avatar_url")) || (authorLogin ? `https://github.com/${authorLogin}.png?size=40` : "");
+  const commentCount = (commitObj && readNumber(commitObj, "comment_count")) ?? 0;
+  return {
+    sha,
+    abbrevSha: sha.slice(0, 7),
+    message,
+    headline,
+    body,
+    authorName,
+    authorLogin,
+    authorAvatarUrl,
+    authorDate,
+    committerDate,
+    commentCount,
+  };
+}
+
 export async function getIssue(owner: string, repo: string, number: number): Promise<IssueDetail> {
   const [issueRaw, timelineRaw] = await Promise.all([
     apiFetch(`/repos/${owner}/${repo}/issues/${number}`),

@@ -117,7 +117,10 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // silently no-ops in production (no server listening).
 {
   const DEV_URL = "http://localhost:7878/build-id";
+  const QUIESCE_MS = 4_000;
   let lastStamp: string | null = null;
+  let pendingStamp: string | null = null;
+  let pendingSince = 0;
   let consecutiveErrors = 0;
   const tick = async (): Promise<void> => {
     try {
@@ -128,12 +131,24 @@ chrome.tabs.onRemoved.addListener((tabId) => {
       }
       consecutiveErrors = 0;
       const stamp = (await resp.text()).trim();
-      if (lastStamp !== null && stamp && stamp !== lastStamp) {
-        console.info("[oldgh] dev rebuild detected, reloading extension");
-        chrome.runtime.reload();
+      if (lastStamp === null) {
+        lastStamp = stamp;
         return;
       }
-      lastStamp = stamp;
+      if (stamp === lastStamp) {
+        pendingStamp = null;
+        pendingSince = 0;
+        return;
+      }
+      if (pendingStamp !== stamp) {
+        pendingStamp = stamp;
+        pendingSince = Date.now();
+        return;
+      }
+      if (Date.now() - pendingSince >= QUIESCE_MS) {
+        console.info("[oldgh] dev rebuild settled, reloading extension");
+        chrome.runtime.reload();
+      }
     } catch {
       consecutiveErrors++;
     }

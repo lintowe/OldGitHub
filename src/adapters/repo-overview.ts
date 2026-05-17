@@ -93,39 +93,55 @@ export type RepoBlobView = {
 };
 
 export async function getRepoBlob(owner: string, repo: string, refAndPath: string): Promise<RepoBlobView> {
-  const url = `https://github.com/${owner}/${repo}/blob/${refAndPath}`;
-  const resp = await fetch(url, {
-    credentials: "include",
-    headers: { Accept: "text/html" },
+  const { branch, path } = await resolveBranchAndPath(owner, repo, refAndPath);
+
+  const contentsUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(branch)}`;
+  const resp = await fetch(contentsUrl, {
+    credentials: "omit",
+    headers: { Accept: "application/vnd.github+json" },
   });
   if (!resp.ok) {
-    throw new AdapterFailure("getRepoBlob", `${owner}/${repo}/blob/${refAndPath} responded ${resp.status}`);
+    throw new AdapterFailure("getRepoBlob", `contents ${owner}/${repo}/${path}@${branch} responded ${resp.status}`);
   }
-  const html = await resp.text();
-  const doc = parseRepoPage(html);
-  const payload = extractEmbeddedPayload(doc);
-
-  const route = read<{ payload?: unknown }>(payload, "payload");
-  const blobRoute = read<Record<string, unknown>>(route, "codeViewBlobRoute");
-  if (!blobRoute) {
-    throw new AdapterFailure("getRepoBlob", "missing codeViewBlobRoute in payload");
+  const meta = (await resp.json()) as Record<string, unknown>;
+  if (Array.isArray(meta)) {
+    throw new AdapterFailure("getRepoBlob", `${path} is a directory, not a file`);
   }
 
-  const refInfo = read<{ name?: unknown }>(blobRoute, "refInfo");
-  const branch = typeof refInfo?.name === "string" ? refInfo.name : null;
-  const path = blobRoute["path"];
-  if (!branch || typeof path !== "string") {
-    throw new AdapterFailure("getRepoBlob", "missing refInfo.name or path");
-  }
+  const encoding = typeof meta["encoding"] === "string" ? (meta["encoding"] as string) : "";
+  const sizeRaw = meta["size"];
+  const size = typeof sizeRaw === "number" ? sizeRaw : 0;
+  const downloadUrlRaw = meta["download_url"];
+  const rawBlobUrl = typeof downloadUrlRaw === "string" ? downloadUrlRaw : null;
+  const displayName = pathBasename(path);
+  const language = guessLanguage(path);
 
-  const rawLines = readStringArray(blobRoute["rawLines"]);
-  const displayName = typeof blobRoute["displayName"] === "string"
-    ? (blobRoute["displayName"] as string)
-    : pathBasename(path);
-  const language = typeof blobRoute["language"] === "string" ? (blobRoute["language"] as string) : null;
-  const rawBlobUrl = typeof blobRoute["rawBlobUrl"] === "string" ? (blobRoute["rawBlobUrl"] as string) : null;
-  const truncated = blobRoute["truncated"] === true;
-  const isBinary = rawLines === null;
+  let rawLines: string[] = [];
+  let isBinary = false;
+  let truncated = false;
+
+  if (encoding === "base64" && typeof meta["content"] === "string") {
+    const decoded = decodeBase64Utf8((meta["content"] as string).replace(/\n/g, ""));
+    if (decoded === null) {
+      isBinary = true;
+    } else {
+      rawLines = decoded.split("\n");
+    }
+  } else if (encoding === "none" || size > 1_000_000) {
+    truncated = true;
+    if (rawBlobUrl) {
+      try {
+        const r = await fetch(rawBlobUrl, { credentials: "omit" });
+        if (r.ok) {
+          const text = await r.text();
+          rawLines = text.split("\n");
+          truncated = false;
+        }
+      } catch {
+        // keep truncated
+      }
+    }
+  }
 
   return {
     owner,
@@ -134,21 +150,90 @@ export async function getRepoBlob(owner: string, repo: string, refAndPath: strin
     path,
     displayName,
     language,
-    rawLines: rawLines ?? [],
+    rawLines,
     rawBlobUrl,
     truncated,
     isBinary,
   };
 }
 
-function readStringArray(v: unknown): string[] | null {
-  if (!Array.isArray(v)) return null;
-  const out: string[] = [];
-  for (const x of v) {
-    if (typeof x !== "string") return null;
-    out.push(x);
+async function resolveBranchAndPath(owner: string, repo: string, refAndPath: string): Promise<{ branch: string; path: string }> {
+  const segs = refAndPath.split("/").filter(Boolean);
+  if (segs.length === 0) {
+    throw new AdapterFailure("getRepoBlob", "empty refAndPath");
   }
-  return out;
+  if (segs.length === 1) {
+    return { branch: decodeURIComponent(segs[0]!), path: "" };
+  }
+  try {
+    const refsUrl = `https://api.github.com/repos/${owner}/${repo}/git/matching-refs/heads/${encodeURIComponent(decodeURIComponent(segs[0]!))}`;
+    const r = await fetch(refsUrl, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
+    if (r.ok) {
+      const refs = (await r.json()) as Array<{ ref?: string }>;
+      const names = refs.map((x) => (x.ref || "").replace(/^refs\/heads\//, "")).filter(Boolean);
+      let best = "";
+      for (const name of names) {
+        const enc = name.split("/").map(encodeURIComponent).join("/");
+        if (refAndPath === enc || refAndPath.startsWith(enc + "/")) {
+          if (name.length > best.length) best = name;
+        }
+      }
+      if (best) {
+        const enc = best.split("/").map(encodeURIComponent).join("/");
+        const rest = refAndPath === enc ? "" : refAndPath.slice(enc.length + 1);
+        return { branch: best, path: rest.split("/").map(decodeURIComponent).join("/") };
+      }
+    }
+  } catch {
+    // fall through
+  }
+  const branch = decodeURIComponent(segs[0]!);
+  const path = segs.slice(1).map(decodeURIComponent).join("/");
+  return { branch, path };
+}
+
+function decodeBase64Utf8(b64: string): string | null {
+  try {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    for (let i = 0; i < Math.min(bytes.length, 8192); i++) {
+      const b = bytes[i]!;
+      if (b === 0) return null;
+    }
+    return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  } catch {
+    return null;
+  }
+}
+
+function guessLanguage(path: string): string | null {
+  const ext = path.toLowerCase().match(/\.([a-z0-9]+)$/);
+  if (!ext) {
+    const base = pathBasename(path).toLowerCase();
+    const byName: Record<string, string> = {
+      "dockerfile": "Dockerfile",
+      "makefile": "Makefile",
+      "rakefile": "Ruby",
+      "gemfile": "Ruby",
+    };
+    return byName[base] ?? null;
+  }
+  const map: Record<string, string> = {
+    ts: "TypeScript", tsx: "TypeScript", js: "JavaScript", jsx: "JavaScript",
+    mjs: "JavaScript", cjs: "JavaScript", json: "JSON", md: "Markdown",
+    py: "Python", rb: "Ruby", go: "Go", rs: "Rust", java: "Java",
+    c: "C", h: "C", cpp: "C++", cc: "C++", hpp: "C++", cs: "C#",
+    php: "PHP", swift: "Swift", kt: "Kotlin", scala: "Scala",
+    sh: "Shell", bash: "Shell", zsh: "Shell", ps1: "PowerShell",
+    yml: "YAML", yaml: "YAML", toml: "TOML", ini: "INI",
+    html: "HTML", css: "CSS", scss: "SCSS", less: "Less",
+    xml: "XML", svg: "XML", sql: "SQL", lua: "Lua", vim: "VimL",
+    pl: "Perl", r: "R", dart: "Dart", ex: "Elixir", exs: "Elixir",
+    erl: "Erlang", elm: "Elm", clj: "Clojure", hs: "Haskell",
+    objc: "Objective-C", m: "Objective-C", diff: "Diff", patch: "Diff",
+  };
+  return map[ext[1]!] ?? null;
 }
 
 function pathBasename(p: string): string {

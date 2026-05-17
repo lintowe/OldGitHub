@@ -3337,3 +3337,143 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 [data-oldgh-theme="dark"] .oldgh-dash__broadcast .oldgh-dash__box-head h3 {
   color: #f5e6a8;
 }
+
+/* PR Files and Commits sub-tabs (REST-rendered) */
+.oldgh-pr-files,
+.oldgh-pr-commits {
+  margin: 14px 0;
+}
+.oldgh-pr-files__summary {
+  padding: 10px 14px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+}
+.oldgh-pr-files__add { color: #4a934a; }
+.oldgh-pr-files__del { color: #b94a48; }
+
+.oldgh-pr-file {
+  margin-bottom: 14px;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-elev);
+}
+.oldgh-pr-file__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--gh-bg-stripe);
+  border-bottom: 1px solid var(--gh-border);
+  border-radius: 3px 3px 0 0;
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-sm);
+}
+.oldgh-pr-file__name { color: var(--gh-fg); }
+.oldgh-pr-file__counts { color: var(--gh-fg-muted); font-size: 11px; }
+.oldgh-pr-file__add { color: #4a934a; margin-right: 6px; }
+.oldgh-pr-file__del { color: #b94a48; }
+.oldgh-pr-file__nopatch {
+  padding: 18px;
+  color: var(--gh-fg-muted);
+  text-align: center;
+  font-size: var(--gh-size-md);
+}
+
+.oldgh-diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--gh-font-mono);
+  font-size: 12px;
+  line-height: 18px;
+}
+.oldgh-diff td {
+  vertical-align: top;
+  padding: 0 8px;
+  white-space: pre;
+}
+.oldgh-diff .oldgh-diff__num {
+  width: 1%;
+  min-width: 40px;
+  color: rgba(0, 0, 0, 0.3);
+  text-align: right;
+  border-right: 1px solid var(--gh-border-faint);
+  user-select: none;
+  background: var(--gh-bg-subtle);
+}
+.oldgh-diff .oldgh-diff__code {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.oldgh-diff__add { background: #dbffdb; }
+.oldgh-diff__add .oldgh-diff__num { background: #c5f0c5; color: #557755; }
+.oldgh-diff__del { background: #ffe1e1; }
+.oldgh-diff__del .oldgh-diff__num { background: #f3c8c8; color: #885555; }
+.oldgh-diff__hunk { background: #f0f4fa; }
+.oldgh-diff__hunk .oldgh-diff__code { color: #4a6b8a; }
+.oldgh-diff__hunk .oldgh-diff__num { background: #e6ecf3; border-right: 0; }
+
+.oldgh-pr-commits__group {
+  margin-bottom: 18px;
+}
+.oldgh-pr-commits__day {
+  margin: 14px 0 8px;
+  padding: 0 0 6px;
+  font-size: var(--gh-size-md);
+  font-weight: normal;
+  color: var(--gh-fg-muted);
+  border-bottom: 1px dashed var(--gh-border);
+}
+.oldgh-pr-commits__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-elev);
+}
+.oldgh-pr-commits__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-pr-commits__row:last-child { border-bottom: 0; }
+.oldgh-pr-commits__main {
+  flex: 1;
+  min-width: 0;
+}
+.oldgh-pr-commits__title {
+  display: block;
+  font-weight: bold;
+  color: var(--gh-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oldgh-pr-commits__byline {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-pr-commits__avatar {
+  vertical-align: middle;
+  margin-right: 4px;
+  border-radius: 3px;
+}
+.oldgh-pr-commits__sha {
+  font-family: var(--gh-font-mono);
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-subtle);
+}
+.oldgh-pr-commits__sha a {
+  color: var(--gh-fg-muted);
+}

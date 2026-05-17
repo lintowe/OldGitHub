@@ -2,12 +2,16 @@ import { octicon } from "@/icons";
 import {
   getIssue,
   getPull,
+  getPullFiles,
+  getPullCommits,
   type IssueDetail,
   type PullDetail,
   type TimelineNode,
   type Actor,
   type Label,
   type ReactionCount,
+  type PullFile,
+  type PullCommit,
 } from "@/adapters/repo-issue";
 import { AdapterFailure } from "@/adapters";
 import { absoluteTime, relativeTime } from "@/util/time";
@@ -173,41 +177,150 @@ async function hydrateSubTab(
 ): Promise<void> {
   const container = root.querySelector<HTMLElement>(".oldgh-issue__subtab");
   if (!container) return;
-  const url = `https://github.com/${owner}/${repo}/pull/${number}/${tab}`;
   try {
-    const resp = await fetch(url, { credentials: "include", headers: { Accept: "text/html" } });
-    if (!resp.ok) throw new Error(`status ${resp.status}`);
-    const html = await resp.text();
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const inner =
-      doc.querySelector("turbo-frame#repo-content-turbo-frame") ||
-      doc.querySelector("[data-pjax-container]") ||
-      doc.querySelector("main");
-    if (!inner) {
-      container.innerHTML = `<p class="oldgh-issue__subtab-empty">Couldn't load this tab.</p>`;
+    if (tab === "files") {
+      const files = await getPullFiles(owner, repo, number);
+      container.innerHTML = renderPullFiles(files);
       return;
     }
-    for (const sel of [
-      "header.AppHeader",
-      "header[role='banner']",
-      "footer",
-      "#repository-container-header",
-      ".pagehead",
-      ".UnderlineNav.js-repo-nav",
-      "script",
-      "style",
-    ]) {
-      inner.querySelectorAll(sel).forEach((n) => n.remove());
+    if (tab === "commits") {
+      const commits = await getPullCommits(owner, repo, number);
+      container.innerHTML = renderPullCommits(owner, repo, commits);
+      return;
     }
-    for (const node of Array.from(inner.querySelectorAll<HTMLElement>("*"))) {
-      for (const attr of Array.from(node.attributes)) {
-        if (/^on/i.test(attr.name)) node.removeAttribute(attr.name);
-      }
+    if (tab === "checks") {
+      container.innerHTML = `<div class="oldgh-issue__subtab-checks"><p class="oldgh-issue__subtab-empty">Checks view isn't built yet — use the modern GitHub UI for now.</p></div>`;
+      return;
     }
-    container.innerHTML = inner.innerHTML;
   } catch {
     container.innerHTML = `<p class="oldgh-issue__subtab-empty">Couldn't load this tab.</p>`;
   }
+}
+
+function renderPullFiles(files: PullFile[]): string {
+  if (files.length === 0) {
+    return `<p class="oldgh-issue__subtab-empty">No file changes.</p>`;
+  }
+  const totalAdd = files.reduce((s, f) => s + f.additions, 0);
+  const totalDel = files.reduce((s, f) => s + f.deletions, 0);
+  const summary = `
+    <div class="oldgh-pr-files__summary">
+      Showing <strong>${files.length}</strong> changed ${files.length === 1 ? "file" : "files"}
+      with <strong class="oldgh-pr-files__add">${totalAdd}</strong> additions
+      and <strong class="oldgh-pr-files__del">${totalDel}</strong> deletions
+    </div>
+  `;
+  const blocks = files.map((f) => renderPullFile(f)).join("");
+  return `<div class="oldgh-pr-files">${summary}${blocks}</div>`;
+}
+
+function renderPullFile(f: PullFile): string {
+  const statusLabel = f.status === "renamed" && f.previousFilename
+    ? `${escapeText(f.previousFilename)} → ${escapeText(f.filename)}`
+    : escapeText(f.filename);
+  const hunk = f.patch
+    ? renderDiffPatch(f.patch)
+    : `<div class="oldgh-pr-file__nopatch">Binary or large file — view on <a href="${escapeAttr(f.blobUrl)}">GitHub</a>.</div>`;
+  return `
+    <div class="oldgh-pr-file" data-status="${escapeAttr(f.status)}">
+      <div class="oldgh-pr-file__header">
+        <span class="oldgh-pr-file__name">${statusLabel}</span>
+        <span class="oldgh-pr-file__counts">
+          <span class="oldgh-pr-file__add">+${f.additions}</span>
+          <span class="oldgh-pr-file__del">−${f.deletions}</span>
+        </span>
+      </div>
+      <div class="oldgh-pr-file__diff">${hunk}</div>
+    </div>
+  `;
+}
+
+function renderDiffPatch(patch: string): string {
+  const lines = patch.split("\n");
+  let oldNum = 0;
+  let newNum = 0;
+  const rows: string[] = [];
+  for (const line of lines) {
+    if (line.startsWith("@@")) {
+      const m = /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/.exec(line);
+      if (m) {
+        oldNum = parseInt(m[1]!, 10);
+        newNum = parseInt(m[3]!, 10);
+      }
+      rows.push(`<tr class="oldgh-diff__hunk"><td class="oldgh-diff__num"></td><td class="oldgh-diff__num"></td><td class="oldgh-diff__code">${escapeText(line)}</td></tr>`);
+      continue;
+    }
+    if (line.startsWith("+") && !line.startsWith("+++")) {
+      rows.push(`<tr class="oldgh-diff__add"><td class="oldgh-diff__num"></td><td class="oldgh-diff__num">${newNum}</td><td class="oldgh-diff__code">${escapeText(line)}</td></tr>`);
+      newNum++;
+      continue;
+    }
+    if (line.startsWith("-") && !line.startsWith("---")) {
+      rows.push(`<tr class="oldgh-diff__del"><td class="oldgh-diff__num">${oldNum}</td><td class="oldgh-diff__num"></td><td class="oldgh-diff__code">${escapeText(line)}</td></tr>`);
+      oldNum++;
+      continue;
+    }
+    if (line.startsWith("---") || line.startsWith("+++")) continue;
+    rows.push(`<tr class="oldgh-diff__ctx"><td class="oldgh-diff__num">${oldNum}</td><td class="oldgh-diff__num">${newNum}</td><td class="oldgh-diff__code">${escapeText(line)}</td></tr>`);
+    oldNum++;
+    newNum++;
+  }
+  return `<table class="oldgh-diff"><tbody>${rows.join("")}</tbody></table>`;
+}
+
+function renderPullCommits(owner: string, repo: string, commits: PullCommit[]): string {
+  if (commits.length === 0) {
+    return `<p class="oldgh-issue__subtab-empty">No commits in this pull request.</p>`;
+  }
+  const groups = new Map<string, PullCommit[]>();
+  for (const c of commits) {
+    const day = c.committerDate ? c.committerDate.slice(0, 10) : "";
+    const list = groups.get(day) ?? [];
+    list.push(c);
+    groups.set(day, list);
+  }
+  const sections: string[] = [];
+  for (const [day, list] of groups) {
+    const label = day ? formatDateHeading(day) : "Commits";
+    const rows = list.map((c) => renderPullCommitRow(owner, repo, c)).join("");
+    sections.push(`
+      <div class="oldgh-pr-commits__group">
+        <h3 class="oldgh-pr-commits__day">Commits on ${escapeText(label)}</h3>
+        <ul class="oldgh-pr-commits__list">${rows}</ul>
+      </div>
+    `);
+  }
+  return `<div class="oldgh-pr-commits">${sections.join("")}</div>`;
+}
+
+function renderPullCommitRow(owner: string, repo: string, c: PullCommit): string {
+  const authorLink = c.authorLogin
+    ? `<a href="/${escapeAttr(c.authorLogin)}" class="oldgh-pr-commits__author">${escapeText(c.authorLogin)}</a>`
+    : `<span class="oldgh-pr-commits__author">${escapeText(c.authorName || "ghost")}</span>`;
+  const avatar = c.authorAvatarUrl
+    ? `<img class="oldgh-pr-commits__avatar" src="${escapeAttr(c.authorAvatarUrl)}" width="20" height="20" alt="" />`
+    : "";
+  return `
+    <li class="oldgh-pr-commits__row">
+      <div class="oldgh-pr-commits__main">
+        <a class="oldgh-pr-commits__title" href="/${escapeAttr(owner)}/${escapeAttr(repo)}/commit/${escapeAttr(c.sha)}">${escapeText(c.headline)}</a>
+        <div class="oldgh-pr-commits__byline">
+          ${avatar}
+          ${authorLink}
+          committed ${relativeTimeLink(c.committerDate)}
+        </div>
+      </div>
+      <div class="oldgh-pr-commits__meta">
+        <code class="oldgh-pr-commits__sha"><a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/commit/${escapeAttr(c.sha)}">${escapeText(c.abbrevSha)}</a></code>
+      </div>
+    </li>
+  `;
+}
+
+function formatDateHeading(yyyyMmDd: string): string {
+  const d = new Date(yyyyMmDd + "T00:00:00Z");
+  if (Number.isNaN(d.getTime())) return yyyyMmDd;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 export function unmountRepoIssue(): void {

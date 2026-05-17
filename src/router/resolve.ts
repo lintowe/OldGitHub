@@ -140,7 +140,10 @@ export function resolveRoute(pathname: string, search: string): Route {
     if (!Number.isNaN(num)) {
       const sub = segs[4];
       const tab: "conversation" | "files" | "commits" | "checks" =
-        sub === "files" ? "files" : sub === "commits" ? "commits" : sub === "checks" ? "checks" : "conversation";
+        sub === "files" || sub === "changes" ? "files"
+          : sub === "commits" ? "commits"
+          : sub === "checks" ? "checks"
+          : "conversation";
       return {
         kind: "repo-issue",
         owner,

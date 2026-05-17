@@ -3,27 +3,15 @@ export type Theme = "light" | "dark" | "auto";
 const MEDIA = "(prefers-color-scheme: dark)";
 
 export async function applyTheme(): Promise<void> {
-  const { theme = "auto" } = (await chrome.storage.sync.get("theme")) as { theme?: Theme };
-  setEffectiveTheme(resolve(theme));
+  setEffectiveTheme("light");
 }
 
 export function watchThemeChanges(): void {
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== "sync" || !changes["theme"]) return;
-    const next = (changes["theme"].newValue ?? "auto") as Theme;
-    setEffectiveTheme(resolve(next));
-  });
-
-  matchMedia(MEDIA).addEventListener("change", () => {
-    void applyTheme();
-  });
+  // 2013 GitHub was light-only; no theme switching
 }
 
-function resolve(theme: Theme): "light" | "dark" {
-  if (theme === "auto") {
-    return matchMedia(MEDIA).matches ? "dark" : "light";
-  }
-  return theme;
+function resolve(_theme: Theme): "light" | "dark" {
+  return "light";
 }
 
 function setEffectiveTheme(effective: "light" | "dark"): void {

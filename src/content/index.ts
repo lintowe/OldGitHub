@@ -23,12 +23,28 @@ async function run(): Promise<void> {
   }
   killTurbo();
   document.documentElement.setAttribute("data-oldgh", "active");
+  forceLightColorMode();
   injectThemeStylesheet();
   await applyTheme();
   watchThemeChanges();
   console.debug("[oldgh] mounting header + router");
   await mountHeader();
   mountRouter();
+}
+
+function forceLightColorMode(): void {
+  const html = document.documentElement;
+  html.setAttribute("data-color-mode", "light");
+  html.setAttribute("data-light-theme", "light");
+  html.setAttribute("data-dark-theme", "light");
+  const obs = new MutationObserver(() => {
+    if (html.getAttribute("data-color-mode") !== "light") {
+      html.setAttribute("data-color-mode", "light");
+      html.setAttribute("data-light-theme", "light");
+      html.setAttribute("data-dark-theme", "light");
+    }
+  });
+  obs.observe(html, { attributes: true, attributeFilter: ["data-color-mode", "data-light-theme", "data-dark-theme"] });
 }
 
 function injectThemeStylesheet(): void {
