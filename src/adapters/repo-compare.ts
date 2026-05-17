@@ -12,15 +12,35 @@ export type CompareView = {
 
 export async function getCompare(owner: string, repo: string, range: string): Promise<CompareView> {
   const { base, head, threeDot } = parseRange(range);
+  const basehead = `${encodeURIComponent(base)}...${encodeURIComponent(head)}`;
   const resp = await fetch(
-    `https://github.com/${owner}/${repo}/compare/${range}.diff`,
-    { credentials: "include", headers: { Accept: "text/plain" } },
+    `https://api.github.com/repos/${owner}/${repo}/compare/${basehead}`,
+    { credentials: "omit", headers: { Accept: "application/vnd.github+json" } },
   );
   if (!resp.ok) {
-    throw new AdapterFailure("getCompare", `compare .diff responded ${resp.status}`);
+    throw new AdapterFailure("getCompare", `REST compare ${owner}/${repo}/${basehead} responded ${resp.status}`);
   }
-  const diff = await resp.text();
-  return { owner, repo, base, head, threeDot, files: parseUnifiedDiff(diff) };
+  const data = (await resp.json()) as { files?: unknown };
+  const restFiles = Array.isArray(data.files) ? data.files : [];
+  const files: DiffFile[] = [];
+  for (const f of restFiles) {
+    if (!f || typeof f !== "object") continue;
+    const obj = f as Record<string, unknown>;
+    const filename = typeof obj["filename"] === "string" ? (obj["filename"] as string) : "";
+    const patch = typeof obj["patch"] === "string" ? (obj["patch"] as string) : "";
+    if (!filename) continue;
+    if (!patch) {
+      const status = typeof obj["status"] === "string" ? (obj["status"] as string) : "modified";
+      const placeholder = `diff --git a/${filename} b/${filename}\n${status === "added" ? "new file mode 100644" : status === "removed" ? "deleted file mode 100644" : "index 0..0"}\n--- a/${filename}\n+++ b/${filename}\n`;
+      const parsed = parseUnifiedDiff(placeholder);
+      if (parsed.length > 0) files.push(parsed[0]!);
+      continue;
+    }
+    const synthesized = `diff --git a/${filename} b/${filename}\n--- a/${filename}\n+++ b/${filename}\n${patch}\n`;
+    const parsed = parseUnifiedDiff(synthesized);
+    if (parsed.length > 0) files.push(parsed[0]!);
+  }
+  return { owner, repo, base, head, threeDot, files };
 }
 
 function parseRange(range: string): { base: string; head: string; threeDot: boolean } {
