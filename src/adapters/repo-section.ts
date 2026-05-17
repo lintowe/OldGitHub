@@ -57,6 +57,7 @@ export async function scrapeSection(
   const docTitleRaw = doc.querySelector("title")?.textContent?.trim() || "";
   const docTitleClean = docTitleRaw.split("·")[0]?.trim() || "";
   const title = titleFromMain || options.titleFallback || docTitleClean || "Other";
+  if (inMainH1) inMainH1.remove();
 
   return {
     owner,
