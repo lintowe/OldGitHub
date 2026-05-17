@@ -44,7 +44,21 @@ export async function scrapeTopLevel(
   cleanScraped(main);
 
   const title = pickTitle(doc, titleFallback);
+  stripDuplicateHeading(main, title);
   return { title, contentHtml: main.innerHTML, sourceUrl };
+}
+
+function stripDuplicateHeading(el: Element, title: string): void {
+  if (!title) return;
+  const normalize = (s: string): string => s.replace(/\s+/g, " ").trim().toLowerCase();
+  const target = normalize(title);
+  for (const h of Array.from(el.querySelectorAll<HTMLElement>("h1, h2"))) {
+    if (h.classList.contains("sr-only")) continue;
+    if (normalize(h.textContent || "") === target) {
+      h.remove();
+      break;
+    }
+  }
 }
 
 function pickTitle(doc: Document, fallback: string): string {
