@@ -1,5 +1,4 @@
 import { AdapterFailure } from "./index";
-import { extractEmbeddedPayload, parseRepoPage } from "./_page";
 
 export type IssueState = "OPEN" | "CLOSED";
 export type PullState = "OPEN" | "CLOSED" | "MERGED";
@@ -75,7 +74,7 @@ export type IssueDetail = {
   isLocked: boolean;
 };
 
-export type PullDetail = IssueDetail & {
+export type PullDetail = Omit<IssueDetail, "state"> & {
   isDraft: boolean;
   state: PullState;
   headRefName: string;
@@ -90,291 +89,390 @@ export type PullDetail = IssueDetail & {
   mergedBy: Actor | null;
 };
 
+const API = "https://api.github.com";
+const HTML_ACCEPT = "application/vnd.github.html+json";
+
 export async function getIssue(owner: string, repo: string, number: number): Promise<IssueDetail> {
-  const url = `https://github.com/${owner}/${repo}/issues/${number}`;
-  return fetchAndParse(owner, repo, number, url, "issue") as Promise<IssueDetail>;
+  const [issueRaw, timelineRaw] = await Promise.all([
+    apiFetch(`/repos/${owner}/${repo}/issues/${number}`),
+    apiFetchAll(`/repos/${owner}/${repo}/issues/${number}/timeline`),
+  ]);
+  if (!issueRaw || typeof issueRaw !== "object") {
+    throw new AdapterFailure("getIssue", `issue ${owner}/${repo}#${number} not parseable`);
+  }
+  return restToIssue(owner, repo, number, issueRaw as Record<string, unknown>, timelineRaw);
 }
 
 export async function getPull(owner: string, repo: string, number: number): Promise<PullDetail> {
-  const url = `https://github.com/${owner}/${repo}/pull/${number}`;
-  return fetchAndParse(owner, repo, number, url, "pullRequest") as Promise<PullDetail>;
+  const [prRaw, issueRaw, timelineRaw] = await Promise.all([
+    apiFetch(`/repos/${owner}/${repo}/pulls/${number}`),
+    apiFetch(`/repos/${owner}/${repo}/issues/${number}`),
+    apiFetchAll(`/repos/${owner}/${repo}/issues/${number}/timeline`),
+  ]);
+  if (!prRaw || typeof prRaw !== "object" || !issueRaw || typeof issueRaw !== "object") {
+    throw new AdapterFailure("getPull", `pull ${owner}/${repo}#${number} not parseable`);
+  }
+  const base = restToIssue(owner, repo, number, issueRaw as Record<string, unknown>, timelineRaw);
+  return restToPull(base, prRaw as Record<string, unknown>);
 }
 
-async function fetchAndParse(
-  owner: string,
-  repo: string,
-  number: number,
-  url: string,
-  kind: "issue" | "pullRequest",
-): Promise<IssueDetail | PullDetail> {
-  const resp = await fetch(url, {
-    credentials: "include",
-    headers: { Accept: "text/html" },
+async function apiFetch(path: string): Promise<unknown | null> {
+  const resp = await fetch(`${API}${path}`, {
+    credentials: "omit",
+    headers: { Accept: HTML_ACCEPT },
   });
   if (!resp.ok) {
-    throw new AdapterFailure("getIssue", `${url} responded ${resp.status}`);
+    throw new AdapterFailure("apiFetch", `${path} responded ${resp.status}`);
   }
-  const html = await resp.text();
-  const doc = parseRepoPage(html);
-  const payload = extractEmbeddedPayload(doc);
-
-  const root = (payload as { payload?: { preloadedQueries?: unknown[] } })?.payload;
-  const queries = Array.isArray(root?.preloadedQueries) ? root!.preloadedQueries : [];
-
-  let entity: Record<string, unknown> | null = null;
-  for (const q of queries) {
-    if (!q || typeof q !== "object") continue;
-    const data = (q as { result?: { data?: { repository?: Record<string, unknown> } } }).result?.data?.repository;
-    if (data && data[kind] && typeof data[kind] === "object") {
-      entity = data[kind] as Record<string, unknown>;
-      break;
-    }
+  try {
+    return (await resp.json()) as unknown;
+  } catch (err) {
+    throw new AdapterFailure("apiFetch", `${path} returned invalid JSON`, { cause: err });
   }
-
-  if (!entity) {
-    throw new AdapterFailure("getIssue", `no ${kind} payload found`);
-  }
-
-  const base = parseEntityCore(entity, owner, repo, number);
-  if (kind === "issue") return base;
-  return enrichPull(base, entity);
 }
 
-function parseEntityCore(
-  e: Record<string, unknown>,
+async function apiFetchAll(path: string): Promise<unknown[]> {
+  const out: unknown[] = [];
+  let url = `${API}${path}?per_page=100`;
+  for (let i = 0; i < 5; i++) {
+    const resp = await fetch(url, {
+      credentials: "omit",
+      headers: { Accept: HTML_ACCEPT },
+    });
+    if (!resp.ok) {
+      throw new AdapterFailure("apiFetchAll", `${path} responded ${resp.status}`);
+    }
+    const page = (await resp.json()) as unknown;
+    if (!Array.isArray(page)) break;
+    out.push(...page);
+    const link = resp.headers.get("link") || "";
+    const next = /<([^>]+)>;\s*rel="next"/.exec(link);
+    if (!next || !next[1]) break;
+    url = next[1];
+  }
+  return out;
+}
+
+function restToIssue(
   owner: string,
   repo: string,
   number: number,
+  issue: Record<string, unknown>,
+  timeline: unknown[],
 ): IssueDetail {
-  const title = typeof e["title"] === "string" ? (e["title"] as string) : "";
-  const titleHtml = typeof e["titleHTML"] === "string" ? (e["titleHTML"] as string) : escapeHtml(title);
-  const state = e["state"] === "CLOSED" ? "CLOSED" : "OPEN";
-  const stateReason = typeof e["stateReason"] === "string" ? (e["stateReason"] as string) : null;
-  const bodyHtml = typeof e["bodyHTML"] === "string" ? (e["bodyHTML"] as string) : "";
-  const createdAt = typeof e["createdAt"] === "string" ? (e["createdAt"] as string) : "";
-
-  const front = readTimelineEdges(e["frontTimelineItems"]);
-  const back = readTimelineEdges(e["backTimelineItems"]);
-  const totalCount =
-    readNumber(readObj(e["frontTimelineItems"]), "totalCount") ??
-    front.length + back.length;
+  const title = readString(issue, "title") ?? "";
+  const bodyHtml = readString(issue, "body_html") ?? "";
+  const state = readString(issue, "state") === "closed" ? "CLOSED" : "OPEN";
+  const stateReason = readString(issue, "state_reason");
+  const createdAt = readString(issue, "created_at") ?? "";
+  const author = restActor(issue["user"]);
+  const labels = readArray(issue["labels"]).map(restLabel).filter((l): l is Label => l !== null);
+  const assignees = readArray(issue["assignees"]).map(restActor).filter((a): a is Actor => a !== null);
+  const milestone = restMilestone(issue["milestone"]);
+  const reactions = restReactionSummary(issue["reactions"]);
+  const nodes = restTimeline(timeline);
+  const commentsTotal = readNumber(issue, "comments") ?? 0;
 
   return {
     owner,
     repo,
     number,
     title,
-    titleHtml,
+    titleHtml: escapeHtml(title),
     state,
-    stateReason,
+    stateReason: stateReason ?? null,
     bodyHtml,
-    author: parseActor(e["author"]),
+    author,
     createdAt,
-    labels: parseLabels(e["labels"]),
-    assignees: parseAssignees(e["assignedActors"]),
-    milestone: parseMilestone(e["milestone"]),
-    reactions: parseReactions(e["reactionGroups"]),
-    timeline: [...front, ...back],
-    totalTimelineCount: totalCount,
-    isLocked: e["locked"] === true,
+    labels,
+    assignees,
+    milestone,
+    reactions,
+    timeline: nodes,
+    totalTimelineCount: Math.max(commentsTotal, nodes.filter((n) => n.kind === "comment").length),
+    isLocked: issue["locked"] === true,
   };
 }
 
-function enrichPull(base: IssueDetail, e: Record<string, unknown>): PullDetail {
-  const stateRaw = typeof e["state"] === "string" ? (e["state"] as string).toUpperCase() : "OPEN";
-  const state: PullState =
-    stateRaw === "MERGED" ? "MERGED" : stateRaw === "CLOSED" ? "CLOSED" : "OPEN";
-  const merged = e["merged"] === true || state === "MERGED";
+function restToPull(base: IssueDetail, pr: Record<string, unknown>): PullDetail {
+  const merged = pr["merged"] === true;
+  const state: PullState = merged
+    ? "MERGED"
+    : readString(pr, "state") === "closed"
+      ? "CLOSED"
+      : "OPEN";
+  const isDraft = pr["draft"] === true;
+  const head = readObj(pr["head"]);
+  const baseObj = readObj(pr["base"]);
+  const headRefName = head ? (readString(head, "ref") ?? "") : "";
+  const baseRefName = baseObj ? (readString(baseObj, "ref") ?? "") : "";
+  const headRepoOwner = readNestedString(pr["head"], ["repo", "owner", "login"]);
+  const baseRepoOwner = readNestedString(pr["base"], ["repo", "owner", "login"]);
+  const headRepoOwnerNorm = headRepoOwner && headRepoOwner !== baseRepoOwner ? headRepoOwner : null;
+  const mergedBy = restActor(pr["merged_by"]);
 
   return {
     ...base,
+    bodyHtml: base.bodyHtml || readString(pr, "body_html") || "",
     state,
-    isDraft: e["isDraft"] === true,
-    headRefName: typeof e["headRefName"] === "string" ? (e["headRefName"] as string) : "",
-    baseRefName: typeof e["baseRefName"] === "string" ? (e["baseRefName"] as string) : "",
-    headRepoOwner: readNestedString(e["headRepository"], ["owner", "login"]),
-    commitsCount: readNumber(readObj(e["commits"]), "totalCount") ?? 0,
-    changedFiles: typeof e["changedFiles"] === "number" ? (e["changedFiles"] as number) : 0,
-    additions: typeof e["additions"] === "number" ? (e["additions"] as number) : 0,
-    deletions: typeof e["deletions"] === "number" ? (e["deletions"] as number) : 0,
+    isDraft,
+    headRefName,
+    baseRefName,
+    headRepoOwner: headRepoOwnerNorm,
+    commitsCount: readNumber(pr, "commits") ?? 0,
+    changedFiles: readNumber(pr, "changed_files") ?? 0,
+    additions: readNumber(pr, "additions") ?? 0,
+    deletions: readNumber(pr, "deletions") ?? 0,
     merged,
-    mergedAt: typeof e["mergedAt"] === "string" ? (e["mergedAt"] as string) : null,
-    mergedBy: parseActor(e["mergedBy"]),
+    mergedAt: readString(pr, "merged_at"),
+    mergedBy,
   };
 }
 
-function readTimelineEdges(raw: unknown): TimelineNode[] {
-  if (!raw || typeof raw !== "object") return [];
-  const r = raw as { edges?: unknown };
-  if (!Array.isArray(r.edges)) return [];
+function restTimeline(raw: unknown[]): TimelineNode[] {
   const out: TimelineNode[] = [];
-  for (const edge of r.edges) {
-    if (!edge || typeof edge !== "object") continue;
-    const node = (edge as { node?: unknown }).node;
-    const parsed = parseTimelineNode(node);
+  for (const r of raw) {
+    if (!r || typeof r !== "object") continue;
+    const n = r as Record<string, unknown>;
+    const ev = readString(n, "event");
+    if (!ev) continue;
+    const parsed = restTimelineItem(ev, n);
     if (parsed) out.push(parsed);
   }
   return out;
 }
 
-function parseTimelineNode(raw: unknown): TimelineNode | null {
-  if (!raw || typeof raw !== "object") return null;
-  const n = raw as Record<string, unknown>;
-  const type = String(n["__typename"] ?? "");
-  if (!type) return null;
-
-  if (type === "IssueComment" || type === "PullRequestReviewThread" || type === "PullRequestReview") {
-    if (type !== "IssueComment") {
-      // Fallback: render as event for review/thread
-      return parseEventNode(type, n);
-    }
+function restTimelineItem(ev: string, n: Record<string, unknown>): TimelineNode | null {
+  if (ev === "commented") {
     return {
       kind: "comment",
-      id: String(n["id"] ?? ""),
-      author: parseActor(n["author"]),
-      bodyHtml: typeof n["bodyHTML"] === "string" ? (n["bodyHTML"] as string) : "",
-      createdAt: typeof n["createdAt"] === "string" ? (n["createdAt"] as string) : "",
-      authorAssociation: typeof n["authorAssociation"] === "string" ? (n["authorAssociation"] as string) : null,
-      reactions: parseReactions(n["reactionGroups"]),
-      isAuthor: n["viewerDidAuthor"] === true,
+      id: String(n["id"] ?? n["node_id"] ?? ""),
+      author: restActor(n["user"]) ?? restActor(n["actor"]),
+      bodyHtml: readString(n, "body_html") ?? "",
+      createdAt: readString(n, "created_at") ?? "",
+      authorAssociation: readString(n, "author_association"),
+      reactions: restReactionSummary(n["reactions"]),
+      isAuthor: false,
     };
   }
-  return parseEventNode(type, n);
-}
 
-function parseEventNode(type: string, n: Record<string, unknown>): EventNode {
-  const ev: EventNode = {
+  if (ev === "reviewed") {
+    const state = (readString(n, "state") ?? "").toUpperCase();
+    const body = readString(n, "body_html") ?? "";
+    if (body) {
+      return {
+        kind: "comment",
+        id: String(n["id"] ?? n["node_id"] ?? ""),
+        author: restActor(n["user"]),
+        bodyHtml: prefixReviewBody(state, body),
+        createdAt: readString(n, "submitted_at") ?? readString(n, "created_at") ?? "",
+        authorAssociation: readString(n, "author_association"),
+        reactions: [],
+        isAuthor: false,
+      };
+    }
+    return {
+      kind: "event",
+      type: "PullRequestReview",
+      actor: restActor(n["user"]) ?? restActor(n["actor"]),
+      createdAt: readString(n, "submitted_at") ?? readString(n, "created_at") ?? "",
+      toState: state.toLowerCase(),
+    };
+  }
+
+  if (ev === "subscribed" || ev === "unsubscribed" || ev === "mentioned") return null;
+
+  const base: EventNode = {
     kind: "event",
-    type,
-    actor: parseActor(n["actor"]),
-    createdAt: typeof n["createdAt"] === "string" ? (n["createdAt"] as string) : "",
+    type: mapEventType(ev),
+    actor: restActor(n["actor"]) ?? restActor(n["user"]),
+    createdAt: readString(n, "created_at") ?? readString(n, "submitted_at") ?? "",
   };
 
-  const label = parseLabel(n["label"]);
-  if (label) ev.label = label;
-
-  const assignee = parseActor(n["assignee"]);
-  if (assignee) ev.assignee = assignee;
-
-  if (type === "RenamedTitleEvent") {
-    if (typeof n["previousTitle"] === "string") ev.fromState = n["previousTitle"] as string;
-    if (typeof n["currentTitle"] === "string") ev.toState = n["currentTitle"] as string;
-  }
-
-  if (type === "ReferencedEvent" || type === "CrossReferencedEvent") {
-    const src = readObj(n["source"]) ?? readObj(n["subject"]);
-    if (src) {
-      ev.refTitle = typeof src["title"] === "string" ? (src["title"] as string) : undefined;
-      ev.refUrl = typeof src["url"] === "string" ? (src["url"] as string) : undefined;
-      const refNumber = src["number"];
-      if (typeof refNumber === "number") ev.ref = `#${refNumber}`;
+  switch (ev) {
+    case "labeled":
+    case "unlabeled": {
+      const l = restLabel(n["label"]);
+      if (l) base.label = l;
+      return base;
     }
-    if (typeof n["commitOid"] === "string") ev.commitOid = n["commitOid"] as string;
-  }
-
-  if (type === "ClosedEvent" && typeof n["stateReason"] === "string") {
-    ev.toState = (n["stateReason"] as string);
-  }
-
-  if (type === "HeadRefForcePushedEvent" || type === "BaseRefForcePushedEvent") {
-    if (typeof n["beforeCommit"] === "object" && n["beforeCommit"] !== null) {
-      const before = (n["beforeCommit"] as { abbreviatedOid?: string }).abbreviatedOid;
-      if (typeof before === "string") ev.fromState = before;
+    case "assigned":
+    case "unassigned": {
+      const a = restActor(n["assignee"]);
+      if (a) base.assignee = a;
+      return base;
     }
-    if (typeof n["afterCommit"] === "object" && n["afterCommit"] !== null) {
-      const after = (n["afterCommit"] as { abbreviatedOid?: string }).abbreviatedOid;
-      if (typeof after === "string") ev.toState = after;
+    case "milestoned":
+    case "demilestoned": {
+      const m = readObj(n["milestone"]);
+      const t = m ? readString(m, "title") : null;
+      if (t) base.toState = t;
+      return base;
     }
+    case "closed": {
+      const sr = readString(n, "state_reason");
+      if (sr) base.toState = sr;
+      return base;
+    }
+    case "renamed": {
+      const r = readObj(n["rename"]);
+      if (r) {
+        const from = readString(r, "from");
+        const to = readString(r, "to");
+        if (from) base.fromState = from;
+        if (to) base.toState = to;
+      }
+      return base;
+    }
+    case "referenced": {
+      const cid = readString(n, "commit_id");
+      if (cid) base.commitOid = cid.slice(0, 7);
+      const repoUrl = readString(n, "commit_url");
+      if (repoUrl) base.refUrl = repoUrl;
+      return base;
+    }
+    case "cross-referenced": {
+      const src = readObj(n["source"]);
+      if (src) {
+        const issueObj = readObj(src["issue"]);
+        if (issueObj) {
+          const t = readString(issueObj, "title");
+          const u = readString(issueObj, "html_url");
+          if (t) base.refTitle = t;
+          if (u) base.refUrl = u;
+          const num = readNumber(issueObj, "number");
+          if (num != null) base.ref = `#${num}`;
+        }
+      }
+      return base;
+    }
+    case "committed": {
+      const sha = readString(n, "sha");
+      if (sha) base.commitOid = sha.slice(0, 7);
+      const msg = readString(n, "message");
+      if (msg) base.commitMessageHeadline = escapeHtml(msg.split("\n")[0] ?? "");
+      const author = readObj(n["author"]);
+      if (author && !base.actor) {
+        const login = readString(author, "name");
+        if (login) base.actor = { login, avatarUrl: `https://github.com/${login}.png?size=64` };
+      }
+      return base;
+    }
+    case "merged": {
+      const cid = readString(n, "commit_id");
+      if (cid) base.commitOid = cid.slice(0, 7);
+      return base;
+    }
+    case "head_ref_force_pushed":
+    case "base_ref_force_pushed": {
+      return base;
+    }
+    default:
+      return base;
   }
-
-  if (type === "PullRequestCommit" || type === "Commit") {
-    const commit = readObj(n["commit"]) ?? n;
-    if (typeof commit["oid"] === "string") ev.commitOid = (commit["oid"] as string).slice(0, 7);
-    if (typeof commit["messageHeadline"] === "string") ev.commitMessageHeadline = commit["messageHeadline"] as string;
-    if (typeof commit["messageHeadlineHTML"] === "string") ev.commitMessageHeadline = commit["messageHeadlineHTML"] as string;
-  }
-
-  return ev;
 }
 
-function parseActor(raw: unknown): Actor | null {
+function mapEventType(ev: string): string {
+  switch (ev) {
+    case "labeled": return "LabeledEvent";
+    case "unlabeled": return "UnlabeledEvent";
+    case "assigned": return "AssignedEvent";
+    case "unassigned": return "UnassignedEvent";
+    case "milestoned": return "MilestonedEvent";
+    case "demilestoned": return "DemilestonedEvent";
+    case "closed": return "ClosedEvent";
+    case "reopened": return "ReopenedEvent";
+    case "merged": return "MergedEvent";
+    case "renamed": return "RenamedTitleEvent";
+    case "referenced": return "ReferencedEvent";
+    case "cross-referenced": return "CrossReferencedEvent";
+    case "committed": return "PullRequestCommit";
+    case "head_ref_force_pushed": return "HeadRefForcePushedEvent";
+    case "base_ref_force_pushed": return "BaseRefForcePushedEvent";
+    case "head_ref_deleted": return "HeadRefDeletedEvent";
+    case "head_ref_restored": return "HeadRefRestoredEvent";
+    case "ready_for_review": return "ReadyForReviewEvent";
+    case "convert_to_draft": return "ConvertToDraftEvent";
+    case "review_requested": return "ReviewRequestedEvent";
+    case "review_request_removed": return "ReviewRequestRemovedEvent";
+    case "review_dismissed": return "ReviewDismissedEvent";
+    case "locked": return "LockedEvent";
+    case "unlocked": return "UnlockedEvent";
+    case "pinned": return "PinnedEvent";
+    case "unpinned": return "UnpinnedEvent";
+    case "transferred": return "TransferredEvent";
+    case "moved_columns_in_project": return "MovedColumnsInProjectEvent";
+    case "added_to_project": return "AddedToProjectEvent";
+    case "removed_from_project": return "RemovedFromProjectEvent";
+    case "auto_merge_enabled": return "AutoMergeEnabledEvent";
+    case "auto_merge_disabled": return "AutoMergeDisabledEvent";
+    case "auto_rebase_enabled": return "AutoRebaseEnabledEvent";
+    case "auto_squash_enabled": return "AutoSquashEnabledEvent";
+    default: return ev.split("_").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join("") + "Event";
+  }
+}
+
+function prefixReviewBody(state: string, body: string): string {
+  let label = "reviewed";
+  if (state === "APPROVED") label = "approved these changes";
+  else if (state === "CHANGES_REQUESTED") label = "requested changes";
+  else if (state === "COMMENTED") label = "left a review comment";
+  else if (state === "DISMISSED") label = "had this review dismissed";
+  return `<p><em>${label}</em></p>${body}`;
+}
+
+function restActor(raw: unknown): Actor | null {
   if (!raw || typeof raw !== "object") return null;
   const a = raw as Record<string, unknown>;
-  const login = a["login"];
-  if (typeof login !== "string") return null;
+  const login = readString(a, "login");
+  if (!login) return null;
   return {
     login,
-    avatarUrl: typeof a["avatarUrl"] === "string" ? (a["avatarUrl"] as string) : `https://github.com/${login}.png?size=64`,
-    isAgent: a["isAgent"] === true || a["isCopilot"] === true,
+    avatarUrl: readString(a, "avatar_url") ?? `https://github.com/${login}.png?size=64`,
+    isAgent: /\[bot\]$/.test(login) || a["type"] === "Bot",
   };
 }
 
-function parseLabels(raw: unknown): Label[] {
-  if (!raw || typeof raw !== "object") return [];
-  const r = raw as { edges?: unknown; nodes?: unknown };
-  if (Array.isArray(r.nodes)) {
-    return r.nodes.map((n) => parseLabel(n)).filter((l): l is Label => l !== null);
-  }
-  if (!Array.isArray(r.edges)) return [];
-  const out: Label[] = [];
-  for (const edge of r.edges) {
-    if (!edge || typeof edge !== "object") continue;
-    const node = (edge as { node?: unknown }).node;
-    const parsed = parseLabel(node);
-    if (parsed) out.push(parsed);
-  }
-  return out;
-}
-
-function parseLabel(raw: unknown): Label | null {
+function restLabel(raw: unknown): Label | null {
   if (!raw || typeof raw !== "object") return null;
   const l = raw as Record<string, unknown>;
-  const name = l["name"];
-  if (typeof name !== "string") return null;
+  const name = readString(l, "name");
+  if (!name) return null;
   return {
     name,
-    color: typeof l["color"] === "string" ? (l["color"] as string) : "ccc",
-    description: typeof l["description"] === "string" ? (l["description"] as string) : null,
+    color: (readString(l, "color") ?? "ccc").replace(/^#/, ""),
+    description: readString(l, "description"),
   };
 }
 
-function parseAssignees(raw: unknown): Actor[] {
-  if (!raw || typeof raw !== "object") return [];
-  const r = raw as { edges?: unknown };
-  if (!Array.isArray(r.edges)) return [];
-  const out: Actor[] = [];
-  for (const edge of r.edges) {
-    if (!edge || typeof edge !== "object") continue;
-    const node = (edge as { node?: unknown }).node;
-    const parsed = parseActor(node);
-    if (parsed) out.push(parsed);
-  }
-  return out;
-}
-
-function parseMilestone(raw: unknown): Milestone | null {
+function restMilestone(raw: unknown): Milestone | null {
   if (!raw || typeof raw !== "object") return null;
   const m = raw as Record<string, unknown>;
-  const title = m["title"];
-  if (typeof title !== "string") return null;
+  const title = readString(m, "title");
+  if (!title) return null;
   return {
     title,
-    url: typeof m["url"] === "string" ? (m["url"] as string) : "",
+    url: readString(m, "html_url") ?? "",
   };
 }
 
-function parseReactions(raw: unknown): ReactionCount[] {
-  if (!Array.isArray(raw)) return [];
+function restReactionSummary(raw: unknown): ReactionCount[] {
+  if (!raw || typeof raw !== "object") return [];
+  const r = raw as Record<string, unknown>;
+  const map: Array<[string, string]> = [
+    ["+1", "THUMBS_UP"],
+    ["-1", "THUMBS_DOWN"],
+    ["laugh", "LAUGH"],
+    ["hooray", "HOORAY"],
+    ["confused", "CONFUSED"],
+    ["heart", "HEART"],
+    ["rocket", "ROCKET"],
+    ["eyes", "EYES"],
+  ];
   const out: ReactionCount[] = [];
-  for (const rg of raw) {
-    if (!rg || typeof rg !== "object") continue;
-    const content = (rg as { content?: unknown }).content;
-    const count =
-      readNumber(readObj((rg as { reactors?: unknown }).reactors), "totalCount") ??
-      readNumber(readObj((rg as { users?: unknown }).users), "totalCount") ??
-      0;
-    if (typeof content !== "string" || count <= 0) continue;
-    out.push({ content, count });
+  for (const [key, content] of map) {
+    const v = r[key];
+    if (typeof v === "number" && v > 0) out.push({ content, count: v });
   }
   return out;
 }
@@ -383,8 +481,16 @@ function readObj(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" ? (v as Record<string, unknown>) : null;
 }
 
-function readNumber(o: Record<string, unknown> | null, key: string): number | null {
-  if (!o) return null;
+function readArray(v: unknown): unknown[] {
+  return Array.isArray(v) ? v : [];
+}
+
+function readString(o: Record<string, unknown>, key: string): string | null {
+  const v = o[key];
+  return typeof v === "string" ? v : null;
+}
+
+function readNumber(o: Record<string, unknown>, key: string): number | null {
   const v = o[key];
   return typeof v === "number" ? v : null;
 }

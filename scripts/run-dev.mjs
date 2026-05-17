@@ -5,7 +5,7 @@ const isWin = process.platform === "win32";
 const npmCmd = isWin ? "npm.cmd" : "npm";
 
 function start(name, cmd, args) {
-  const child = spawn(cmd, args, { stdio: "inherit", shell: false });
+  const child = spawn(cmd, args, { stdio: "inherit", shell: isWin });
   child.on("exit", (code, signal) => {
     console.log(`[${name}] exited code=${code} signal=${signal}`);
     procs.forEach((p) => {
