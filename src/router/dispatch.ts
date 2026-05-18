@@ -218,6 +218,11 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       console.debug("[oldgh] dispatch adapter failure:", err.name, err.message);
       bodyState = { kind: "none" };
       removeAllBodyRoots();
+      if (/responded 404\b/.test(err.message)) {
+        document.documentElement.removeAttribute(MOUNTED_ATTR);
+        teardownRepoHeader();
+        return;
+      }
       insertBodyError(err.message);
       return;
     }
