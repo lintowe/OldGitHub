@@ -37,6 +37,9 @@ export async function mountRepoIssue(
       : await getIssue(owner, repo, number);
   } catch (err) {
     if (!(err instanceof AdapterFailure)) throw err;
+    // A 404 here means this issue/PR genuinely doesn't exist; bubble up so
+    // dispatch can show the friendly section-not-found panel.
+    if (/responded 404\b/.test(err.message)) throw err;
   }
 
   const root = document.createElement("div");

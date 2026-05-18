@@ -393,22 +393,67 @@ async function hydrateStars(root: HTMLElement, login: string): Promise<void> {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
-    if (!resp.ok) {
-      container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load stars (${resp.status}).</p>`;
+    if (resp.ok) {
+      const data = (await resp.json()) as unknown[];
+      if (Array.isArray(data) && data.length > 0) {
+        container.innerHTML = `
+          <ul class="oldgh-profile__repos-list">
+            ${data.map((r) => renderStarItem(r)).join("")}
+          </ul>
+        `;
+        return;
+      }
+    }
+    // Fall back to scraping the page (catches private stars / API gaps).
+    const html = await scrapeStarsPage(login);
+    if (html) {
+      container.innerHTML = html;
       return;
     }
-    const data = (await resp.json()) as unknown[];
-    if (!Array.isArray(data) || data.length === 0) {
-      container.innerHTML = `<p class="oldgh-profile__muted">No starred repositories.</p>`;
-      return;
-    }
-    container.innerHTML = `
-      <ul class="oldgh-profile__repos-list">
-        ${data.map((r) => renderStarItem(r)).join("")}
-      </ul>
-    `;
+    container.innerHTML = `<p class="oldgh-profile__muted">No starred repositories.</p>`;
   } catch {
     container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load stars.</p>`;
+  }
+}
+
+async function scrapeStarsPage(login: string): Promise<string | null> {
+  try {
+    const resp = await fetch(`https://github.com/${encodeURIComponent(login)}?tab=stars`, {
+      credentials: "include",
+      headers: { Accept: "text/html" },
+    });
+    if (!resp.ok) return null;
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const items: string[] = [];
+    const seen = new Set<string>();
+    for (const a of Array.from(doc.querySelectorAll<HTMLAnchorElement>('div.col-12.d-block a[itemprop="name codeRepository"], h3 a[href^="/"]'))) {
+      const href = a.getAttribute("href") || "";
+      const m = /^\/([\w.-]+)\/([\w.-]+)\/?$/.exec(href);
+      if (!m || !m[1] || !m[2]) continue;
+      const full = `${m[1]}/${m[2]}`;
+      if (seen.has(full)) continue;
+      seen.add(full);
+      const card = a.closest("div");
+      const desc = card?.querySelector('p[itemprop="description"]')?.textContent?.trim() || "";
+      const lang = card?.querySelector('[itemprop="programmingLanguage"]')?.textContent?.trim() || null;
+      const starsEl = card?.querySelector<HTMLAnchorElement>('a[href*="/stargazers"]');
+      const starsTxt = starsEl?.textContent?.trim() || "";
+      items.push(`
+        <li class="oldgh-profile__repo">
+          <h3 class="oldgh-profile__repo-name"><a href="/${escapeAttr(full)}">${escapeText(full)}</a></h3>
+          ${desc ? `<p class="oldgh-profile__repo-desc">${escapeText(desc)}</p>` : ""}
+          <p class="oldgh-profile__repo-meta">
+            ${lang ? `<span>${escapeText(lang)}</span>` : ""}
+            ${starsTxt ? `<span>${octicon("star", { size: 12 })}${escapeText(starsTxt)}</span>` : ""}
+          </p>
+        </li>
+      `);
+    }
+    if (items.length === 0) return null;
+    return `<ul class="oldgh-profile__repos-list">${items.join("")}</ul>`;
+  } catch {
+    return null;
   }
 }
 
