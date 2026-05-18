@@ -98,19 +98,21 @@ async function scrapeRepoSummary(owner: string, repo: string): Promise<RepoSumma
   const titleMeta = doc.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.content || "";
   const descMeta = doc.querySelector<HTMLMetaElement>('meta[name="description"], meta[property="og:description"]')?.content?.trim() || "";
 
-  // The page's <body> data-pjax-transient-attr or sidebar links tell us
-  // about features. Look at the repo tabs nav to discover which exist.
-  const tabLinks = doc.querySelectorAll<HTMLAnchorElement>('nav[role="navigation"] a, ul.UnderlineNav-body a, [data-pjax-container] nav a');
+  // Walk every anchor with an href in the same repo namespace; modern GitHub
+  // doesn't put the tabs under a single stable container class anymore.
+  const prefix = `/${owner}/${repo}`;
   let hasIssues = false;
   let hasWiki = false;
   let hasProjects = false;
   let hasDiscussions = false;
-  for (const a of Array.from(tabLinks)) {
+  for (const a of Array.from(doc.querySelectorAll<HTMLAnchorElement>("a[href]"))) {
     const href = a.getAttribute("href") || "";
-    if (/\/issues$/.test(href) || /\/issues\?/.test(href)) hasIssues = true;
-    else if (/\/wiki$/.test(href) || /\/wiki\//.test(href)) hasWiki = true;
-    else if (/\/projects$/.test(href) || /\/projects\?/.test(href)) hasProjects = true;
-    else if (/\/discussions$/.test(href) || /\/discussions\?/.test(href)) hasDiscussions = true;
+    if (!href.startsWith(prefix)) continue;
+    const rest = href.slice(prefix.length);
+    if (/^\/issues(\?|$|\/)/.test(rest)) hasIssues = true;
+    else if (/^\/wiki(\?|$|\/)/.test(rest)) hasWiki = true;
+    else if (/^\/projects(\?|$|\/)/.test(rest)) hasProjects = true;
+    else if (/^\/discussions(\?|$|\/)/.test(rest)) hasDiscussions = true;
   }
 
   // Topics are rendered as <a class="topic-tag"> or under a topics list.
@@ -125,10 +127,11 @@ async function scrapeRepoSummary(owner: string, repo: string): Promise<RepoSumma
     }
   }
 
-  // Strip the trailing "Contribute to … on GitHub." that GitHub appends.
+  // Strip the trailing " - owner/repo" or "Contribute to …" that GitHub appends.
   const description = descMeta
     .replace(/\s*Contribute to [^.]+\s+development by creating an account on GitHub\.?\s*$/i, "")
-    .replace(/^.*?:\s*/, "")
+    .replace(new RegExp(`\\s*[-–—]\\s*${owner}/${repo}\\s*$`, "i"), "")
+    .replace(new RegExp(`^${owner}/${repo}\\s*:\\s*`, "i"), "")
     .trim();
 
   const isPrivate = !!doc.querySelector('.octicon-lock, [aria-label="Private repository"]');
