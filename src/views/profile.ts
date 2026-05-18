@@ -54,7 +54,8 @@ function decorateContributionCells(root: HTMLElement): void {
     const labelId = cell.getAttribute("aria-labelledby");
     let label: string | null = null;
     if (labelId) {
-      label = graph.querySelector("#" + cssEscape(labelId))?.textContent?.replace(/\s+/g, " ").trim() || null;
+      // tool-tip elements auto-relocate to document body, so search globally
+      label = document.getElementById(labelId)?.textContent?.replace(/\s+/g, " ").trim() || null;
     }
     if (!label) {
       const tipNeighbor = cell.querySelector<HTMLElement>("tool-tip, .sr-only");
@@ -68,10 +69,6 @@ function decorateContributionCells(root: HTMLElement): void {
   }
 }
 
-function cssEscape(s: string): string {
-  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") return CSS.escape(s);
-  return s.replace(/[^\w-]/g, "\\$&");
-}
 
 async function hydrateActivity(root: HTMLElement, login: string): Promise<void> {
   const slot = root.querySelector<HTMLElement>(".oldgh-profile__activity-slot");
