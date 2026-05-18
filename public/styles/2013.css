@@ -448,6 +448,20 @@ html[data-oldgh-theme="dark"] .oldgh-header__search-input {
 /* theme toggle in the header */
 .oldgh-header__menu--theme > summary {
   padding: 4px 8px;
+  border-radius: 3px;
+  transition: background 80ms ease;
+}
+.oldgh-header__menu--theme > summary:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+html[data-oldgh-theme="dark"] .oldgh-header__menu--theme > summary:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.oldgh-header__menu--theme[open] > summary {
+  background: rgba(0, 0, 0, 0.06);
+}
+html[data-oldgh-theme="dark"] .oldgh-header__menu--theme[open] > summary {
+  background: rgba(255, 255, 255, 0.08);
 }
 .oldgh-header__theme-icon {
   vertical-align: middle;
@@ -468,6 +482,9 @@ html[data-oldgh-theme="dark"] .oldgh-header__theme-icon--dark { display: inline-
 .oldgh-header__menu--theme button[aria-checked="true"] {
   font-weight: bold;
   background: rgba(0, 0, 0, 0.04);
+}
+html[data-oldgh-theme="dark"] .oldgh-header__menu--theme button[aria-checked="true"] {
+  background: rgba(255, 255, 255, 0.06);
 }
 .oldgh-header__menu--theme button[aria-checked="true"]::after {
   content: "✓";
@@ -1958,7 +1975,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: var(--gh-bg-canvas-subtle, #fafafa);
+  background: var(--gh-bg-subtle);
   cursor: pointer;
   font-size: 12px;
   font-weight: bold;
@@ -2003,7 +2020,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   color: var(--gh-fg-default);
 }
 .oldgh-activity__item:hover {
-  background: var(--gh-bg-canvas-subtle, #fafafa);
+  background: var(--gh-bg-subtle);
 }
 .oldgh-activity__icon {
   flex: 0 0 16px;
@@ -2021,7 +2038,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 .oldgh-activity__line code {
   font-size: 11px;
   padding: 1px 4px;
-  background: var(--gh-bg-canvas-subtle, #f6f8fa);
+  background: var(--gh-bg-subtle);
   border-radius: 3px;
 }
 .oldgh-activity__when {
@@ -5605,7 +5622,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
 .oldgh-actions-run__sidebar {
   width: 240px;
   flex-shrink: 0;
-  background: #fafbfc;
+  background: var(--gh-bg-subtle);
   border: 1px solid var(--gh-border-default);
   border-radius: 3px;
   padding: 10px 12px;
@@ -5639,7 +5656,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   font-size: 12px;
 }
 .oldgh-actions-run__job-nav a:hover {
-  background: #f1f4f6;
+  background: var(--gh-bg-subtle);
 }
 .oldgh-actions-run__job-nav-name {
   flex: 1;
@@ -5722,7 +5739,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   flex-wrap: wrap;
   gap: 14px;
   padding: 8px 14px;
-  background: #fafbfc;
+  background: var(--gh-bg-subtle);
   border-bottom: 1px solid #eaecef;
   font-size: 11px;
   color: var(--gh-fg-muted);
@@ -5745,7 +5762,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   border-bottom: none;
 }
 .oldgh-actions-run__step:hover {
-  background: #f9fafb;
+  background: var(--gh-bg-subtle);
 }
 .oldgh-actions-run__step-num {
   width: 22px;
@@ -5808,11 +5825,11 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   font-size: 13px;
 }
 .oldgh-me-issues__rail a:hover {
-  background: #f6f8fa;
+  background: var(--gh-bg-subtle);
   text-decoration: none;
 }
 .oldgh-me-issues__tab--active {
-  background: #f6f8fa;
+  background: var(--gh-bg-subtle);
   border-left-color: var(--gh-accent-emphasis) !important;
   font-weight: bold;
 }
@@ -5842,7 +5859,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   padding: 0;
   border: 1px solid var(--gh-border-default);
   border-radius: 3px;
-  background: #ffffff;
+  background: var(--gh-bg-elev);
 }
 .oldgh-me-issues__item {
   display: flex;
@@ -5855,7 +5872,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   border-bottom: none;
 }
 .oldgh-me-issues__item:hover {
-  background: #f9fafb;
+  background: var(--gh-bg-subtle);
 }
 .oldgh-me-issues__icon {
   display: inline-flex;
@@ -5975,7 +5992,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   align-items: center;
   gap: 6px;
   padding: 14px 10px;
-  background: #ffffff;
+  background: var(--gh-bg-elev);
   border: 1px solid var(--gh-border);
   border-radius: 4px;
   box-shadow: var(--gh-shadow-soft);
@@ -6016,7 +6033,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   display: flex;
   gap: 10px;
   padding: 10px;
-  background: #ffffff;
+  background: var(--gh-bg-elev);
   border: 1px solid var(--gh-border);
   border-radius: 3px;
 }
@@ -6070,7 +6087,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   margin-bottom: 24px;
   border: 1px solid var(--gh-border);
   border-radius: 4px;
-  background: #ffffff;
+  background: var(--gh-bg-elev);
 }
 .oldgh-profile__readme .oldgh-profile__section-title {
   margin: 0;
@@ -6128,7 +6145,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
 }
 .oldgh-repo-header--skeleton {
   height: 102px;
-  background: linear-gradient(180deg, #fafbfc 0%, #f1f4f6 100%);
+  background: var(--gh-bg-elev);
   border-bottom: 1px solid var(--gh-border);
 }
 
@@ -6151,7 +6168,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   line-height: 1.5;
 }
 .oldgh-body-error__detail code {
-  background: #f6f8fa;
+  background: var(--gh-bg-subtle);
   padding: 4px 8px;
   border-radius: 3px;
   font-size: 11px;
