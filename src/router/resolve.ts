@@ -22,7 +22,7 @@ export type Route =
   | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "other"; pathname: string; search: string; title: string }
   | { kind: "todo"; name: string };
 
-export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring";
+export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring" | "people";
 
 const OUT_OF_SCOPE_PREFIXES = [
   "/codespaces",
@@ -271,7 +271,7 @@ export function isCovered(pathname: string): boolean {
   return COVERED_REPO_KINDS.has(route.kind) || route.kind === "profile";
 }
 
-const COVERED_PROFILE_TABS = new Set<ProfileTab>(["overview", "repositories", "stars", "followers", "following", "achievements", "projects", "packages", "sponsoring"]);
+const COVERED_PROFILE_TABS = new Set<ProfileTab>(["overview", "repositories", "stars", "followers", "following", "achievements", "projects", "packages", "sponsoring", "people"]);
 
 export function isFullyCoveredUrl(pathname: string, search: string): boolean {
   const route = resolveRoute(pathname, search);
@@ -318,6 +318,7 @@ function parseProfileTab(search: string): ProfileTab {
     case "projects":
     case "packages":
     case "sponsoring":
+    case "people":
       return t;
     default:
       return "overview";

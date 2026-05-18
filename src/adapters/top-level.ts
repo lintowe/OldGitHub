@@ -62,13 +62,16 @@ function stripDuplicateHeading(el: Element, title: string): void {
 }
 
 function pickTitle(doc: Document, fallback: string): string {
+  if (fallback) return fallback;
   const candidates = doc.querySelectorAll<HTMLElement>("h1.h2, h1.h3, h1");
   for (const h of Array.from(candidates)) {
     if (h.classList.contains("sr-only")) continue;
     if (h.getAttribute("aria-hidden") === "true") continue;
     if (h.closest("dialog, modal-dialog, .Overlay--hidden, [hidden]")) continue;
     const txt = h.textContent?.trim();
-    if (txt) return txt;
+    if (!txt) continue;
+    if (/^Search code, repositories/i.test(txt)) continue;
+    return txt;
   }
   return fallback;
 }
@@ -87,6 +90,10 @@ function cleanScraped(el: Element): void {
   ];
   for (const sel of removeSelectors) {
     el.querySelectorAll(sel).forEach((n) => n.remove());
+  }
+  for (const h of Array.from(el.querySelectorAll<HTMLElement>("h1"))) {
+    const txt = (h.textContent || "").replace(/\s+/g, " ").trim();
+    if (/^Search code, repositories/i.test(txt)) h.remove();
   }
   for (const node of Array.from(el.querySelectorAll<HTMLElement>("*"))) {
     for (const attr of Array.from(node.attributes)) {
