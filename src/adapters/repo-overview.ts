@@ -100,6 +100,10 @@ export async function getRepoBlob(owner: string, repo: string, refAndPath: strin
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
+  if (resp.status === 403 || resp.status === 429) {
+    // rate-limited — fall back to raw.githubusercontent.com which is unauth-friendly
+    return loadBlobViaRaw(owner, repo, branch, path);
+  }
   if (!resp.ok) {
     throw new AdapterFailure("getRepoBlob", `contents ${owner}/${repo}/${path}@${branch} responded ${resp.status}`);
   }
@@ -154,6 +158,37 @@ export async function getRepoBlob(owner: string, repo: string, refAndPath: strin
     rawBlobUrl,
     truncated,
     isBinary,
+  };
+}
+
+async function loadBlobViaRaw(owner: string, repo: string, branch: string, path: string): Promise<RepoBlobView> {
+  const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path.split("/").map(encodeURIComponent).join("/")}`;
+  const r = await fetch(rawUrl, { credentials: "omit" });
+  if (!r.ok) {
+    throw new AdapterFailure("getRepoBlob", `raw ${owner}/${repo}/${path}@${branch} responded ${r.status}`);
+  }
+  const contentType = r.headers.get("content-type") || "";
+  const isText = /^text\b|^application\/(json|xml|x-yaml|javascript|sh|toml)|json|yaml|markdown|html|svg/i.test(contentType);
+  if (!isText) {
+    return {
+      owner, repo, branch, path,
+      displayName: pathBasename(path),
+      language: guessLanguage(path),
+      rawLines: [],
+      rawBlobUrl: rawUrl,
+      truncated: false,
+      isBinary: true,
+    };
+  }
+  const text = await r.text();
+  return {
+    owner, repo, branch, path,
+    displayName: pathBasename(path),
+    language: guessLanguage(path),
+    rawLines: text.split("\n"),
+    rawBlobUrl: rawUrl,
+    truncated: false,
+    isBinary: false,
   };
 }
 

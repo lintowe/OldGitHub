@@ -65,14 +65,24 @@ function insertBodyError(message: string): void {
   document.querySelectorAll(".oldgh-body-placeholder, .oldgh-body-error").forEach((n) => n.remove());
   const el = document.createElement("div");
   el.className = "oldgh-body-root oldgh-body-error";
-  el.innerHTML = `
-    <div class="oldgh-page oldgh-body-error__page">
-      <h2>Couldn't render this page natively.</h2>
-      <p>The OldGitHub adapter for this URL didn't return data we could use, so the original GitHub UI is hidden to avoid showing two skins at once.</p>
-      <p class="oldgh-body-error__detail"><code>${escapeText(message)}</code></p>
-      <p><a href="${escapeAttr(window.location.href)}">Reload</a> or <a href="javascript:void(0)" data-oldgh-show-native>show GitHub's native page instead</a>.</p>
-    </div>
-  `;
+  const rateLimited = /responded 403\b/.test(message) || /responded 429\b/.test(message);
+  el.innerHTML = rateLimited
+    ? `
+      <div class="oldgh-page oldgh-body-error__page">
+        <h2>GitHub rate-limited this request.</h2>
+        <p>OldGitHub talks to the public GitHub API without authentication, which caps you at 60 requests per hour. You've hit that ceiling.</p>
+        <p class="oldgh-body-error__detail"><code>${escapeText(message)}</code></p>
+        <p>Wait an hour, or <a href="javascript:void(0)" data-oldgh-show-native>show GitHub's native page instead</a>.</p>
+      </div>
+    `
+    : `
+      <div class="oldgh-page oldgh-body-error__page">
+        <h2>Couldn't render this page natively.</h2>
+        <p>The OldGitHub adapter for this URL didn't return data we could use, so the original GitHub UI is hidden to avoid showing two skins at once.</p>
+        <p class="oldgh-body-error__detail"><code>${escapeText(message)}</code></p>
+        <p><a href="${escapeAttr(window.location.href)}">Reload</a> or <a href="javascript:void(0)" data-oldgh-show-native>show GitHub's native page instead</a>.</p>
+      </div>
+    `;
   el.addEventListener("click", (e) => {
     const target = e.target as HTMLElement | null;
     if (!target) return;
