@@ -1,4 +1,5 @@
 import { octicon } from "@/icons";
+import { fetchApi } from "@/adapters/rate-limit";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-trending";
@@ -36,7 +37,18 @@ export async function mountTrending(_pathname: string, search: string): Promise<
     const items = await fetchTrending(period, language);
     main.innerHTML = renderList(items);
   } catch (err) {
-    main.innerHTML = `<div class="oldgh-trending__empty">Couldn't load trending: ${escapeText(err instanceof Error ? err.message : String(err))}</div>`;
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/rate-?limit|status 40[39]|status 429/i.test(msg)) {
+      main.innerHTML = `
+        <div class="oldgh-trending__empty">
+          ${octicon("clock", { size: 36 })}
+          <p>You've hit GitHub's anonymous API rate limit. Trending will work again in a few minutes.</p>
+          <p><a href="https://github.com/trending${language ? `/${encodeURIComponent(language)}` : ""}?since=${encodeURIComponent(period)}">Open trending on modern GitHub</a></p>
+        </div>
+      `;
+      return;
+    }
+    main.innerHTML = `<div class="oldgh-trending__empty">Couldn't load trending: ${escapeText(msg)}</div>`;
   }
 }
 
@@ -50,8 +62,11 @@ async function fetchTrending(period: TrendingPeriod, language: string): Promise<
   let q = `created:>${since}`;
   if (language) q += ` language:${language}`;
   const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(q)}&sort=stars&order=desc&per_page=25`;
-  const resp = await fetch(url, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
-  if (!resp.ok) throw new Error(`status ${resp.status}`);
+  const resp = await fetchApi(url, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
+  if (!resp.ok) {
+    if (resp.status === 403 || resp.status === 429) throw new Error(`rate-limited (status ${resp.status})`);
+    throw new Error(`status ${resp.status}`);
+  }
   const data = (await resp.json()) as { items?: unknown[] };
   return (data.items ?? []).map(parseRepo).filter((r): r is TrendingRepo => r !== null);
 }

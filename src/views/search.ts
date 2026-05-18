@@ -84,6 +84,17 @@ export async function mountSearch(_pathname: string, search: string): Promise<vo
       `;
       return;
     }
+    if (/rate-?limit/i.test(msg)) {
+      const fallbackType = type === "pullrequests" ? "pullrequests" : type;
+      resultsEl.innerHTML = `
+        <div class="oldgh-search__empty">
+          ${octicon("clock", { size: 36 })}
+          <p>You've hit GitHub's anonymous API rate limit. It resets in a few minutes.</p>
+          <p><a href="https://github.com/search?q=${encodeURIComponent(query)}&type=${encodeURIComponent(fallbackType)}">Open this search on modern GitHub</a></p>
+        </div>
+      `;
+      return;
+    }
     resultsEl.innerHTML = `<div class="oldgh-search__empty"><p>Couldn't load results: ${escapeText(msg)}</p></div>`;
   }
 }

@@ -43,6 +43,9 @@ export async function mountProfile(login: string, tab: string, query: string): P
     void hydrateProfileReadme(root, login);
     void hydrateActivity(root, login);
   }
+  if (tab === "overview" && view.kind === "org") {
+    void hydrateOrgReadme(root, login);
+  }
   decorateContributionCells(root);
   // tool-tip custom elements relocate themselves asynchronously; retry once they have
   setTimeout(() => decorateContributionCells(root), 100);
@@ -521,12 +524,44 @@ function renderTabBody(v: ProfileView, tab: string): string {
   if (tab !== "overview") {
     return `<div class="oldgh-profile__scraped" data-state="loading"><p class="oldgh-profile__muted">Loading&hellip;</p></div>`;
   }
+  if (v.kind === "org") {
+    return `
+      ${v.pinned.length > 0 ? renderPinned(v) : ""}
+      <div class="oldgh-profile__org-readme-slot"></div>
+    `;
+  }
   return `
     <div class="oldgh-profile__readme-slot"></div>
     ${v.pinned.length > 0 ? renderPinned(v) : ""}
     ${renderContributions(v)}
     <div class="oldgh-profile__activity-slot"></div>
   `;
+}
+
+async function hydrateOrgReadme(root: HTMLElement, login: string): Promise<void> {
+  const slot = root.querySelector<HTMLElement>(".oldgh-profile__org-readme-slot");
+  if (!slot) return;
+  const url = `https://api.github.com/repos/${encodeURIComponent(login)}/.github/readme`;
+  try {
+    const htmlResp = await fetch(url, {
+      credentials: "omit",
+      cache: "no-cache",
+      headers: { Accept: "application/vnd.github.html" },
+    });
+    if (!htmlResp.ok) return;
+    const ct = htmlResp.headers.get("content-type") || "";
+    const text = await htmlResp.text();
+    const looksHtml = ct.includes("html") || /^\s*</.test(text);
+    if (!looksHtml || !text.trim()) return;
+    slot.innerHTML = `
+      <section class="oldgh-profile__readme">
+        <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>.github</strong></h3>
+        <article class="oldgh-profile__readme-body markdown-body">${text}</article>
+      </section>
+    `;
+  } catch {
+    // silent — no readme is fine
+  }
 }
 
 async function hydrateProfileReadme(root: HTMLElement, login: string): Promise<void> {

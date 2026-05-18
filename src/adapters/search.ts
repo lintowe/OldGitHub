@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi } from "./rate-limit";
 
 export type SearchType =
   | "repositories"
@@ -153,11 +154,14 @@ async function rawSearch(
   const params = new URLSearchParams({ q: trimmed, per_page: "30" });
   if (sort && sort !== "best-match") params.set("sort", sort);
   if (order) params.set("order", order);
-  const resp = await fetch(`${API}/search/${segment}?${params.toString()}`, {
+  const resp = await fetchApi(`${API}/search/${segment}?${params.toString()}`, {
     credentials: "omit",
     headers: { Accept: accept },
   });
   if (!resp.ok) {
+    if (resp.status === 403 || resp.status === 429) {
+      throw new AdapterFailure("search", `rate-limited (search/${segment} responded ${resp.status})`);
+    }
     throw new AdapterFailure("search", `/search/${segment} responded ${resp.status}`);
   }
   return (await resp.json()) as Record<string, unknown>;
