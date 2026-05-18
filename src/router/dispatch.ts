@@ -231,6 +231,12 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       bodyState = { kind: "none" };
       removeAllBodyRoots();
       if (/responded 404\b/.test(err.message)) {
+        // If the repo header successfully mounted, it's a sub-section 404 (e.g.
+        // discussions disabled). Keep the header and show a friendly message.
+        if (mountedRepo) {
+          insertBodyNotFound(err.message);
+          return;
+        }
         document.documentElement.removeAttribute(MOUNTED_ATTR);
         teardownRepoHeader();
         return;
@@ -241,6 +247,35 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     throw err;
   } finally {
     hideProgress();
+  }
+}
+
+function insertBodyNotFound(message: string): void {
+  document.querySelectorAll(".oldgh-body-placeholder, .oldgh-body-error").forEach((n) => n.remove());
+  const el = document.createElement("div");
+  el.className = "oldgh-body-root oldgh-body-error";
+  el.innerHTML = `
+    <div class="oldgh-page oldgh-body-error__page">
+      <h2>This section isn't available.</h2>
+      <p>The page you requested couldn't be found in this repository. It may be disabled, moved, or never existed.</p>
+      <p class="oldgh-body-error__detail"><code>${escapeText(message)}</code></p>
+      <p><a href="javascript:void(0)" data-oldgh-show-native>Show GitHub's native page instead</a>.</p>
+    </div>
+  `;
+  el.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.matches("[data-oldgh-show-native]")) {
+      e.preventDefault();
+      document.documentElement.removeAttribute("data-oldgh-mounted");
+      document.querySelectorAll(".oldgh-body-root").forEach((n) => n.remove());
+    }
+  });
+  const after = document.querySelector(".oldgh-repo-header") || document.querySelector(".oldgh-header");
+  if (after && after.parentNode) {
+    after.after(el);
+  } else {
+    document.body.append(el);
   }
 }
 

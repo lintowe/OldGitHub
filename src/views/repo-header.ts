@@ -65,6 +65,10 @@ function renderMinimalHeader(owner: string, repo: string, activeTab: TabKey): st
     topics: [],
     primaryLanguage: null,
     license: null,
+    hasIssues: true,
+    hasWiki: true,
+    hasProjects: true,
+    hasDiscussions: false,
   };
   return renderRepoHeaderHtml(minimal, activeTab);
 }
@@ -154,7 +158,7 @@ function renderRepoHeaderHtml(s: RepoSummary, activeTab: TabKey): string {
       ${topics}
       <nav class="oldgh-repo-tabs" aria-label="Repository">
         <ul class="oldgh-tabs">
-          ${TABS.map((t) => renderTab(s, t, activeTab)).join("")}
+          ${TABS.filter((t) => isTabAvailable(s, t.key)).map((t) => renderTab(s, t, activeTab)).join("")}
         </ul>
       </nav>
     </div>
@@ -182,6 +186,15 @@ function renderActionButton(b: ActionButton): string {
       ${count}
     </span>
   `;
+}
+
+function isTabAvailable(s: RepoSummary, key: TabKey): boolean {
+  switch (key) {
+    case "issues": return s.hasIssues;
+    case "wiki": return s.hasWiki;
+    case "projects": return s.hasProjects;
+    default: return true;
+  }
 }
 
 function renderTab(s: RepoSummary, tab: (typeof TABS)[number], active: TabKey): string {

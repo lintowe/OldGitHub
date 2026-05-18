@@ -18,6 +18,10 @@ export type RepoSummary = {
   topics: string[];
   primaryLanguage: string | null;
   license: string | null;
+  hasIssues: boolean;
+  hasWiki: boolean;
+  hasProjects: boolean;
+  hasDiscussions: boolean;
 };
 
 const summaryCache = new Map<string, { value: RepoSummary; expires: number }>();
@@ -63,6 +67,10 @@ export async function getRepoSummary(owner: string, repo: string): Promise<RepoS
     topics: Array.isArray(data["topics"]) ? (data["topics"] as unknown[]).filter((t): t is string => typeof t === "string") : [],
     primaryLanguage: typeof data["language"] === "string" ? (data["language"] as string) : null,
     license: license ? (typeof license["spdx_id"] === "string" ? (license["spdx_id"] as string) : (typeof license["name"] === "string" ? (license["name"] as string) : null)) : null,
+    hasIssues: data["has_issues"] !== false,
+    hasWiki: data["has_wiki"] !== false,
+    hasProjects: data["has_projects"] !== false,
+    hasDiscussions: data["has_discussions"] === true,
   };
 
   summaryCache.set(key, { value: summary, expires: now + TTL_MS });
