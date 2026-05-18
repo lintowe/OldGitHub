@@ -11,7 +11,9 @@ export type OcticonOptions = {
 export function octicon(name: string, opts: OcticonOptions = {}): string {
   const raw = OCTICON_SVGS[name];
   if (!raw) {
-    throw new Error(`unknown octicon: ${name}`);
+    console.debug(`[oldgh] unknown octicon: ${name}`);
+    const size = opts.size ?? 16;
+    return `<svg width="${size}" height="${size}" aria-hidden="true"></svg>`;
   }
   const attrs: string[] = [];
   attrs.push(`class="octicon octicon-${name}${opts.className ? " " + opts.className : ""}"`);

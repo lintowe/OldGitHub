@@ -65,7 +65,7 @@ function insertBodyError(message: string): void {
   document.querySelectorAll(".oldgh-body-placeholder, .oldgh-body-error").forEach((n) => n.remove());
   const el = document.createElement("div");
   el.className = "oldgh-body-root oldgh-body-error";
-  const rateLimited = /responded 403\b/.test(message) || /responded 429\b/.test(message);
+  const rateLimited = /responded 403\b/.test(message) || /responded 429\b/.test(message) || /rate-limited/i.test(message);
   el.innerHTML = rateLimited
     ? `
       <div class="oldgh-page oldgh-body-error__page">

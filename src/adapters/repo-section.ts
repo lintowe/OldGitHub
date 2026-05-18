@@ -104,11 +104,11 @@ function cleanScrapedContent(el: Element): void {
     if (!/^Welcome to Projects$/i.test(txt)) continue;
     let card: HTMLElement | null = heading;
     for (let i = 0; i < 6 && card; i++) {
-      const parent = card.parentElement;
-      if (!parent) break;
-      const parentText = (parent.textContent || "").trim();
+      const next: HTMLElement | null = card.parentElement;
+      if (!next) break;
+      const parentText = (next.textContent || "").trim();
       if (parentText.length > 800) break;
-      card = parent;
+      card = next;
     }
     if (card && card !== el) card.remove();
   }
