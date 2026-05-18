@@ -5781,6 +5781,68 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 }
 
 /* ======================= */
+/* profile followers/following */
+/* ======================= */
+.oldgh-people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+.oldgh-people__item {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+}
+.oldgh-people__avatar {
+  flex-shrink: 0;
+}
+.oldgh-people__avatar img {
+  display: block;
+  border-radius: 3px;
+  border: 1px solid var(--gh-border);
+}
+.oldgh-people__body {
+  min-width: 0;
+  flex: 1;
+}
+.oldgh-people__name {
+  margin: 0 0 3px;
+  font-size: 14px;
+  color: var(--gh-fg-default);
+}
+.oldgh-people__name strong {
+  color: var(--gh-fg-default);
+}
+.oldgh-people__login {
+  color: var(--gh-fg-muted);
+  font-size: 12px;
+}
+.oldgh-people__bio,
+.oldgh-people__location {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gh-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oldgh-people__bio {
+  margin-top: 2px;
+}
+.oldgh-people__location {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ======================= */
 /* top progress bar */
 /* ======================= */
 .oldgh-progress-bar {

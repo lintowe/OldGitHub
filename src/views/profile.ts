@@ -34,9 +34,67 @@ export async function mountProfile(login: string, tab: string, query: string): P
 
   if (tab === "repositories") {
     void hydrateRepos(root, login, query);
+  } else if (tab === "stars") {
+    void hydrateStars(root, login);
   } else if (tab !== "overview") {
     void hydrateScrapedTab(root, login, tab, query);
   }
+}
+
+async function hydrateStars(root: HTMLElement, login: string): Promise<void> {
+  const container = root.querySelector<HTMLElement>(".oldgh-profile__scraped");
+  if (!container) return;
+  try {
+    const resp = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}/starred?per_page=30`, {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!resp.ok) {
+      container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load stars (${resp.status}).</p>`;
+      return;
+    }
+    const data = (await resp.json()) as unknown[];
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = `<p class="oldgh-profile__muted">No starred repositories.</p>`;
+      return;
+    }
+    container.innerHTML = `
+      <ul class="oldgh-profile__repos-list">
+        ${data.map((r) => renderStarItem(r)).join("")}
+      </ul>
+    `;
+  } catch {
+    container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load stars.</p>`;
+  }
+}
+
+function renderStarItem(raw: unknown): string {
+  if (!raw || typeof raw !== "object") return "";
+  const r = raw as Record<string, unknown>;
+  const full = typeof r["full_name"] === "string" ? (r["full_name"] as string) : "";
+  if (!full) return "";
+  const desc = typeof r["description"] === "string" ? (r["description"] as string) : "";
+  const stars = typeof r["stargazers_count"] === "number" ? (r["stargazers_count"] as number) : 0;
+  const forks = typeof r["forks_count"] === "number" ? (r["forks_count"] as number) : 0;
+  const lang = typeof r["language"] === "string" ? (r["language"] as string) : null;
+  const updated = typeof r["pushed_at"] === "string" ? (r["pushed_at"] as string) : "";
+  return `
+    <li class="oldgh-profile__repo">
+      <h3 class="oldgh-profile__repo-name"><a href="/${escapeAttr(full)}">${escapeText(full)}</a></h3>
+      ${desc ? `<p class="oldgh-profile__repo-desc">${escapeText(desc)}</p>` : ""}
+      <p class="oldgh-profile__repo-meta">
+        ${lang ? `<span>${escapeText(lang)}</span>` : ""}
+        <span>${octicon("star", { size: 12 })}${formatNum(stars)}</span>
+        <span>${octicon("repo-forked", { size: 12 })}${formatNum(forks)}</span>
+        ${updated ? `<span>updated <span title="${escapeAttr(updated)}">${escapeText(relativeTime(updated))}</span></span>` : ""}
+      </p>
+    </li>
+  `;
+}
+
+function formatNum(n: number): string {
+  if (n >= 1000) return (n / 1000).toFixed(1) + "k";
+  return String(n);
 }
 
 export function unmountProfile(): void {
@@ -105,6 +163,10 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
       container.innerHTML = renderAchievementsFromFrame(frame);
       return;
     }
+    if (tab === "followers" || tab === "following") {
+      container.innerHTML = renderPeopleFromFrame(frame);
+      return;
+    }
     for (const node of Array.from(frame.querySelectorAll("script, style"))) node.remove();
     for (const node of Array.from(frame.querySelectorAll<HTMLElement>("*"))) {
       for (const attr of Array.from(node.attributes)) {
@@ -115,6 +177,61 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
   } catch {
     container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load this tab.</p>`;
   }
+}
+
+function renderPeopleFromFrame(frame: Element): string {
+  type P = { login: string; name: string | null; avatarUrl: string; bio: string | null; location: string | null };
+  const people: P[] = [];
+  const seen = new Set<string>();
+  for (const card of Array.from(frame.querySelectorAll<HTMLElement>("li, div.d-table, .user-list-item"))) {
+    const avatar = card.querySelector<HTMLImageElement>("img.avatar, img.avatar-user, img[src*='avatars']");
+    if (!avatar) continue;
+    const loginLink = card.querySelector<HTMLAnchorElement>("a[data-hovercard-type='user'], a.d-inline-block, a.text-bold[href^='/']");
+    const href = loginLink?.getAttribute("href") || avatar.closest("a")?.getAttribute("href") || "";
+    const m = /^\/([\w.-]+)\/?$/.exec(href);
+    if (!m || !m[1]) continue;
+    const login = m[1];
+    if (seen.has(login)) continue;
+    seen.add(login);
+    let name: string | null = null;
+    const nameEl = card.querySelector(".f4.lh-condensed, .text-bold[itemprop='name'], h3.f4");
+    if (nameEl) name = (nameEl.textContent || "").trim() || null;
+    let bio: string | null = null;
+    const bioEl = card.querySelector(".user-profile-bio, .pinned-item-desc, p.color-fg-muted, [data-bio-text]");
+    if (bioEl) bio = (bioEl.textContent || "").trim().slice(0, 200) || null;
+    let location: string | null = null;
+    const locEl = card.querySelector("[itemprop='homeLocation'], li[itemprop='homeLocation'] span");
+    if (locEl) location = (locEl.textContent || "").trim() || null;
+    people.push({
+      login,
+      name,
+      avatarUrl: avatar.getAttribute("src") || `https://github.com/${login}.png?size=64`,
+      bio,
+      location,
+    });
+  }
+  if (people.length === 0) {
+    return `<p class="oldgh-profile__muted">No users to show.</p>`;
+  }
+  return `
+    <ul class="oldgh-people">
+      ${people.map((p) => `
+        <li class="oldgh-people__item">
+          <a class="oldgh-people__avatar" href="/${escapeAttr(p.login)}">
+            <img src="${escapeAttr(p.avatarUrl)}" width="48" height="48" alt="${escapeAttr(p.login)}" />
+          </a>
+          <div class="oldgh-people__body">
+            <div class="oldgh-people__name">
+              ${p.name ? `<a href="/${escapeAttr(p.login)}"><strong>${escapeText(p.name)}</strong></a> ` : ""}
+              <a href="/${escapeAttr(p.login)}" class="oldgh-people__login">${escapeText(p.login)}</a>
+            </div>
+            ${p.bio ? `<p class="oldgh-people__bio">${escapeText(p.bio)}</p>` : ""}
+            ${p.location ? `<p class="oldgh-people__location">${octicon("location", { size: 12 })} ${escapeText(p.location)}</p>` : ""}
+          </div>
+        </li>
+      `).join("")}
+    </ul>
+  `;
 }
 
 function renderAchievementsFromFrame(frame: Element): string {
