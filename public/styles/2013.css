@@ -5692,7 +5692,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   padding: 0;
 }
 .oldgh-actions-run__job-nav li + li {
-  border-top: 1px solid #eaecef;
+  border-top: 1px solid var(--gh-border-faint);
 }
 .oldgh-actions-run__job-nav a {
   display: flex;
@@ -5788,7 +5788,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   gap: 14px;
   padding: 8px 14px;
   background: var(--gh-bg-subtle);
-  border-bottom: 1px solid #eaecef;
+  border-bottom: 1px solid var(--gh-border-faint);
   font-size: 11px;
   color: var(--gh-fg-muted);
 }
@@ -5804,7 +5804,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   padding: 6px 14px;
   font-size: 13px;
   color: var(--gh-fg-default);
-  border-bottom: 1px solid #f6f8fa;
+  border-bottom: 1px solid var(--gh-border-faint);
 }
 .oldgh-actions-run__step:last-child {
   border-bottom: none;
@@ -5914,7 +5914,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   align-items: flex-start;
   gap: 10px;
   padding: 10px 12px;
-  border-bottom: 1px solid #eaecef;
+  border-bottom: 1px solid var(--gh-border-faint);
 }
 .oldgh-me-issues__item:last-child {
   border-bottom: none;
