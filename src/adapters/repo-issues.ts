@@ -83,6 +83,9 @@ export async function getIssueList(
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
+  if (resp.status === 403 || resp.status === 429) {
+    return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
+  }
   if (!resp.ok) {
     throw new AdapterFailure("getIssueList", `${apiUrl.pathname} responded ${resp.status}`);
   }
@@ -119,6 +122,103 @@ export async function getIssueList(
     rows,
     pageInfo: { hasNext, hasPrevious: hasPrev, page },
   };
+}
+
+async function scrapeIssueList(
+  owner: string,
+  repo: string,
+  rawQuery: string,
+  kind: "issues" | "pulls",
+  qStr: string,
+  state: "open" | "closed" | "all",
+  page: number,
+): Promise<IssueListView> {
+  const path = kind === "pulls" ? "pulls" : "issues";
+  const url = `https://github.com/${owner}/${repo}/${path}${rawQuery ? "?" + rawQuery : ""}`;
+  const resp = await fetch(url, { credentials: "include", headers: { Accept: "text/html" } });
+  if (!resp.ok) {
+    throw new AdapterFailure("getIssueList", `scrape ${url} responded ${resp.status}`);
+  }
+  const html = await resp.text();
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const rows: IssueRow[] = [];
+  for (const li of Array.from(doc.querySelectorAll<HTMLElement>("li.js-issue-row, div.js-issue-row, [data-listview-component='items-list'] li"))) {
+    const parsed = parseScrapedRow(li, kind);
+    if (parsed) rows.push(parsed);
+  }
+  const openTab = doc.querySelector<HTMLElement>("a[href*='is%3Aopen'], a[href*='is:open']");
+  const closedTab = doc.querySelector<HTMLElement>("a[href*='is%3Aclosed'], a[href*='is:closed']");
+  const openCount = openTab ? parseNumber(openTab.textContent || "") : null;
+  const closedCount = closedTab ? parseNumber(closedTab.textContent || "") : null;
+  const total = state === "closed"
+    ? (closedCount ?? rows.length)
+    : state === "open"
+      ? (openCount ?? rows.length)
+      : ((openCount ?? 0) + (closedCount ?? 0)) || rows.length;
+  return {
+    owner,
+    repo,
+    rawQuery,
+    query: qStr,
+    totalCount: total,
+    openCount,
+    closedCount,
+    rows,
+    pageInfo: { hasNext: rows.length === 25, hasPrevious: page > 1, page },
+  };
+}
+
+function parseScrapedRow(el: HTMLElement, kind: "issues" | "pulls"): IssueRow | null {
+  const idMatch = /issue_(\d+)/.exec(el.id || "");
+  const titleA = el.querySelector<HTMLAnchorElement>("a.Link--primary, a[href*='/issues/'], a[href*='/pull/']");
+  if (!titleA) return null;
+  const href = titleA.getAttribute("href") || "";
+  const nm = /\/(?:issues|pull)\/(\d+)/.exec(href);
+  const number = idMatch ? parseInt(idMatch[1]!, 10) : (nm ? parseInt(nm[1]!, 10) : 0);
+  if (!number) return null;
+  const stateLabel = el.querySelector<HTMLElement>("[aria-label*='Open' i], [aria-label*='Closed' i], [aria-label*='Merged' i], [aria-label*='Draft' i]")?.getAttribute("aria-label") || "";
+  const isMerged = /merged/i.test(stateLabel);
+  const isClosed = /closed/i.test(stateLabel);
+  const state: IssueState = isClosed || isMerged ? "CLOSED" : "OPEN";
+  const userLink = el.querySelector<HTMLAnchorElement>("a.opened-by, a[data-hovercard-type='user']");
+  const login = userLink?.textContent?.trim() || null;
+  const labels: IssueLabel[] = [];
+  for (const lbl of Array.from(el.querySelectorAll<HTMLElement>("a.IssueLabel, a[data-name]"))) {
+    const name = lbl.getAttribute("data-name") || lbl.textContent?.trim() || "";
+    if (!name) continue;
+    const style = lbl.getAttribute("style") || "";
+    const rgb = /--label-r:\s*(\d+)[^;]*;\s*--label-g:\s*(\d+)[^;]*;\s*--label-b:\s*(\d+)/.exec(style);
+    let color = "cccccc";
+    if (rgb) color = [rgb[1], rgb[2], rgb[3]].map((n) => parseInt(n!, 10).toString(16).padStart(2, "0")).join("");
+    labels.push({ name, color });
+  }
+  const time = el.querySelector("relative-time")?.getAttribute("datetime") || "";
+  const commentLink = el.querySelector<HTMLAnchorElement>("a[href*='#issuecomment'], .ItemActionBar__count");
+  const comments = commentLink ? parseInt((commentLink.textContent || "").trim().replace(/\D/g, ""), 10) || 0 : 0;
+  return {
+    number,
+    titleHtml: titleA.innerHTML.trim(),
+    state,
+    stateReason: isMerged ? "MERGED" : isClosed ? "COMPLETED" : null,
+    createdAt: time,
+    closedAt: null,
+    updatedAt: time,
+    comments,
+    author: login ? { login, avatarUrl: `https://github.com/${login}.png?size=40` } : null,
+    labels,
+    assignees: [],
+    milestone: null,
+    isPullRequest: kind === "pulls" || /\/pull\//.test(href),
+    isDraft: /draft/i.test(stateLabel),
+    merged: isMerged,
+  };
+}
+
+function parseNumber(s: string): number | null {
+  const m = /([\d,]+)/.exec(s);
+  if (!m) return null;
+  const n = parseInt(m[1]!.replace(/,/g, ""), 10);
+  return Number.isFinite(n) ? n : null;
 }
 
 async function getCounts(owner: string, repo: string, kind: "issues" | "pulls"): Promise<{ open: number | null; closed: number | null }> {
