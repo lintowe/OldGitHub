@@ -96,9 +96,11 @@ function renderSource(v: RepoBlobView): string {
     rows.push(`<tr id="L${n}"><td class="oldgh-repo-blob__num"><a href="#L${n}">${n}</a></td><td class="oldgh-repo-blob__code">${escapeText(v.rawLines[i]!)}</td></tr>`);
   }
   return `
-    <table class="oldgh-repo-blob__table">
-      <tbody>${rows.join("")}</tbody>
-    </table>
+    <div class="oldgh-repo-blob__scroll">
+      <table class="oldgh-repo-blob__table">
+        <tbody>${rows.join("")}</tbody>
+      </table>
+    </div>
   `;
 }
 

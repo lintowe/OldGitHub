@@ -1047,6 +1047,9 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   gap: 6px;
 }
 
+.oldgh-repo-blob__scroll {
+  overflow-x: auto;
+}
 .oldgh-repo-blob__table {
   width: 100%;
   border-collapse: collapse;
@@ -1338,6 +1341,9 @@ html[data-oldgh-theme="dark"] .oldgh-repo-commit__file-status--renamed {
   font-size: var(--gh-size-sm);
 }
 
+.oldgh-diff-scroll {
+  overflow-x: auto;
+}
 .oldgh-diff {
   width: 100%;
   border-collapse: collapse;
@@ -3740,6 +3746,10 @@ html[data-oldgh-theme="dark"] .oldgh-pr-files__del { color: #ff7b72; }
   border: 1px solid var(--gh-border);
   border-radius: 3px;
   background: var(--gh-bg-elev);
+  overflow: hidden;
+}
+.oldgh-pr-file__diff {
+  overflow-x: auto;
 }
 .oldgh-pr-file__header {
   display: flex;

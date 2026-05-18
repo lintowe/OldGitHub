@@ -281,7 +281,7 @@ function renderDiffPatch(patch: string): string {
     oldNum++;
     newNum++;
   }
-  return `<table class="oldgh-diff"><tbody>${rows.join("")}</tbody></table>`;
+  return `<div class="oldgh-diff-scroll"><table class="oldgh-diff"><tbody>${rows.join("")}</tbody></table></div>`;
 }
 
 function renderPullCommits(owner: string, repo: string, commits: PullCommit[]): string {
