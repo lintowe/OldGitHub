@@ -28,6 +28,15 @@ const OUT_OF_SCOPE_PREFIXES = [
   "/codespaces",
   "/sponsors",
   "/enterprises",
+  "/settings",
+  "/account",
+  "/organizations/new",
+  "/new",
+  "/import",
+];
+
+const OUT_OF_SCOPE_REPO_SUFFIXES = [
+  "/settings",
 ];
 
 const TOP_LEVEL_NON_REPO = new Set([
@@ -79,6 +88,15 @@ export function resolveRoute(pathname: string, search: string): Route {
   for (const prefix of OUT_OF_SCOPE_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
       return { kind: "out-of-scope" };
+    }
+  }
+  for (const suffix of OUT_OF_SCOPE_REPO_SUFFIXES) {
+    if (pathname.endsWith(suffix) || pathname.includes(suffix + "/")) {
+      const segs = pathname.split("/").filter(Boolean);
+      if (segs.length >= 3 && !TOP_LEVEL_NON_REPO.has(segs[0]!)) {
+        const segIdx = segs.indexOf(suffix.replace(/^\//, ""));
+        if (segIdx === 2) return { kind: "out-of-scope" };
+      }
     }
   }
 
