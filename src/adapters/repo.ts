@@ -1,5 +1,6 @@
 import { AdapterFailure } from "./index";
 import { fetchApi, isApiRateLimited } from "./rate-limit";
+import { fetchRepoPage, parseRepoPage } from "./_page";
 
 export type RepoSummary = {
   owner: string;
@@ -34,6 +35,11 @@ export async function getRepoSummary(owner: string, repo: string): Promise<RepoS
   if (cached && cached.expires > now) return cached.value;
 
   if (isApiRateLimited()) {
+    const scraped = await scrapeRepoSummary(owner, repo).catch(() => null);
+    if (scraped) {
+      summaryCache.set(key, { value: scraped, expires: now + TTL_MS });
+      return scraped;
+    }
     throw new AdapterFailure("getRepoSummary", "API rate-limited; skipping");
   }
 
@@ -42,6 +48,14 @@ export async function getRepoSummary(owner: string, repo: string): Promise<RepoS
     headers: { Accept: "application/vnd.github+json" },
   });
   if (!resp.ok) {
+    // Private repos return 404 to anonymous API calls, but the page itself
+    // renders fine when the user has a cookie. Fall back to scraping the
+    // page so we can still show description, topics, and feature flags.
+    const scraped = await scrapeRepoSummary(owner, repo).catch(() => null);
+    if (scraped) {
+      summaryCache.set(key, { value: scraped, expires: now + TTL_MS });
+      return scraped;
+    }
     throw new AdapterFailure("getRepoSummary", `responded ${resp.status}`);
   }
   const data = (await resp.json()) as Record<string, unknown>;
@@ -75,6 +89,78 @@ export async function getRepoSummary(owner: string, repo: string): Promise<RepoS
 
   summaryCache.set(key, { value: summary, expires: now + TTL_MS });
   return summary;
+}
+
+async function scrapeRepoSummary(owner: string, repo: string): Promise<RepoSummary> {
+  const html = await fetchRepoPage(owner, repo);
+  const doc = parseRepoPage(html);
+
+  const titleMeta = doc.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.content || "";
+  const descMeta = doc.querySelector<HTMLMetaElement>('meta[name="description"], meta[property="og:description"]')?.content?.trim() || "";
+
+  // The page's <body> data-pjax-transient-attr or sidebar links tell us
+  // about features. Look at the repo tabs nav to discover which exist.
+  const tabLinks = doc.querySelectorAll<HTMLAnchorElement>('nav[role="navigation"] a, ul.UnderlineNav-body a, [data-pjax-container] nav a');
+  let hasIssues = false;
+  let hasWiki = false;
+  let hasProjects = false;
+  let hasDiscussions = false;
+  for (const a of Array.from(tabLinks)) {
+    const href = a.getAttribute("href") || "";
+    if (/\/issues$/.test(href) || /\/issues\?/.test(href)) hasIssues = true;
+    else if (/\/wiki$/.test(href) || /\/wiki\//.test(href)) hasWiki = true;
+    else if (/\/projects$/.test(href) || /\/projects\?/.test(href)) hasProjects = true;
+    else if (/\/discussions$/.test(href) || /\/discussions\?/.test(href)) hasDiscussions = true;
+  }
+
+  // Topics are rendered as <a class="topic-tag"> or under a topics list.
+  const topicEls = doc.querySelectorAll<HTMLElement>('a[data-octo-click="topic_click"], a.topic-tag, a[href^="/topics/"]');
+  const topics: string[] = [];
+  const seenTopic = new Set<string>();
+  for (const t of Array.from(topicEls)) {
+    const name = (t.textContent || "").trim();
+    if (name && !seenTopic.has(name) && /^[a-z0-9-]+$/.test(name)) {
+      seenTopic.add(name);
+      topics.push(name);
+    }
+  }
+
+  // Strip the trailing "Contribute to … on GitHub." that GitHub appends.
+  const description = descMeta
+    .replace(/\s*Contribute to [^.]+\s+development by creating an account on GitHub\.?\s*$/i, "")
+    .replace(/^.*?:\s*/, "")
+    .trim();
+
+  const isPrivate = !!doc.querySelector('.octicon-lock, [aria-label="Private repository"]');
+  const isFork = !!doc.querySelector('.octicon-repo-forked + span, [data-pjax-replace] [aria-label*="forked"]')
+    || /^Forks /.test(titleMeta);
+  const isArchived = !!doc.querySelector('.flash-warn, [class*="archived"]');
+  const branch = doc.querySelector<HTMLMetaElement>('meta[name="octolytics-dimension-repository_default_branch"]')?.content
+    || doc.querySelector<HTMLElement>('[data-test-selector="branch-name"]')?.textContent?.trim()
+    || "main";
+
+  return {
+    owner,
+    repo,
+    nwo: `${owner}/${repo}`,
+    isPrivate,
+    isFork,
+    isArchived,
+    parentNwo: null,
+    description,
+    homepage: null,
+    defaultBranch: branch,
+    stars: null,
+    forks: null,
+    watchers: null,
+    topics,
+    primaryLanguage: null,
+    license: null,
+    hasIssues,
+    hasWiki,
+    hasProjects,
+    hasDiscussions,
+  };
 }
 
 export async function getRepoLanguages(owner: string, repo: string): Promise<Array<{ name: string; bytes: number; percent: number }>> {
