@@ -1,5 +1,6 @@
 import { AdapterFailure } from "@/adapters";
 import { mountRepoHeader, unmountRepoHeader, updateActiveTab } from "@/views/repo-header";
+import { updateTopNavActive } from "@/views/header";
 import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
 import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
@@ -146,6 +147,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     document.documentElement.setAttribute(MOUNTED_ATTR, route.kind);
     showProgress();
   }
+  updateTopNavActive(pathname);
 
   try {
     if (route.kind === "out-of-scope") {
