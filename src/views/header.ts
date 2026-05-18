@@ -2,6 +2,7 @@ import { octicon } from "@/icons";
 import { getMe, type Me } from "@/adapters/me";
 import { getUnreadCount } from "@/adapters/notifications";
 import { AdapterFailure } from "@/adapters";
+import { dispatchRoute } from "@/router/dispatch";
 
 const POLL_INTERVAL_MS = 60_000;
 
@@ -100,8 +101,14 @@ function renderHeaderHtml(me: Me): string {
 function bindSearchForm(root: HTMLElement): void {
   const form = root.querySelector<HTMLFormElement>("form.oldgh-header__search");
   if (!form) return;
-  form.addEventListener("submit", () => {
-    // let the browser submit normally; GH /search accepts q + ref
+  form.addEventListener("submit", (e) => {
+    const input = form.querySelector<HTMLInputElement>('input[name="q"]');
+    const q = input?.value.trim();
+    if (!q) return;
+    e.preventDefault();
+    const url = `/search?q=${encodeURIComponent(q)}&ref=cmdform`;
+    history.pushState({}, "", url);
+    void dispatchRoute(new URL(url, window.location.origin));
   });
 }
 
