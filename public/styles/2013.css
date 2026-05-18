@@ -1281,6 +1281,8 @@ html[data-oldgh-theme="dark"] .oldgh-repo-blob__truncated > p {
 }
 .oldgh-repo-commit__add { color: #6cc644; font-weight: bold; }
 .oldgh-repo-commit__del { color: #bd2c00; font-weight: bold; }
+html[data-oldgh-theme="dark"] .oldgh-repo-commit__add { color: #7ee787; }
+html[data-oldgh-theme="dark"] .oldgh-repo-commit__del { color: #ff7b72; }
 
 .oldgh-repo-commit__file {
   margin-bottom: 18px;
@@ -3726,6 +3728,8 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 }
 .oldgh-pr-files__add { color: #4a934a; }
 .oldgh-pr-files__del { color: #b94a48; }
+html[data-oldgh-theme="dark"] .oldgh-pr-files__add { color: #7ee787; }
+html[data-oldgh-theme="dark"] .oldgh-pr-files__del { color: #ff7b72; }
 
 .oldgh-pr-file {
   margin-bottom: 14px;
@@ -3748,6 +3752,8 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 .oldgh-pr-file__counts { color: var(--gh-fg-muted); font-size: 11px; }
 .oldgh-pr-file__add { color: #4a934a; margin-right: 6px; }
 .oldgh-pr-file__del { color: #b94a48; }
+html[data-oldgh-theme="dark"] .oldgh-pr-file__add { color: #7ee787; }
+html[data-oldgh-theme="dark"] .oldgh-pr-file__del { color: #ff7b72; }
 .oldgh-pr-file__nopatch {
   padding: 18px;
   color: var(--gh-fg-muted);
@@ -4376,6 +4382,9 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
 .oldgh-pulse__split-num--open { color: #4a934a; }
 .oldgh-pulse__split-num--merged { color: #6e5494; }
 .oldgh-pulse__split-num--closed { color: #b94a48; }
+html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--open { color: #7ee787; }
+html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--merged { color: #d2a8ff; }
+html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; }
 
 .oldgh-pulse__sublist {
   margin-bottom: 12px;
