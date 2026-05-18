@@ -577,6 +577,11 @@ html[data-oldgh-hide-modern-repo-header] .UnderlineNav.js-repo-nav {
   letter-spacing: 0.04em;
   vertical-align: 3px;
 }
+html[data-oldgh-theme="dark"] .oldgh-repo-header__archived {
+  background: rgba(210, 153, 34, 0.18);
+  border-color: rgba(210, 153, 34, 0.45);
+  color: #e3b341;
+}
 .oldgh-repo-header__topics {
   margin: 8px 0 0;
   display: flex;
@@ -1067,6 +1072,10 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
 .oldgh-repo-blob__table tr:target .oldgh-repo-blob__num {
   background: #fff8c4;
 }
+html[data-oldgh-theme="dark"] .oldgh-repo-blob__table tr:target .oldgh-repo-blob__code,
+html[data-oldgh-theme="dark"] .oldgh-repo-blob__table tr:target .oldgh-repo-blob__num {
+  background: rgba(187, 128, 9, 0.20);
+}
 
 .oldgh-repo-blob__binary,
 .oldgh-repo-blob__truncated {
@@ -1080,6 +1089,10 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   padding: 8px 12px;
   border-radius: var(--gh-radius);
   margin: 0 0 12px;
+}
+html[data-oldgh-theme="dark"] .oldgh-repo-blob__truncated > p {
+  background: rgba(187, 128, 9, 0.18);
+  border-color: rgba(187, 128, 9, 0.45);
 }
 
 /* commits list */
@@ -1300,6 +1313,15 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
 .oldgh-repo-commit__file-status--added { background: #d3f0c7; color: #2e7212; }
 .oldgh-repo-commit__file-status--deleted { background: #fbcfc5; color: #8a1a08; }
 .oldgh-repo-commit__file-status--renamed { background: #d9e6f6; color: #1a4a82; }
+html[data-oldgh-theme="dark"] .oldgh-repo-commit__file-status--added {
+  background: rgba(46, 160, 67, 0.20); color: #7ee787;
+}
+html[data-oldgh-theme="dark"] .oldgh-repo-commit__file-status--deleted {
+  background: rgba(248, 81, 73, 0.20); color: #ff7b72;
+}
+html[data-oldgh-theme="dark"] .oldgh-repo-commit__file-status--renamed {
+  background: rgba(56, 139, 253, 0.18); color: #79c0ff;
+}
 .oldgh-repo-commit__file-counts {
   margin-left: auto;
   display: flex;
@@ -1320,6 +1342,10 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   padding: 4px 10px;
   border-top: 1px solid var(--gh-border-faint);
   border-bottom: 1px solid var(--gh-border-faint);
+}
+html[data-oldgh-theme="dark"] .oldgh-diff__hunk-header td {
+  background: rgba(56, 139, 253, 0.10);
+  color: #79c0ff;
 }
 .oldgh-diff__num {
   width: 1%;
@@ -4042,6 +4068,11 @@ html[data-oldgh-theme="dark"] .oldgh-diff__hunk .oldgh-diff__num { background: r
   text-transform: uppercase;
 }
 .oldgh-search__tag--warn { color: #d9822b; border-color: #ebc97e; background: #fff8e1; }
+html[data-oldgh-theme="dark"] .oldgh-search__tag--warn {
+  background: rgba(210, 153, 34, 0.18);
+  border-color: rgba(210, 153, 34, 0.45);
+  color: #e3b341;
+}
 .oldgh-search__desc {
   margin: 4px 0 6px;
   color: var(--gh-fg);
@@ -5101,6 +5132,11 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   border-color: #ebc97e;
   color: #b87000;
 }
+html[data-oldgh-theme="dark"] .oldgh-hovercard__chip--warn {
+  background: rgba(210, 153, 34, 0.18);
+  border-color: rgba(210, 153, 34, 0.45);
+  color: #e3b341;
+}
 .oldgh-hovercard__chips { margin-top: 2px; }
 .oldgh-hovercard__bio {
   margin: 6px 0 8px;
@@ -5277,6 +5313,10 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   background: #f5efff;
   overflow: hidden;
 }
+html[data-oldgh-theme="dark"] .oldgh-discussion__answer-card {
+  background: rgba(163, 113, 247, 0.10);
+  border-color: rgba(163, 113, 247, 0.55);
+}
 .oldgh-discussion__answer-head {
   padding: 6px 12px;
   background: #6e5494;
@@ -5285,6 +5325,10 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+html[data-oldgh-theme="dark"] .oldgh-discussion__answer-head {
+  background: rgba(163, 113, 247, 0.40);
+  color: #fff;
 }
 .oldgh-discussion__answer-head svg { fill: currentColor; }
 .oldgh-discussion__answer-card .oldgh-issue__comment { padding: 12px; }
@@ -5603,6 +5647,42 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   background: #fff5e1;
   color: #b76b00;
   border-color: #ffd591;
+}
+
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--success {
+  background: rgba(46, 160, 67, 0.18);
+  color: #7ee787;
+  border-color: rgba(46, 160, 67, 0.40);
+}
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--failure,
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--timed_out {
+  background: rgba(248, 81, 73, 0.18);
+  color: #ff7b72;
+  border-color: rgba(248, 81, 73, 0.40);
+}
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--in_progress {
+  background: rgba(210, 153, 34, 0.20);
+  color: #e3b341;
+  border-color: rgba(210, 153, 34, 0.40);
+}
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--queued,
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--pending {
+  background: rgba(139, 148, 158, 0.15);
+  color: var(--gh-fg-muted);
+  border-color: var(--gh-border-faint);
+}
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--cancelled,
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--skipped,
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--neutral,
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--stale {
+  background: rgba(139, 148, 158, 0.18);
+  color: var(--gh-fg-muted);
+  border-color: var(--gh-border-faint);
+}
+html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--action_required {
+  background: rgba(217, 119, 6, 0.20);
+  color: #e3b341;
+  border-color: rgba(217, 119, 6, 0.45);
 }
 
 /* status icons */
