@@ -6,15 +6,74 @@
     <link rel="stylesheet" href="./options.css" />
   </head>
   <body>
-    <main>
-      <h1>OldGitHub</h1>
-      <fieldset>
-        <legend>Theme</legend>
-        <label><input type="radio" name="theme" value="light" /> Light (2013)</label>
-        <label><input type="radio" name="theme" value="dark" /> Dark (invented)</label>
-        <label><input type="radio" name="theme" value="auto" /> Auto (match OS)</label>
-      </fieldset>
+    <header class="page-header">
+      <div class="page-header__inner">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true"></span>
+          <h1>OldGitHub</h1>
+        </div>
+        <p class="page-header__tagline">Restore the 2012-2013 GitHub layout</p>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="card">
+        <header class="card__head">
+          <h2>Theme</h2>
+          <p class="card__sub">Apply to every github.com tab. Affects only the extension's own UI.</p>
+        </header>
+        <div class="card__body">
+          <fieldset class="theme-choices">
+            <legend class="sr-only">Theme</legend>
+            <label class="theme-choice" data-theme-value="light">
+              <input type="radio" name="theme" value="light" />
+              <div class="theme-choice__preview theme-choice__preview--light" aria-hidden="true">
+                <div class="theme-choice__bar"></div>
+                <div class="theme-choice__line"></div>
+                <div class="theme-choice__line theme-choice__line--short"></div>
+              </div>
+              <span class="theme-choice__label">Light <small>2013 original</small></span>
+            </label>
+            <label class="theme-choice" data-theme-value="dark">
+              <input type="radio" name="theme" value="dark" />
+              <div class="theme-choice__preview theme-choice__preview--dark" aria-hidden="true">
+                <div class="theme-choice__bar"></div>
+                <div class="theme-choice__line"></div>
+                <div class="theme-choice__line theme-choice__line--short"></div>
+              </div>
+              <span class="theme-choice__label">Dark <small>invented but consistent</small></span>
+            </label>
+            <label class="theme-choice" data-theme-value="auto">
+              <input type="radio" name="theme" value="auto" />
+              <div class="theme-choice__preview theme-choice__preview--auto" aria-hidden="true">
+                <div class="theme-choice__bar"></div>
+                <div class="theme-choice__line"></div>
+                <div class="theme-choice__line theme-choice__line--short"></div>
+              </div>
+              <span class="theme-choice__label">Match system <small>follows OS dark mode</small></span>
+            </label>
+          </fieldset>
+          <p class="hint" data-status hidden>Saved.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <h2>How it works</h2>
+        </header>
+        <div class="card__body">
+          <p>OldGitHub rewrites the GitHub web UI in your browser to match the 2012-2013 layout. It does this only on github.com tabs — no data leaves your machine, no token is required.</p>
+          <p>Some pages (such as Marketplace or Settings) keep the modern UI because there isn't a faithful 2013 equivalent.</p>
+          <p>You can also flip the theme from any GitHub page using the sun/moon icon in the header bar.</p>
+        </div>
+      </section>
+
+      <footer class="page-footer">
+        <span>OldGitHub</span>
+        <a href="https://github.com/lintowe/OldGitHub" target="_blank" rel="noopener noreferrer">View source</a>
+      </footer>
     </main>
+
     <script type="module" src="./options.ts"></script>
   </body>
 </html>

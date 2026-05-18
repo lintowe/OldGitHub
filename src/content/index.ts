@@ -7,7 +7,10 @@ import { mountHovercards } from "@/views/hovercards";
 function eagerStyle(): void {
   document.documentElement.setAttribute("data-oldgh", "active");
   document.documentElement.setAttribute("data-oldgh-mounted", "pending");
-  forceLightColorMode();
+  // Default to light at document_start so there's no flash; applyTheme() will
+  // upgrade to dark/auto once chrome.storage is reachable.
+  document.documentElement.setAttribute("data-oldgh-theme", "light");
+  forceGitHubColorModeNeutral();
   injectThemeStylesheet();
 }
 
@@ -41,7 +44,11 @@ async function run(): Promise<void> {
   mountRouter();
 }
 
-function forceLightColorMode(): void {
+function forceGitHubColorModeNeutral(): void {
+  // We render everything ourselves, but a few scraped fragments (achievements,
+  // wiki, scraped sections) still pick up GitHub's color-mode tokens. Pin them
+  // to "light" so scraped HTML always uses light tokens; our own dark theme is
+  // independent and reads data-oldgh-theme instead.
   const html = document.documentElement;
   html.setAttribute("data-color-mode", "light");
   html.setAttribute("data-light-theme", "light");

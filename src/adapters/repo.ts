@@ -130,14 +130,18 @@ async function scrapeRepoSummary(owner: string, repo: string): Promise<RepoSumma
   // Strip the trailing " - owner/repo" or "Contribute to …" that GitHub appends.
   const description = descMeta
     .replace(/\s*Contribute to [^.]+\s+development by creating an account on GitHub\.?\s*$/i, "")
-    .replace(new RegExp(`\\s*[-–—]\\s*${owner}/${repo}\\s*$`, "i"), "")
-    .replace(new RegExp(`^${owner}/${repo}\\s*:\\s*`, "i"), "")
+    .replace(/\s*[-–—]\s*[\w.-]+\/[\w.-]+\s*$/i, "")
+    .replace(/^[\w.-]+\/[\w.-]+\s*:\s*/i, "")
     .trim();
 
   const isPrivate = !!doc.querySelector('.octicon-lock, [aria-label="Private repository"]');
   const isFork = !!doc.querySelector('.octicon-repo-forked + span, [data-pjax-replace] [aria-label*="forked"]')
     || /^Forks /.test(titleMeta);
-  const isArchived = !!doc.querySelector('.flash-warn, [class*="archived"]');
+  // Archived repos render a "This repository has been archived" banner with a
+  // specific aria-label, or a small .Label--inactive next to the title.
+  const isArchived =
+    /This repository has been archived/i.test(doc.body.textContent || "") ||
+    !!doc.querySelector('[aria-label*="archived" i]');
   const branch = doc.querySelector<HTMLMetaElement>('meta[name="octolytics-dimension-repository_default_branch"]')?.content
     || doc.querySelector<HTMLElement>('[data-test-selector="branch-name"]')?.textContent?.trim()
     || "main";

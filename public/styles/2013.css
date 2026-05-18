@@ -441,6 +441,39 @@ html[data-oldgh-hide-modern-header] body > header:not([data-oldgh]) {
   border-top: 1px solid var(--gh-border-faint);
 }
 
+/* theme toggle in the header */
+.oldgh-header__menu--theme > summary {
+  padding: 4px 8px;
+}
+.oldgh-header__theme-icon {
+  vertical-align: middle;
+}
+.oldgh-header__theme-icon--dark { display: none; }
+html[data-oldgh-theme="dark"] .oldgh-header__theme-icon--light { display: none; }
+html[data-oldgh-theme="dark"] .oldgh-header__theme-icon--dark { display: inline-block; }
+
+.oldgh-header__menu--theme button[data-theme] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.oldgh-header__menu--theme button[data-theme] svg {
+  flex: 0 0 14px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-header__menu--theme button[aria-checked="true"] {
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.04);
+}
+.oldgh-header__menu--theme button[aria-checked="true"]::after {
+  content: "✓";
+  margin-left: auto;
+  color: var(--gh-link);
+}
+.oldgh-header__menu--theme button[aria-checked="true"]:hover::after {
+  color: #fff;
+}
+
 /* repo header — title bar, action buttons, tabs */
 html[data-oldgh-hide-modern-repo-header] #repository-container-header,
 html[data-oldgh-hide-modern-repo-header] .pagehead,
@@ -511,17 +544,17 @@ html[data-oldgh-hide-modern-repo-header] .UnderlineNav.js-repo-nav {
 }
 .oldgh-repo-header__archived {
   display: inline-block;
-  margin-left: 6px;
+  margin-left: 8px;
   padding: 2px 8px;
   background: #fff8e1;
   border: 1px solid #ebc97e;
-  border-radius: 3px;
+  border-radius: 10px;
   color: #b87000;
   font-size: 11px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  vertical-align: middle;
+  vertical-align: 3px;
 }
 .oldgh-repo-header__topics {
   margin: 8px 0 0;
@@ -645,6 +678,7 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
 .oldgh-repo-home__topbar {
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 16px;
   margin-bottom: 12px;
   flex-wrap: wrap;
@@ -654,7 +688,7 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
 }
 
 .oldgh-repo-home__branch-btn {

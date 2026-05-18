@@ -107,10 +107,11 @@ function renderRepoHeaderHtml(s: RepoSummary, activeTab: TabKey): string {
     descBits.push(`<a class="oldgh-repo-header__homepage" href="${escapeAttr(href)}" rel="noopener noreferrer nofollow">${octicon("link", { size: 12 })} ${escapeText(s.homepage.replace(/^https?:\/\//, ""))}</a>`);
   }
   const description = descBits.length > 0
-    ? `<p class="oldgh-repo-header__description">${descBits.join(" ")}${s.isArchived ? ` <span class="oldgh-repo-header__archived">Archived</span>` : ""}</p>`
-    : s.isArchived
-      ? `<p class="oldgh-repo-header__description"><span class="oldgh-repo-header__archived">Archived</span></p>`
-      : "";
+    ? `<p class="oldgh-repo-header__description">${descBits.join(" ")}</p>`
+    : "";
+  const archivedBadge = s.isArchived
+    ? ` <span class="oldgh-repo-header__archived" title="This repository is archived">Public archive</span>`
+    : "";
 
   const topics = s.topics.length > 0
     ? `<p class="oldgh-repo-header__topics">${s.topics.slice(0, 12).map((t) => `<a class="oldgh-repo-header__topic" href="/topics/${escapeAttr(t)}">${escapeText(t)}</a>`).join("")}</p>`
@@ -150,6 +151,7 @@ function renderRepoHeaderHtml(s: RepoSummary, activeTab: TabKey): string {
           <a href="/${escapeAttr(s.owner)}">${escapeText(s.owner)}</a>
           <span class="oldgh-repo-header__slash">/</span>
           <a href="/${escapeAttr(s.owner)}/${escapeAttr(s.repo)}"><strong>${escapeText(s.repo)}</strong></a>
+          ${archivedBadge}
         </h1>
         <div class="oldgh-repo-header__actions">${watch}${star}${fork}</div>
       </div>

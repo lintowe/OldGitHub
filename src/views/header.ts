@@ -3,6 +3,7 @@ import { getMe, type Me } from "@/adapters/me";
 import { getUnreadCount } from "@/adapters/notifications";
 import { AdapterFailure } from "@/adapters";
 import { dispatchRoute } from "@/router/dispatch";
+import { getCurrentTheme, setTheme, type Theme } from "@/theme";
 
 const POLL_INTERVAL_MS = 60_000;
 
@@ -30,7 +31,9 @@ export async function mountHeader(): Promise<void> {
   root.innerHTML = renderHeaderHtml(me);
   bindSearchForm(root);
   bindAvatarMenu(root);
+  bindThemeMenu(root);
   void startNotificationPolling(root);
+  void syncThemeMenuState(root);
 }
 
 function renderHeaderHtml(me: Me): string {
@@ -58,6 +61,18 @@ function renderHeaderHtml(me: Me): string {
       <a href="/explore" data-topnav-key="explore">Explore</a>
     </nav>
     <div class="oldgh-header__actions">
+      <details class="oldgh-header__menu oldgh-header__menu--theme" data-oldgh-theme-menu>
+        <summary aria-label="Theme" title="Theme">
+          ${sunSvg("oldgh-header__theme-icon oldgh-header__theme-icon--light", 16)}
+          ${moonSvg("oldgh-header__theme-icon oldgh-header__theme-icon--dark", 16)}
+        </summary>
+        <ul class="oldgh-header__menu-list" role="menu">
+          <li class="oldgh-header__menu-label" role="presentation">Theme</li>
+          <li role="none"><button type="button" role="menuitemradio" class="oldgh-header__menu-button" data-theme="light">${sunSvg("", 14)} Light</button></li>
+          <li role="none"><button type="button" role="menuitemradio" class="oldgh-header__menu-button" data-theme="dark">${moonSvg("", 14)} Dark</button></li>
+          <li role="none"><button type="button" role="menuitemradio" class="oldgh-header__menu-button" data-theme="auto">${octicon("device-desktop", { size: 14 })} Match system</button></li>
+        </ul>
+      </details>
       <a class="oldgh-header__bell" href="/notifications" aria-label="Notifications">
         ${bell}
         <span class="oldgh-header__bell-count" hidden></span>
@@ -137,6 +152,37 @@ function bindAvatarMenu(root: HTMLElement): void {
       input.value = token;
       void e;
     });
+  }
+}
+
+function sunSvg(extraClass: string, size: number): string {
+  return `<svg class="octicon ${extraClass}" width="${size}" height="${size}" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0zm0 13.5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13.5zM2.343 2.343a.75.75 0 0 1 1.06 0l1.061 1.061a.75.75 0 0 1-1.06 1.06L2.343 3.404a.75.75 0 0 1 0-1.06zM11.536 11.536a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061zM0 8a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5H.75A.75.75 0 0 1 0 8zm13.5 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75zM2.343 13.657a.75.75 0 0 1 0-1.061l1.06-1.06a.75.75 0 1 1 1.061 1.06l-1.06 1.061a.75.75 0 0 1-1.061 0zm9.193-9.193a.75.75 0 0 1 0-1.06l1.06-1.061a.75.75 0 1 1 1.061 1.06l-1.06 1.061a.75.75 0 0 1-1.061 0z"/></svg>`;
+}
+
+function moonSvg(extraClass: string, size: number): string {
+  return `<svg class="octicon ${extraClass}" width="${size}" height="${size}" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M9.598 1.591a.75.75 0 0 1 .785-.175 7 7 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786z"/></svg>`;
+}
+
+function bindThemeMenu(root: HTMLElement): void {
+  const menu = root.querySelector<HTMLDetailsElement>("[data-oldgh-theme-menu]");
+  if (!menu) return;
+  menu.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>("button[data-theme]");
+    if (!btn) return;
+    e.preventDefault();
+    const value = btn.dataset["theme"] as Theme | undefined;
+    if (!value) return;
+    void setTheme(value).then(() => {
+      menu.open = false;
+      void syncThemeMenuState(root);
+    });
+  });
+}
+
+async function syncThemeMenuState(root: HTMLElement): Promise<void> {
+  const current = await getCurrentTheme();
+  for (const btn of Array.from(root.querySelectorAll<HTMLButtonElement>(".oldgh-header__menu--theme button[data-theme]"))) {
+    btn.setAttribute("aria-checked", btn.dataset["theme"] === current ? "true" : "false");
   }
 }
 
