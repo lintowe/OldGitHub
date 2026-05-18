@@ -88,6 +88,9 @@
   --gh-btn-bg-bottom-hover: #333333;
   --gh-btn-border: #4a4a4a;
   --gh-btn-fg: #e6e6e6;
+
+  --gh-header-border: #383838;
+  --gh-header-logo: #e6e6e6;
 }
 
 html[data-oldgh="active"],
