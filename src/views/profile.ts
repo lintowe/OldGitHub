@@ -47,6 +47,90 @@ export async function mountProfile(login: string, tab: string, query: string): P
   // tool-tip custom elements relocate themselves asynchronously; retry once they have
   setTimeout(() => decorateContributionCells(root), 100);
   setTimeout(() => decorateContributionCells(root), 500);
+  renderContributionStreaks(root);
+}
+
+function renderContributionStreaks(root: HTMLElement): void {
+  const graph = root.querySelector<HTMLElement>(".oldgh-profile__contribs-graph");
+  if (!graph) return;
+  const cells = Array.from(graph.querySelectorAll<HTMLElement>(".ContributionCalendar-day[data-date], td.day[data-date]"));
+  if (cells.length === 0) return;
+  type Day = { date: string; active: boolean };
+  const days: Day[] = cells
+    .map((c) => ({
+      date: c.getAttribute("data-date") || "",
+      active: parseInt(c.getAttribute("data-level") || "0", 10) > 0,
+    }))
+    .filter((d) => d.date)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (days.length === 0) return;
+
+  let longest = 0;
+  let longestStart: string | null = null;
+  let longestEnd: string | null = null;
+  let runStart: string | null = null;
+  let runLen = 0;
+  for (let i = 0; i < days.length; i++) {
+    const d = days[i]!;
+    if (d.active) {
+      if (runLen === 0) runStart = d.date;
+      runLen++;
+      if (runLen > longest) {
+        longest = runLen;
+        longestStart = runStart;
+        longestEnd = d.date;
+      }
+    } else {
+      runLen = 0;
+      runStart = null;
+    }
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  let current = 0;
+  let currentStart: string | null = null;
+  for (let i = days.length - 1; i >= 0; i--) {
+    const d = days[i]!;
+    if (d.date > today) continue;
+    if (d.active) {
+      current++;
+      currentStart = d.date;
+    } else {
+      if (current > 0) break;
+      // skip leading inactive days (today might be active later)
+      if (d.date < today) break;
+    }
+  }
+
+  const totalActive = days.filter((d) => d.active).length;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "oldgh-profile__contribs-stats";
+  wrapper.innerHTML = `
+    <div class="oldgh-profile__streak">
+      <span class="oldgh-profile__streak-num">${totalActive}</span>
+      <span class="oldgh-profile__streak-label">total days with contributions</span>
+    </div>
+    <div class="oldgh-profile__streak">
+      <span class="oldgh-profile__streak-num">${longest}</span>
+      <span class="oldgh-profile__streak-label">longest streak${longest > 0 && longestStart && longestEnd ? ` <small>${formatRange(longestStart, longestEnd)}</small>` : ""}</span>
+    </div>
+    <div class="oldgh-profile__streak">
+      <span class="oldgh-profile__streak-num">${current}</span>
+      <span class="oldgh-profile__streak-label">current streak${current > 0 && currentStart ? ` <small>${formatRange(currentStart, today)}</small>` : ""}</span>
+    </div>
+  `;
+  const contribsSection = root.querySelector<HTMLElement>(".oldgh-profile__contribs");
+  contribsSection?.appendChild(wrapper);
+}
+
+function formatRange(startIso: string, endIso: string): string {
+  const start = new Date(startIso + "T00:00:00Z");
+  const end = new Date(endIso + "T00:00:00Z");
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "";
+  const fmt = (d: Date): string => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (startIso === endIso) return fmt(start);
+  return `${fmt(start)} – ${fmt(end)}`;
 }
 
 function decorateContributionCells(root: HTMLElement): void {
