@@ -351,8 +351,8 @@ function parseRow(raw: unknown, kind: "issues" | "pulls"): IssueRow | null {
     const m = ms as Record<string, unknown>;
     const t = typeof m["title"] === "string" ? (m["title"] as string) : null;
     if (t) {
-      const num = typeof m["number"] === "number" ? (m["number"] as number) : 0;
-      milestone = { title: t, url: num ? `/milestone/${num}` : "" };
+      const htmlUrl = typeof m["html_url"] === "string" ? (m["html_url"] as string) : "";
+      milestone = { title: t, url: htmlUrl };
     }
   }
 
