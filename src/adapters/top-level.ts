@@ -62,18 +62,31 @@ function stripDuplicateHeading(el: Element, title: string): void {
 }
 
 function pickTitle(doc: Document, fallback: string): string {
-  if (fallback) return fallback;
+  const scraped = pickScrapedTitle(doc);
+  if (scraped) return scraped;
+  return fallback;
+}
+
+const TITLE_BLOCKLIST = [
+  /^Search code, repositories/i,
+  /^Provide feedback$/i,
+  /^Saved searches$/i,
+  /^Search syntax tips/i,
+];
+
+function pickScrapedTitle(doc: Document): string | null {
   const candidates = doc.querySelectorAll<HTMLElement>("h1.h2, h1.h3, h1");
   for (const h of Array.from(candidates)) {
     if (h.classList.contains("sr-only")) continue;
     if (h.getAttribute("aria-hidden") === "true") continue;
     if (h.closest("dialog, modal-dialog, .Overlay--hidden, [hidden]")) continue;
-    const txt = h.textContent?.trim();
+    const txt = h.textContent?.replace(/\s+/g, " ").trim();
     if (!txt) continue;
-    if (/^Search code, repositories/i.test(txt)) continue;
+    if (txt.length > 60) continue;
+    if (TITLE_BLOCKLIST.some((re) => re.test(txt))) continue;
     return txt;
   }
-  return fallback;
+  return null;
 }
 
 function cleanScraped(el: Element): void {
