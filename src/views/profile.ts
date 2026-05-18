@@ -197,19 +197,17 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
     if (!resp.ok) throw new Error(`status ${resp.status}`);
     const html = await resp.text();
     const doc = new DOMParser().parseFromString(html, "text/html");
-    const frame =
+    const frame: Element =
       doc.querySelector("turbo-frame#user-profile-frame") ||
       doc.querySelector("turbo-frame[id*='profile']") ||
-      doc.querySelector("turbo-frame[id]");
-    if (!frame) {
-      container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load this tab.</p>`;
-      return;
-    }
+      doc.querySelector("turbo-frame[id]") ||
+      doc.querySelector("main") ||
+      doc.body;
     if (tab === "achievements") {
       container.innerHTML = renderAchievementsFromFrame(frame);
       return;
     }
-    if (tab === "followers" || tab === "following") {
+    if (tab === "followers" || tab === "following" || tab === "people") {
       container.innerHTML = renderPeopleFromFrame(frame);
       return;
     }
@@ -229,7 +227,13 @@ function renderPeopleFromFrame(frame: Element): string {
   type P = { login: string; name: string | null; avatarUrl: string; bio: string | null; location: string | null };
   const people: P[] = [];
   const seen = new Set<string>();
-  for (const card of Array.from(frame.querySelectorAll<HTMLElement>("li, div.d-table, .user-list-item"))) {
+  const cardSelectors = ["li", "div.d-table", ".user-list-item", "[data-testid*='member']"];
+  let cards: HTMLElement[] = [];
+  for (const sel of cardSelectors) {
+    cards = Array.from(frame.querySelectorAll<HTMLElement>(sel));
+    if (cards.some((c) => c.querySelector("a[data-hovercard-type='user']") && c.querySelector("img[src*='avatars']"))) break;
+  }
+  for (const card of cards) {
     const avatar = card.querySelector<HTMLImageElement>("img.avatar, img.avatar-user, img[src*='avatars']");
     if (!avatar) continue;
     const loginLink = card.querySelector<HTMLAnchorElement>("a[data-hovercard-type='user'], a.d-inline-block, a.text-bold[href^='/']");
@@ -255,6 +259,20 @@ function renderPeopleFromFrame(frame: Element): string {
       bio,
       location,
     });
+  }
+  if (people.length === 0) {
+    for (const a of Array.from(frame.querySelectorAll<HTMLAnchorElement>("a[data-hovercard-type='user']"))) {
+      const href = a.getAttribute("href") || "";
+      const m = /^\/([\w.-]+)\/?$/.exec(href);
+      if (!m || !m[1]) continue;
+      const login = m[1];
+      if (seen.has(login)) continue;
+      seen.add(login);
+      const avatarImg = a.querySelector<HTMLImageElement>("img[src*='avatars']")
+        || (a.parentElement?.querySelector<HTMLImageElement>("img[src*='avatars']") ?? null);
+      const avatarUrl = avatarImg?.getAttribute("src") || `https://github.com/${login}.png?size=64`;
+      people.push({ login, name: null, avatarUrl, bio: null, location: null });
+    }
   }
   if (people.length === 0) {
     return `<p class="oldgh-profile__muted">No users to show.</p>`;
