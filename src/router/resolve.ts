@@ -130,7 +130,13 @@ export function resolveRoute(pathname: string, search: string): Route {
     (segs[2] === "compare" && segs[3] === "new") ||
     segs[2] === "settings" ||
     segs[2] === "fork" ||
-    segs[2] === "subscription"
+    segs[2] === "subscription" ||
+    segs[2] === "find" ||
+    segs[2] === "edit" ||
+    segs[2] === "new" ||
+    segs[2] === "delete" ||
+    segs[2] === "merge_queue" ||
+    segs[2] === "deployments"
   ) {
     return { kind: "out-of-scope" };
   }
