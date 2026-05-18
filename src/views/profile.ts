@@ -43,6 +43,34 @@ export async function mountProfile(login: string, tab: string, query: string): P
     void hydrateProfileReadme(root, login);
     void hydrateActivity(root, login);
   }
+  decorateContributionCells(root);
+}
+
+function decorateContributionCells(root: HTMLElement): void {
+  const graph = root.querySelector<HTMLElement>(".oldgh-profile__contribs-graph");
+  if (!graph) return;
+  for (const cell of Array.from(graph.querySelectorAll<HTMLElement>(".ContributionCalendar-day, td.day"))) {
+    if (cell.getAttribute("title")) continue;
+    const labelId = cell.getAttribute("aria-labelledby");
+    let label: string | null = null;
+    if (labelId) {
+      label = graph.querySelector("#" + cssEscape(labelId))?.textContent?.replace(/\s+/g, " ").trim() || null;
+    }
+    if (!label) {
+      const tipNeighbor = cell.querySelector<HTMLElement>("tool-tip, .sr-only");
+      if (tipNeighbor) label = tipNeighbor.textContent?.replace(/\s+/g, " ").trim() || null;
+    }
+    if (!label) {
+      const date = cell.getAttribute("data-date");
+      if (date) label = `${date}`;
+    }
+    if (label) cell.setAttribute("title", label);
+  }
+}
+
+function cssEscape(s: string): string {
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") return CSS.escape(s);
+  return s.replace(/[^\w-]/g, "\\$&");
 }
 
 async function hydrateActivity(root: HTMLElement, login: string): Promise<void> {
@@ -147,19 +175,23 @@ function buildLine(
   switch (type) {
     case "PushEvent": {
       const commits = Array.isArray(payload["commits"]) ? (payload["commits"] as unknown[]) : [];
-      const size = typeof payload["size"] === "number" ? (payload["size"] as number) : commits.length;
+      const sizeRaw = payload["size"];
+      const size = typeof sizeRaw === "number" ? (sizeRaw as number) : commits.length;
       const ref = typeof payload["ref"] === "string" ? (payload["ref"] as string).replace(/^refs\/heads\//, "") : "";
-      const refLabel = ref ? ` to <code>${escapeText(ref)}</code>` : "";
-      return { icon: "git-commit", line: `Pushed <strong>${size}</strong> commit${size === 1 ? "" : "s"}${refLabel} in ${repoLink} ${when}` };
+      const refLabel = ref ? `<code>${escapeText(ref)}</code>` : "";
+      if (size > 0) {
+        return { icon: "git-commit", line: `Pushed <strong>${size}</strong> commit${size === 1 ? "" : "s"} to ${refLabel} in ${repoLink} ${when}` };
+      }
+      return { icon: "git-commit", line: `Pushed to ${refLabel} in ${repoLink} ${when}` };
     }
     case "PullRequestEvent": {
       const action = typeof payload["action"] === "string" ? (payload["action"] as string) : "";
       const pr = payload["pull_request"] && typeof payload["pull_request"] === "object" ? (payload["pull_request"] as Record<string, unknown>) : null;
-      const num = pr && typeof pr["number"] === "number" ? (pr["number"] as number) : 0;
+      const num = pr && typeof pr["number"] === "number" ? (pr["number"] as number) : (typeof payload["number"] === "number" ? (payload["number"] as number) : 0);
       const title = pr && typeof pr["title"] === "string" ? (pr["title"] as string) : "";
-      const merged = pr && pr["merged"] === true;
-      const verb = action === "closed" ? (merged ? "Merged" : "Closed") : action === "opened" ? "Opened" : action === "reopened" ? "Reopened" : capitalize(action);
-      const icon = merged ? "git-merge" : action === "closed" ? "git-pull-request" : "git-pull-request";
+      const merged = action === "merged" || (pr && pr["merged"] === true);
+      const verb = merged ? "Merged" : action === "closed" ? "Closed" : action === "opened" ? "Opened" : action === "reopened" ? "Reopened" : capitalize(action);
+      const icon = merged ? "git-merge" : "git-pull-request";
       const link = num
         ? `<a href="/${escapeAttr(repoName)}/pull/${num}">${escapeText(title || "#" + num)}</a>`
         : escapeText(title);
@@ -180,7 +212,7 @@ function buildLine(
     case "IssuesEvent": {
       const action = typeof payload["action"] === "string" ? (payload["action"] as string) : "";
       const issue = payload["issue"] && typeof payload["issue"] === "object" ? (payload["issue"] as Record<string, unknown>) : null;
-      const num = issue && typeof issue["number"] === "number" ? (issue["number"] as number) : 0;
+      const num = issue && typeof issue["number"] === "number" ? (issue["number"] as number) : (typeof payload["number"] === "number" ? (payload["number"] as number) : 0);
       const title = issue && typeof issue["title"] === "string" ? (issue["title"] as string) : "";
       const verb = action === "closed" ? "Closed" : action === "opened" ? "Opened" : action === "reopened" ? "Reopened" : capitalize(action);
       const icon = action === "closed" ? "issue-closed" : action === "reopened" ? "issue-reopened" : "issue-opened";
@@ -734,7 +766,7 @@ function renderPinnedCard(p: PinnedRepo): string {
 function renderContributions(v: ProfileView): string {
   if (!v.contributionGraphHtml) {
     return `
-      <section class="oldgh-profile__activity">
+      <section class="oldgh-profile__contribs-empty">
         <h3 class="oldgh-profile__section-title">Contributions</h3>
         <p class="oldgh-profile__activity-link">${octicon("graph", { size: 14 })}<span>See the full contribution graph at <a href="https://github.com/${escapeAttr(v.login)}">github.com/${escapeText(v.login)}</a>.</span></p>
       </section>

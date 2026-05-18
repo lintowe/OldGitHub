@@ -1748,7 +1748,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   background: #ccc;
 }
 
-.oldgh-profile__activity {
+.oldgh-profile__contribs-empty {
   background: var(--gh-bg-elev);
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);

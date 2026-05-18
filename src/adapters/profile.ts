@@ -134,8 +134,19 @@ async function fetchContributionFragment(login: string): Promise<{ tableHtml: st
     const html = await resp.text();
     const doc = new DOMParser().parseFromString(html, "text/html");
     const table = doc.querySelector<HTMLElement>("table.ContributionCalendar-grid, table.js-calendar-graph-table, .js-yearly-contributions table");
+    if (!table) return null;
     const heading = normalizeWhitespace(doc.querySelector("h2")?.textContent || "") || null;
-    return table ? { tableHtml: table.outerHTML, heading } : null;
+    const referencedIds = new Set<string>();
+    for (const cell of Array.from(table.querySelectorAll<HTMLElement>("[aria-labelledby]"))) {
+      const id = cell.getAttribute("aria-labelledby");
+      if (id) referencedIds.add(id);
+    }
+    const tooltips: string[] = [];
+    for (const id of referencedIds) {
+      const tt = doc.querySelector(`#${cssIdentifierEscape(id)}`);
+      if (tt) tooltips.push(tt.outerHTML);
+    }
+    return { tableHtml: table.outerHTML + tooltips.join(""), heading };
   } catch {
     return null;
   }
@@ -178,7 +189,22 @@ function extractContributionGraph(doc: Document): string | null {
   const container = doc.querySelector<HTMLElement>(".js-yearly-contributions");
   if (!container) return null;
   const table = container.querySelector<HTMLElement>("table");
-  return table?.outerHTML ?? null;
+  if (!table) return null;
+  const referencedIds = new Set<string>();
+  for (const cell of Array.from(table.querySelectorAll<HTMLElement>("[aria-labelledby]"))) {
+    const id = cell.getAttribute("aria-labelledby");
+    if (id) referencedIds.add(id);
+  }
+  const tooltips: string[] = [];
+  for (const id of referencedIds) {
+    const tt = container.querySelector(`#${cssIdentifierEscape(id)}`);
+    if (tt) tooltips.push(tt.outerHTML);
+  }
+  return table.outerHTML + tooltips.join("");
+}
+
+function cssIdentifierEscape(s: string): string {
+  return s.replace(/[^\w-]/g, "\\$&");
 }
 
 function meta(doc: Document, key: string): string | null {
