@@ -156,14 +156,17 @@ function resolveTarget(a: HTMLAnchorElement): HoverTarget | null {
   const first = segs[0]!;
   if (RESERVED.has(first)) return null;
   if (!/^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,38})$/.test(first)) return null;
-  if (segs.length === 1 || (segs.length === 2 && (url.search || ""))) {
+  if (segs.length === 1 && !url.search) {
     if (negativeCache.has(`u:${first}`)) return null;
     return { kind: "user", login: first };
   }
   if (segs.length >= 2) {
     const second = segs[1]!;
     if (!/^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,99})$/.test(second)) return null;
-    if (RESERVED.has(second)) return { kind: "user", login: first };
+    if (RESERVED.has(second)) {
+      if (url.search) return null;
+      return { kind: "user", login: first };
+    }
     if (segs.length >= 4 && (segs[2] === "issues" || segs[2] === "pull")) {
       const num = parseInt(segs[3]!, 10);
       if (!Number.isNaN(num)) {
@@ -171,8 +174,10 @@ function resolveTarget(a: HTMLAnchorElement): HoverTarget | null {
         return { kind: "issue", owner: first, repo: second, number: num, isPull: segs[2] === "pull" };
       }
     }
-    if (negativeCache.has(`r:${first}/${second}`)) return null;
-    return { kind: "repo", owner: first, repo: second };
+    if (segs.length === 2 && !url.search) {
+      if (negativeCache.has(`r:${first}/${second}`)) return null;
+      return { kind: "repo", owner: first, repo: second };
+    }
   }
   return null;
 }
