@@ -578,6 +578,7 @@ function renderTimelineItem(node: TimelineNode): string {
       reactions: node.reactions,
       authorAssociation: node.authorAssociation,
       isOpener: false,
+      commentId: node.id,
     });
   }
   return renderEvent(node);
@@ -590,6 +591,7 @@ type CommentInputs = {
   reactions: ReactionCount[];
   authorAssociation?: string | null;
   isOpener: boolean;
+  commentId?: string;
 };
 
 function renderCommentBlock(c: CommentInputs): string {
@@ -598,8 +600,9 @@ function renderCommentBlock(c: CommentInputs): string {
   const association = c.authorAssociation && c.authorAssociation !== "NONE" && c.authorAssociation !== "MEMBER"
     ? `<span class="oldgh-issue__association">${escapeText(formatAssociation(c.authorAssociation))}</span>`
     : "";
+  const anchor = c.commentId && /^\d+$/.test(c.commentId) ? ` id="issuecomment-${c.commentId}"` : "";
   return `
-    <article class="oldgh-issue__comment ${c.isOpener ? "oldgh-issue__comment--opener" : ""}">
+    <article${anchor} class="oldgh-issue__comment ${c.isOpener ? "oldgh-issue__comment--opener" : ""}">
       <a class="oldgh-issue__avatar" href="/${escapeAttr(login)}">
         <img src="${escapeAttr(avatar)}" alt="" width="44" height="44" />
       </a>

@@ -52,26 +52,28 @@ export async function mountSearch(_pathname: string, search: string): Promise<vo
   }
 
   resultsEl.innerHTML = `<div class="oldgh-search__loading">Loading results…</div>`;
+  const sortCtx: SortContext = { query, type, sort, order: order as SearchOrder };
   try {
     if (type === "repositories") {
       const { summary, items } = await searchRepositories(query, sort, order as SearchOrder);
-      resultsEl.innerHTML = renderRepoResults(summary, items);
+      resultsEl.innerHTML = renderRepoResults(summary, items, sortCtx);
     } else if (type === "issues" || type === "pullrequests") {
       const { summary, items } = await searchIssues(query, sort, order as SearchOrder, type === "pullrequests");
-      resultsEl.innerHTML = renderIssueResults(summary, items);
+      resultsEl.innerHTML = renderIssueResults(summary, items, sortCtx);
     } else if (type === "users") {
       const { summary, items } = await searchUsers(query, sort, order as SearchOrder);
-      resultsEl.innerHTML = renderUserResults(summary, items);
+      resultsEl.innerHTML = renderUserResults(summary, items, sortCtx);
     } else if (type === "code") {
       const { summary, items } = await searchCode(query, sort, order as SearchOrder);
-      resultsEl.innerHTML = renderCodeResults(summary, items);
+      resultsEl.innerHTML = renderCodeResults(summary, items, sortCtx);
     } else if (type === "commits") {
       const { summary, items } = await searchCommits(query, sort, order as SearchOrder);
-      resultsEl.innerHTML = renderCommitResults(summary, items);
+      resultsEl.innerHTML = renderCommitResults(summary, items, sortCtx);
     } else if (type === "topics") {
       const { summary, items } = await searchTopics(query);
-      resultsEl.innerHTML = renderTopicResults(summary, items);
+      resultsEl.innerHTML = renderTopicResults(summary, items, sortCtx);
     }
+    bindSortControl(resultsEl);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (type === "code" && /401/.test(msg)) {
@@ -160,10 +162,10 @@ function renderShell(query: string, activeType: SearchType): string {
   `;
 }
 
-function renderRepoResults(summary: SearchSummary, items: RepoResult[]): string {
+function renderRepoResults(summary: SearchSummary, items: RepoResult[], ctx: SortContext): string {
   if (items.length === 0) return renderEmpty(summary);
   return `
-    ${renderResultCount(summary)}
+    ${renderResultBar(summary, ctx)}
     <ul class="oldgh-search__list">
       ${items.map((r) => renderRepoRow(r)).join("")}
     </ul>
@@ -195,10 +197,10 @@ function renderRepoRow(r: RepoResult): string {
   `;
 }
 
-function renderIssueResults(summary: SearchSummary, items: IssueResult[]): string {
+function renderIssueResults(summary: SearchSummary, items: IssueResult[], ctx: SortContext): string {
   if (items.length === 0) return renderEmpty(summary);
   return `
-    ${renderResultCount(summary)}
+    ${renderResultBar(summary, ctx)}
     <ul class="oldgh-search__list">
       ${items.map((it) => renderIssueRow(it)).join("")}
     </ul>
@@ -236,10 +238,10 @@ function renderIssueRow(it: IssueResult): string {
   `;
 }
 
-function renderUserResults(summary: SearchSummary, items: UserResult[]): string {
+function renderUserResults(summary: SearchSummary, items: UserResult[], ctx: SortContext): string {
   if (items.length === 0) return renderEmpty(summary);
   return `
-    ${renderResultCount(summary)}
+    ${renderResultBar(summary, ctx)}
     <ul class="oldgh-search__list oldgh-search__list--users">
       ${items.map((u) => `
         <li class="oldgh-search__row oldgh-search__row--user">
@@ -256,10 +258,10 @@ function renderUserResults(summary: SearchSummary, items: UserResult[]): string 
   `;
 }
 
-function renderCodeResults(summary: SearchSummary, items: CodeResult[]): string {
+function renderCodeResults(summary: SearchSummary, items: CodeResult[], ctx: SortContext): string {
   if (items.length === 0) return renderEmpty(summary);
   return `
-    ${renderResultCount(summary)}
+    ${renderResultBar(summary, ctx)}
     <ul class="oldgh-search__list">
       ${items.map((c) => `
         <li class="oldgh-search__row oldgh-search__row--code">
@@ -274,10 +276,10 @@ function renderCodeResults(summary: SearchSummary, items: CodeResult[]): string 
   `;
 }
 
-function renderCommitResults(summary: SearchSummary, items: CommitResult[]): string {
+function renderCommitResults(summary: SearchSummary, items: CommitResult[], ctx: SortContext): string {
   if (items.length === 0) return renderEmpty(summary);
   return `
-    ${renderResultCount(summary)}
+    ${renderResultBar(summary, ctx)}
     <ul class="oldgh-search__list">
       ${items.map((c) => `
         <li class="oldgh-search__row oldgh-search__row--commit">
@@ -295,10 +297,10 @@ function renderCommitResults(summary: SearchSummary, items: CommitResult[]): str
   `;
 }
 
-function renderTopicResults(summary: SearchSummary, items: TopicResult[]): string {
+function renderTopicResults(summary: SearchSummary, items: TopicResult[], ctx: SortContext): string {
   if (items.length === 0) return renderEmpty(summary);
   return `
-    ${renderResultCount(summary)}
+    ${renderResultBar(summary, ctx)}
     <ul class="oldgh-search__list">
       ${items.map((t) => `
         <li class="oldgh-search__row oldgh-search__row--topic">
@@ -313,9 +315,87 @@ function renderTopicResults(summary: SearchSummary, items: TopicResult[]): strin
   `;
 }
 
-function renderResultCount(s: SearchSummary): string {
+type SortContext = {
+  query: string;
+  type: SearchType;
+  sort: string;
+  order: SearchOrder;
+};
+
+const SORT_OPTIONS: Record<SearchType, Array<{ value: string; label: string }>> = {
+  repositories: [
+    { value: "best-match", label: "Best match" },
+    { value: "stars", label: "Most stars" },
+    { value: "forks", label: "Most forks" },
+    { value: "updated", label: "Recently updated" },
+  ],
+  issues: [
+    { value: "best-match", label: "Best match" },
+    { value: "created", label: "Newest" },
+    { value: "updated", label: "Recently updated" },
+    { value: "comments", label: "Most commented" },
+  ],
+  pullrequests: [
+    { value: "best-match", label: "Best match" },
+    { value: "created", label: "Newest" },
+    { value: "updated", label: "Recently updated" },
+    { value: "comments", label: "Most commented" },
+  ],
+  users: [
+    { value: "best-match", label: "Best match" },
+    { value: "followers", label: "Most followers" },
+    { value: "repositories", label: "Most repositories" },
+    { value: "joined", label: "Recently joined" },
+  ],
+  code: [
+    { value: "best-match", label: "Best match" },
+    { value: "indexed", label: "Recently indexed" },
+  ],
+  commits: [
+    { value: "best-match", label: "Best match" },
+    { value: "author-date", label: "Author date" },
+    { value: "committer-date", label: "Committer date" },
+  ],
+  topics: [
+    { value: "best-match", label: "Best match" },
+  ],
+};
+
+function renderResultBar(s: SearchSummary, ctx: SortContext): string {
   const count = formatCount(s.totalCount);
-  return `<div class="oldgh-search__count"><strong>${count}</strong> ${s.totalCount === 1 ? "result" : "results"}${s.incompleteResults ? " (partial)" : ""}</div>`;
+  const options = SORT_OPTIONS[ctx.type] || [{ value: "best-match", label: "Best match" }];
+  const showSort = options.length > 1;
+  return `
+    <div class="oldgh-search__bar">
+      <div class="oldgh-search__count"><strong>${count}</strong> ${s.totalCount === 1 ? "result" : "results"}${s.incompleteResults ? " (partial)" : ""}</div>
+      ${showSort ? `
+        <label class="oldgh-search__sort">
+          <span>Sort:</span>
+          <select data-oldgh-sort>
+            ${options.map((o) => `<option value="${escapeAttr(o.value)}"${o.value === ctx.sort ? " selected" : ""}>${escapeText(o.label)}</option>`).join("")}
+          </select>
+        </label>` : ""}
+    </div>
+  `;
+}
+
+function bindSortControl(root: HTMLElement): void {
+  const select = root.querySelector<HTMLSelectElement>("select[data-oldgh-sort]");
+  if (!select) return;
+  select.addEventListener("change", () => {
+    const params = new URLSearchParams(window.location.search);
+    const value = select.value;
+    if (value === "best-match") {
+      params.delete("s");
+      params.delete("o");
+    } else {
+      params.set("s", value);
+      params.set("o", "desc");
+    }
+    const href = `/search?${params.toString()}`;
+    history.pushState({}, "", href);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
 }
 
 function renderEmpty(_s: SearchSummary): string {

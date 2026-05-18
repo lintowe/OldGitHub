@@ -4031,11 +4031,32 @@ html[data-oldgh-theme="dark"] .oldgh-diff__hunk .oldgh-diff__num { background: r
   font-weight: bold;
 }
 
-.oldgh-search__count {
+.oldgh-search__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   padding: 6px 0 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-search__count {
   font-size: var(--gh-size-md);
   color: var(--gh-fg-muted);
-  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-search__sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-search__sort select {
+  padding: 3px 6px;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  color: var(--gh-fg);
+  font-size: var(--gh-size-sm);
 }
 .oldgh-search__list {
   list-style: none;
