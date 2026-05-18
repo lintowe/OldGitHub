@@ -569,52 +569,45 @@ function renderPeopleFromFrame(frame: Element): string {
   type P = { login: string; name: string | null; avatarUrl: string; bio: string | null; location: string | null };
   const people: P[] = [];
   const seen = new Set<string>();
-  const cardSelectors = ["li", "div.d-table", ".user-list-item", "[data-testid*='member']"];
-  let cards: HTMLElement[] = [];
-  for (const sel of cardSelectors) {
-    cards = Array.from(frame.querySelectorAll<HTMLElement>(sel));
-    if (cards.some((c) => c.querySelector("a[data-hovercard-type='user']") && c.querySelector("img[src*='avatars']"))) break;
-  }
-  for (const card of cards) {
-    const avatar = card.querySelector<HTMLImageElement>("img.avatar, img.avatar-user, img[src*='avatars']");
-    if (!avatar) continue;
-    const loginLink = card.querySelector<HTMLAnchorElement>("a[data-hovercard-type='user'], a.d-inline-block, a.text-bold[href^='/']");
-    const href = loginLink?.getAttribute("href") || avatar.closest("a")?.getAttribute("href") || "";
+
+  // Walk every hovercard-anchor; pull bio/location/name from the closest card
+  // container if one exists, but don't require it. Modern GitHub renders the
+  // org people list as a flat grid where most "cards" are siblings, not <li>s.
+  for (const a of Array.from(frame.querySelectorAll<HTMLAnchorElement>("a[data-hovercard-type='user']"))) {
+    const href = a.getAttribute("href") || "";
     const m = /^\/([\w.-]+)\/?$/.exec(href);
     if (!m || !m[1]) continue;
     const login = m[1];
     if (seen.has(login)) continue;
     seen.add(login);
+
+    const card: Element | null =
+      a.closest("li") ||
+      a.closest("div.d-table") ||
+      a.closest(".user-list-item") ||
+      a.closest("[data-testid*='member']") ||
+      a.parentElement;
+
+    let avatarImg = card?.querySelector<HTMLImageElement>("img.avatar, img.avatar-user, img[src*='avatars']") ?? null;
+    if (!avatarImg) avatarImg = a.querySelector<HTMLImageElement>("img[src*='avatars']") ?? null;
+    const avatarUrl = avatarImg?.getAttribute("src") || `https://github.com/${login}.png?size=64`;
+
     let name: string | null = null;
-    const nameEl = card.querySelector(".f4.lh-condensed, .text-bold[itemprop='name'], h3.f4");
-    if (nameEl) name = (nameEl.textContent || "").trim() || null;
-    let bio: string | null = null;
-    const bioEl = card.querySelector(".user-profile-bio, .pinned-item-desc, p.color-fg-muted, [data-bio-text]");
-    if (bioEl) bio = (bioEl.textContent || "").trim().slice(0, 200) || null;
-    let location: string | null = null;
-    const locEl = card.querySelector("[itemprop='homeLocation'], li[itemprop='homeLocation'] span");
-    if (locEl) location = (locEl.textContent || "").trim() || null;
-    people.push({
-      login,
-      name,
-      avatarUrl: avatar.getAttribute("src") || `https://github.com/${login}.png?size=64`,
-      bio,
-      location,
-    });
-  }
-  if (people.length === 0) {
-    for (const a of Array.from(frame.querySelectorAll<HTMLAnchorElement>("a[data-hovercard-type='user']"))) {
-      const href = a.getAttribute("href") || "";
-      const m = /^\/([\w.-]+)\/?$/.exec(href);
-      if (!m || !m[1]) continue;
-      const login = m[1];
-      if (seen.has(login)) continue;
-      seen.add(login);
-      const avatarImg = a.querySelector<HTMLImageElement>("img[src*='avatars']")
-        || (a.parentElement?.querySelector<HTMLImageElement>("img[src*='avatars']") ?? null);
-      const avatarUrl = avatarImg?.getAttribute("src") || `https://github.com/${login}.png?size=64`;
-      people.push({ login, name: null, avatarUrl, bio: null, location: null });
+    if (card) {
+      const nameEl = card.querySelector(".f4.lh-condensed, .text-bold[itemprop='name'], h3.f4");
+      if (nameEl) name = (nameEl.textContent || "").trim() || null;
     }
+    let bio: string | null = null;
+    if (card) {
+      const bioEl = card.querySelector(".user-profile-bio, .pinned-item-desc, p.color-fg-muted, [data-bio-text]");
+      if (bioEl) bio = (bioEl.textContent || "").trim().slice(0, 200) || null;
+    }
+    let location: string | null = null;
+    if (card) {
+      const locEl = card.querySelector("[itemprop='homeLocation'], li[itemprop='homeLocation'] span");
+      if (locEl) location = (locEl.textContent || "").trim() || null;
+    }
+    people.push({ login, name, avatarUrl, bio, location });
   }
   if (people.length === 0) {
     return `<p class="oldgh-profile__muted">No users to show.</p>`;
