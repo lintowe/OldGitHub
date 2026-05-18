@@ -1353,6 +1353,13 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   font-style: italic;
 }
 
+html[data-oldgh-theme="dark"] .oldgh-diff__row--add .oldgh-diff__code { background: rgba(46, 160, 67, 0.15); }
+html[data-oldgh-theme="dark"] .oldgh-diff__row--add .oldgh-diff__num { background: rgba(46, 160, 67, 0.30); color: #7ee787; }
+html[data-oldgh-theme="dark"] .oldgh-diff__row--add .oldgh-diff__sign { color: #7ee787; }
+html[data-oldgh-theme="dark"] .oldgh-diff__row--del .oldgh-diff__code { background: rgba(248, 81, 73, 0.15); }
+html[data-oldgh-theme="dark"] .oldgh-diff__row--del .oldgh-diff__num { background: rgba(248, 81, 73, 0.30); color: #ff7b72; }
+html[data-oldgh-theme="dark"] .oldgh-diff__row--del .oldgh-diff__sign { color: #ff7b72; }
+
 .oldgh-repo-commit__binary {
   padding: 14px 16px;
   color: var(--gh-fg-muted);
@@ -1393,6 +1400,39 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
 .oldgh-hljs .hljs-strong { font-weight: bold; }
 .oldgh-hljs .hljs-deletion { color: #8a1a08; background: #ffeef0; }
 .oldgh-hljs .hljs-addition { color: #2e7212; background: #e6ffed; }
+
+/* dark syntax theme */
+html[data-oldgh-theme="dark"] .oldgh-hljs .oldgh-repo-blob__code { color: #e6e6e6; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-comment,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-quote { color: #8b949e; font-style: italic; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-keyword,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-selector-tag,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-subst { color: #ff7b72; font-weight: normal; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-built_in { color: #79c0ff; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-type,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-class .hljs-title,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-title.class_ { color: #ffa657; font-weight: normal; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-function .hljs-title,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-title.function_ { color: #d2a8ff; font-weight: normal; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-number,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-literal { color: #79c0ff; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-string,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-doctag { color: #a5d6ff; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-symbol,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-bullet { color: #d2a8ff; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-params,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-tag,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-section,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-name,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-attr,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-attribute,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-variable,
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-template-variable { color: #79c0ff; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-meta { color: #8b949e; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-regexp { color: #7ee787; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-link { color: #58a6ff; }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-deletion { color: #ff7b72; background: rgba(248, 81, 73, 0.15); }
+html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-addition { color: #7ee787; background: rgba(46, 160, 67, 0.15); }
 
 html[data-oldgh-theme="dark"] .oldgh-hljs .oldgh-repo-blob__code { color: #d9d9d9; }
 html[data-oldgh-theme="dark"] .oldgh-hljs .hljs-comment,
@@ -3718,6 +3758,14 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 .oldgh-diff__hunk { background: #f0f4fa; }
 .oldgh-diff__hunk .oldgh-diff__code { color: #4a6b8a; }
 .oldgh-diff__hunk .oldgh-diff__num { background: #e6ecf3; border-right: 0; }
+
+html[data-oldgh-theme="dark"] .oldgh-diff__add { background: rgba(46, 160, 67, 0.15); }
+html[data-oldgh-theme="dark"] .oldgh-diff__add .oldgh-diff__num { background: rgba(46, 160, 67, 0.30); color: #7ee787; }
+html[data-oldgh-theme="dark"] .oldgh-diff__del { background: rgba(248, 81, 73, 0.15); }
+html[data-oldgh-theme="dark"] .oldgh-diff__del .oldgh-diff__num { background: rgba(248, 81, 73, 0.30); color: #ff7b72; }
+html[data-oldgh-theme="dark"] .oldgh-diff__hunk { background: rgba(56, 139, 253, 0.10); }
+html[data-oldgh-theme="dark"] .oldgh-diff__hunk .oldgh-diff__code { color: #79c0ff; }
+html[data-oldgh-theme="dark"] .oldgh-diff__hunk .oldgh-diff__num { background: rgba(56, 139, 253, 0.15); border-right: 0; }
 
 .oldgh-pr-commits__group {
   margin-bottom: 18px;
