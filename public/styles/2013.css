@@ -5528,6 +5528,13 @@ html[data-oldgh-theme="dark"] .oldgh-discussion__answer-head {
   font-size: 11px;
   color: var(--gh-fg-muted);
 }
+.oldgh-trending__momentum {
+  color: #cea61b;
+  font-weight: bold;
+}
+html[data-oldgh-theme="dark"] .oldgh-trending__momentum {
+  color: #e3b341;
+}
 .oldgh-trending__meta li {
   display: flex;
   align-items: center;

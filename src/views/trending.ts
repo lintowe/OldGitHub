@@ -11,8 +11,10 @@ type TrendingRepo = {
   repoName: string;
   description: string | null;
   language: string | null;
+  languageColor: string | null;
   stars: number;
   forks: number;
+  starsInPeriod: number | null;
   createdAt: string;
   htmlUrl: string;
 };
@@ -57,6 +59,71 @@ export function unmountTrending(): void {
 }
 
 async function fetchTrending(period: TrendingPeriod, language: string): Promise<TrendingRepo[]> {
+  const scraped = await scrapeTrendingHtml(period, language);
+  if (scraped.length > 0) return scraped;
+  return await searchTrendingFallback(period, language);
+}
+
+async function scrapeTrendingHtml(period: TrendingPeriod, language: string): Promise<TrendingRepo[]> {
+  const path = language ? `/trending/${encodeURIComponent(language)}` : "/trending";
+  const url = `https://github.com${path}?since=${encodeURIComponent(period)}`;
+  try {
+    const resp = await fetch(url, { credentials: "include", headers: { Accept: "text/html" } });
+    if (!resp.ok) return [];
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const rows = doc.querySelectorAll<HTMLElement>("article.Box-row");
+    const out: TrendingRepo[] = [];
+    for (const row of Array.from(rows)) {
+      const heading = row.querySelector<HTMLAnchorElement>("h2 a, h3 a");
+      const href = heading?.getAttribute("href") || "";
+      if (!href) continue;
+      const slug = href.replace(/^\/+/, "");
+      const [owner, repoName] = slug.split("/");
+      if (!owner || !repoName) continue;
+      const description = row.querySelector<HTMLElement>("p")?.textContent?.trim() || null;
+      const langEl = row.querySelector<HTMLElement>("[itemprop='programmingLanguage']");
+      const language = langEl?.textContent?.trim() || null;
+      const dot = row.querySelector<HTMLElement>(".repo-language-color");
+      const languageColor = dot?.style.backgroundColor || null;
+      const starsAnchor = row.querySelector<HTMLAnchorElement>(`a[href$="/${owner}/${repoName}/stargazers"]`);
+      const forksAnchor = row.querySelector<HTMLAnchorElement>(`a[href$="/${owner}/${repoName}/forks"]`);
+      const momentumEl = row.querySelector<HTMLElement>(".float-sm-right, .d-inline-block.float-sm-right");
+      const momentum = momentumEl?.textContent?.trim() || "";
+      const starsInPeriod = parseShortCount((momentum.match(/^([\d,.]+\s*[km]?)/i)?.[1] ?? "").replace(/[\s,]/g, ""));
+      out.push({
+        fullName: `${owner}/${repoName}`,
+        ownerLogin: owner,
+        ownerAvatar: `https://avatars.githubusercontent.com/${owner}`,
+        repoName,
+        description,
+        language,
+        languageColor,
+        stars: parseShortCount(starsAnchor?.textContent || "") ?? 0,
+        forks: parseShortCount(forksAnchor?.textContent || "") ?? 0,
+        starsInPeriod,
+        createdAt: "",
+        htmlUrl: `https://github.com/${owner}/${repoName}`,
+      });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+function parseShortCount(s: string): number | null {
+  const trimmed = s.replace(/[\s,]/g, "").toLowerCase();
+  const m = /^([\d.]+)([km])?$/.exec(trimmed);
+  if (!m) return null;
+  const n = parseFloat(m[1]!);
+  if (Number.isNaN(n)) return null;
+  if (m[2] === "k") return Math.round(n * 1000);
+  if (m[2] === "m") return Math.round(n * 1_000_000);
+  return Math.round(n);
+}
+
+async function searchTrendingFallback(period: TrendingPeriod, language: string): Promise<TrendingRepo[]> {
   const days = period === "daily" ? 1 : period === "weekly" ? 7 : 30;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   let q = `created:>${since}`;
@@ -84,8 +151,10 @@ function parseRepo(raw: unknown): TrendingRepo | null {
     repoName: (typeof r["name"] === "string" ? (r["name"] as string) : fullName.split("/")[1]) ?? "",
     description: typeof r["description"] === "string" ? (r["description"] as string) : null,
     language: typeof r["language"] === "string" ? (r["language"] as string) : null,
+    languageColor: null,
     stars: typeof r["stargazers_count"] === "number" ? (r["stargazers_count"] as number) : 0,
     forks: typeof r["forks_count"] === "number" ? (r["forks_count"] as number) : 0,
+    starsInPeriod: null,
     createdAt: typeof r["created_at"] === "string" ? (r["created_at"] as string) : "",
     htmlUrl: (typeof r["html_url"] === "string" ? (r["html_url"] as string) : `https://github.com/${fullName}`),
   };
@@ -132,6 +201,14 @@ function renderList(items: TrendingRepo[]): string {
 }
 
 function renderRow(r: TrendingRepo, rank: number): string {
+  const langDot = r.language
+    ? `<li><span class="oldgh-search__lang-dot" style="background:${r.languageColor || languageColor(r.language)}"></span>${escapeText(r.language)}</li>`
+    : "";
+  const periodLine = r.starsInPeriod && r.starsInPeriod > 0
+    ? `<li class="oldgh-trending__momentum">${octicon("star", { size: 12 })} ${formatCount(r.starsInPeriod)} stars this period</li>`
+    : r.createdAt
+      ? `<li>Created ${escapeText(formatDate(r.createdAt))}</li>`
+      : "";
   return `
     <li class="oldgh-trending__row">
       <span class="oldgh-trending__rank">#${rank}</span>
@@ -143,10 +220,10 @@ function renderRow(r: TrendingRepo, rank: number): string {
         </h2>
         ${r.description ? `<p class="oldgh-trending__desc">${escapeText(r.description)}</p>` : ""}
         <ul class="oldgh-trending__meta">
-          ${r.language ? `<li><span class="oldgh-search__lang-dot" style="background:${languageColor(r.language)}"></span>${escapeText(r.language)}</li>` : ""}
+          ${langDot}
           <li>${octicon("star", { size: 12 })} ${formatCount(r.stars)}</li>
           <li>${octicon("repo-forked", { size: 12 })} ${formatCount(r.forks)}</li>
-          <li>Created ${escapeText(formatDate(r.createdAt))}</li>
+          ${periodLine}
         </ul>
       </div>
     </li>
