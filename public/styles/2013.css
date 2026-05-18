@@ -3636,6 +3636,11 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   height: 18px;
   border-radius: 50%;
   color: #fff;
+  overflow: hidden;
+}
+.oldgh-pr-checks__icon svg {
+  width: 11px !important;
+  height: 11px !important;
 }
 .oldgh-pr-checks__row--success .oldgh-pr-checks__icon { background: #6cc644; }
 .oldgh-pr-checks__row--failure .oldgh-pr-checks__icon { background: #bd2c00; }
