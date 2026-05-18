@@ -123,6 +123,18 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-home", owner, repo };
   }
 
+  // Pass-through routes: forms and creation flows that GitHub renders far better natively.
+  if (
+    (segs[2] === "issues" && segs[3] === "new") ||
+    (segs[2] === "discussions" && segs[3] === "new") ||
+    (segs[2] === "compare" && segs[3] === "new") ||
+    segs[2] === "settings" ||
+    segs[2] === "fork" ||
+    segs[2] === "subscription"
+  ) {
+    return { kind: "out-of-scope" };
+  }
+
   if (segs[2] === "tree" && segs.length >= 4) {
     const refAndPath = segs.slice(3).join("/");
     return { kind: "repo-tree", owner, repo, refAndPath };

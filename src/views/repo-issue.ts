@@ -136,6 +136,16 @@ async function hydrateScrapedBody(
       container.innerHTML = `<p class="oldgh-issue__subtab-empty">Couldn't load this view.</p>`;
       return;
     }
+    // Update our placeholder title with the real one from GitHub's page.
+    const pageTitle = (doc.querySelector("title")?.textContent || "").trim();
+    const titleFromHead = pageTitle
+      .replace(/\s*·\s*(Issue|Pull Request)\s*#\d+\s*·\s*[^\s]+\/[^\s]+\s*$/i, "")
+      .replace(/^Issue\s+#\d+:\s*/i, "")
+      .trim();
+    const titleEl = root.querySelector<HTMLElement>(".oldgh-issue__title");
+    if (titleEl && titleFromHead) {
+      titleEl.innerHTML = `${escapeText(titleFromHead)} <span class="oldgh-issue__number">#${number}</span>`;
+    }
     for (const sel of [
       "header.AppHeader",
       "header[role='banner']",

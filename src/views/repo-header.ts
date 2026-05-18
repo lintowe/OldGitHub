@@ -34,16 +34,39 @@ export async function mountRepoHeader(owner: string, repo: string): Promise<void
     document.body.prepend(skeleton);
   }
 
-  let summary: RepoSummary;
+  let summary: RepoSummary | null = null;
   try {
     summary = await getRepoSummary(owner, repo);
   } catch (err) {
-    unmountRepoHeader();
-    throw err;
+    console.debug("[oldgh] getRepoSummary failed, rendering minimal header:", err);
   }
 
   skeleton.classList.remove(`${ROOT_CLASS}--skeleton`);
-  skeleton.innerHTML = renderRepoHeaderHtml(summary, currentTabKey(owner, repo, window.location.pathname));
+  skeleton.innerHTML = summary
+    ? renderRepoHeaderHtml(summary, currentTabKey(owner, repo, window.location.pathname))
+    : renderMinimalHeader(owner, repo, currentTabKey(owner, repo, window.location.pathname));
+}
+
+function renderMinimalHeader(owner: string, repo: string, activeTab: TabKey): string {
+  const minimal: RepoSummary = {
+    owner,
+    repo,
+    nwo: `${owner}/${repo}`,
+    isPrivate: false,
+    isFork: false,
+    isArchived: false,
+    parentNwo: null,
+    description: "",
+    homepage: null,
+    defaultBranch: "main",
+    stars: null,
+    forks: null,
+    watchers: null,
+    topics: [],
+    primaryLanguage: null,
+    license: null,
+  };
+  return renderRepoHeaderHtml(minimal, activeTab);
 }
 
 export function unmountRepoHeader(): void {
