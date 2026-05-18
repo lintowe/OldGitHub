@@ -5843,6 +5843,36 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 }
 
 /* ======================= */
+/* profile README */
+/* ======================= */
+.oldgh-profile__readme {
+  margin-bottom: 24px;
+  border: 1px solid var(--gh-border);
+  border-radius: 4px;
+  background: #ffffff;
+}
+.oldgh-profile__readme .oldgh-profile__section-title {
+  margin: 0;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--gh-border);
+  background: linear-gradient(180deg, #fafbfc 0%, #eff3f6 100%);
+  font-size: 13px;
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gh-fg-default);
+}
+.oldgh-profile__readme-body {
+  padding: 18px 24px;
+  max-height: none;
+}
+.oldgh-profile__readme-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ======================= */
 /* top progress bar */
 /* ======================= */
 .oldgh-progress-bar {

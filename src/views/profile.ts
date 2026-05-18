@@ -39,6 +39,9 @@ export async function mountProfile(login: string, tab: string, query: string): P
   } else if (tab !== "overview") {
     void hydrateScrapedTab(root, login, tab, query);
   }
+  if (tab === "overview" && view.kind === "user") {
+    void hydrateProfileReadme(root, login);
+  }
 }
 
 async function hydrateStars(root: HTMLElement, login: string): Promise<void> {
@@ -133,9 +136,63 @@ function renderTabBody(v: ProfileView, tab: string): string {
     return `<div class="oldgh-profile__scraped" data-state="loading"><p class="oldgh-profile__muted">Loading&hellip;</p></div>`;
   }
   return `
+    <div class="oldgh-profile__readme-slot"></div>
     ${v.pinned.length > 0 ? renderPinned(v) : ""}
     ${renderContributions(v)}
   `;
+}
+
+async function hydrateProfileReadme(root: HTMLElement, login: string): Promise<void> {
+  const slot = root.querySelector<HTMLElement>(".oldgh-profile__readme-slot");
+  if (!slot) return;
+  try {
+    const resp = await fetch(`https://api.github.com/repos/${encodeURIComponent(login)}/${encodeURIComponent(login)}/readme`, {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github.html+json" },
+    });
+    if (!resp.ok) {
+      if (resp.status === 404) return;
+      // try the raw fallback
+      const rawResp = await fetch(`https://raw.githubusercontent.com/${encodeURIComponent(login)}/${encodeURIComponent(login)}/HEAD/README.md`, {
+        credentials: "omit",
+      });
+      if (!rawResp.ok) return;
+      const md = await rawResp.text();
+      slot.innerHTML = `
+        <section class="oldgh-profile__readme">
+          <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>${escapeText(login)}</strong></h3>
+          <article class="oldgh-profile__readme-body markdown-body"><pre style="white-space:pre-wrap">${escapeText(md.slice(0, 50000))}</pre></article>
+        </section>
+      `;
+      return;
+    }
+    const data = (await resp.json()) as Record<string, unknown>;
+    const html = typeof data["html"] === "string" ? data["html"] : (typeof data["content"] === "string" ? null : null);
+    if (!html) {
+      // fetch as html via accept header — sometimes API returns content
+      const htmlResp = await fetch(`https://api.github.com/repos/${encodeURIComponent(login)}/${encodeURIComponent(login)}/readme`, {
+        credentials: "omit",
+        headers: { Accept: "application/vnd.github.html" },
+      });
+      if (!htmlResp.ok) return;
+      const rendered = await htmlResp.text();
+      slot.innerHTML = `
+        <section class="oldgh-profile__readme">
+          <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>${escapeText(login)}</strong></h3>
+          <article class="oldgh-profile__readme-body markdown-body">${rendered}</article>
+        </section>
+      `;
+      return;
+    }
+    slot.innerHTML = `
+      <section class="oldgh-profile__readme">
+        <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>${escapeText(login)}</strong></h3>
+        <article class="oldgh-profile__readme-body markdown-body">${html}</article>
+      </section>
+    `;
+  } catch {
+    // silent — no readme is fine
+  }
 }
 
 function renderReposLoading(): string {
