@@ -94,7 +94,7 @@ export async function getProfile(login: string): Promise<ProfileView> {
   const location = locationEl?.textContent?.trim() || null;
 
   let contributionGraphHtml = extractContributionGraph(doc);
-  let contributionHeading = doc.querySelector(".js-yearly-contributions h2")?.textContent?.trim() || null;
+  let contributionHeading = normalizeWhitespace(doc.querySelector(".js-yearly-contributions h2")?.textContent || "") || null;
   if (!contributionGraphHtml && kind === "user") {
     const fetched = await fetchContributionFragment(profileUsername);
     if (fetched) {
@@ -134,11 +134,15 @@ async function fetchContributionFragment(login: string): Promise<{ tableHtml: st
     const html = await resp.text();
     const doc = new DOMParser().parseFromString(html, "text/html");
     const table = doc.querySelector<HTMLElement>("table.ContributionCalendar-grid, table.js-calendar-graph-table, .js-yearly-contributions table");
-    const heading = doc.querySelector("h2")?.textContent?.trim() || null;
+    const heading = normalizeWhitespace(doc.querySelector("h2")?.textContent || "") || null;
     return table ? { tableHtml: table.outerHTML, heading } : null;
   } catch {
     return null;
   }
+}
+
+function normalizeWhitespace(s: string): string {
+  return s.replace(/\s+/g, " ").trim();
 }
 
 function readHighlights(doc: Document): ProfileHighlights {

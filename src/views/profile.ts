@@ -41,7 +41,231 @@ export async function mountProfile(login: string, tab: string, query: string): P
   }
   if (tab === "overview" && view.kind === "user") {
     void hydrateProfileReadme(root, login);
+    void hydrateActivity(root, login);
   }
+}
+
+async function hydrateActivity(root: HTMLElement, login: string): Promise<void> {
+  const slot = root.querySelector<HTMLElement>(".oldgh-profile__activity-slot");
+  if (!slot) return;
+  try {
+    const resp = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}/events/public?per_page=30`, {
+      credentials: "omit",
+      cache: "no-cache",
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!resp.ok) return;
+    const events = (await resp.json()) as unknown[];
+    if (!Array.isArray(events) || events.length === 0) return;
+    const groups = groupEventsByMonth(events);
+    if (groups.length === 0) return;
+    slot.innerHTML = `
+      <section class="oldgh-profile__activity">
+        <h3 class="oldgh-profile__section-title">${octicon("clock", { size: 14 })} Public activity</h3>
+        <div class="oldgh-activity">
+          ${groups.map((g) => `
+            <details class="oldgh-activity__group" ${g.isLatest ? "open" : ""}>
+              <summary class="oldgh-activity__month">
+                <span class="oldgh-activity__month-label">${escapeText(g.label)}</span>
+                <span class="oldgh-activity__month-count">${g.items.length} ${g.items.length === 1 ? "event" : "events"}</span>
+              </summary>
+              <ul class="oldgh-activity__list">
+                ${g.items.map(renderActivityItem).join("")}
+              </ul>
+            </details>
+          `).join("")}
+        </div>
+      </section>
+    `;
+  } catch {
+    // silent — activity is optional
+  }
+}
+
+type ActivityItem = {
+  type: string;
+  iconName: string;
+  line: string;
+  occurredAt: string;
+};
+
+type ActivityGroup = {
+  label: string;
+  isLatest: boolean;
+  items: ActivityItem[];
+};
+
+function groupEventsByMonth(events: unknown[]): ActivityGroup[] {
+  const grouped = new Map<string, ActivityItem[]>();
+  for (const raw of events) {
+    const item = parseEvent(raw);
+    if (!item) continue;
+    const monthKey = item.occurredAt.slice(0, 7);
+    const list = grouped.get(monthKey) ?? [];
+    list.push(item);
+    grouped.set(monthKey, list);
+  }
+  const out: ActivityGroup[] = [];
+  let first = true;
+  for (const [key, items] of grouped) {
+    const d = new Date(key + "-01T00:00:00Z");
+    const label = Number.isNaN(d.getTime())
+      ? key
+      : d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    out.push({ label, isLatest: first, items });
+    first = false;
+  }
+  return out;
+}
+
+function parseEvent(raw: unknown): ActivityItem | null {
+  if (!raw || typeof raw !== "object") return null;
+  const e = raw as Record<string, unknown>;
+  const type = typeof e["type"] === "string" ? (e["type"] as string) : "";
+  if (!type) return null;
+  const repoRaw = e["repo"] && typeof e["repo"] === "object" ? (e["repo"] as Record<string, unknown>) : null;
+  const repoName = repoRaw && typeof repoRaw["name"] === "string" ? (repoRaw["name"] as string) : "";
+  const repoLink = repoName ? `<a href="/${escapeAttr(repoName)}">${escapeText(repoName)}</a>` : "this repository";
+  const payload = e["payload"] && typeof e["payload"] === "object" ? (e["payload"] as Record<string, unknown>) : {};
+  const createdAt = typeof e["created_at"] === "string" ? (e["created_at"] as string) : "";
+  const when = createdAt
+    ? `<span class="oldgh-activity__when" title="${escapeAttr(absoluteTime(createdAt))}">${escapeText(relativeTime(createdAt))}</span>`
+    : "";
+
+  const built = buildLine(type, repoName, repoLink, payload, when);
+  if (!built) return null;
+  return { type, iconName: built.icon, line: built.line, occurredAt: createdAt };
+}
+
+function buildLine(
+  type: string,
+  repoName: string,
+  repoLink: string,
+  payload: Record<string, unknown>,
+  when: string,
+): { icon: string; line: string } | null {
+  switch (type) {
+    case "PushEvent": {
+      const commits = Array.isArray(payload["commits"]) ? (payload["commits"] as unknown[]) : [];
+      const size = typeof payload["size"] === "number" ? (payload["size"] as number) : commits.length;
+      const ref = typeof payload["ref"] === "string" ? (payload["ref"] as string).replace(/^refs\/heads\//, "") : "";
+      const refLabel = ref ? ` to <code>${escapeText(ref)}</code>` : "";
+      return { icon: "git-commit", line: `Pushed <strong>${size}</strong> commit${size === 1 ? "" : "s"}${refLabel} in ${repoLink} ${when}` };
+    }
+    case "PullRequestEvent": {
+      const action = typeof payload["action"] === "string" ? (payload["action"] as string) : "";
+      const pr = payload["pull_request"] && typeof payload["pull_request"] === "object" ? (payload["pull_request"] as Record<string, unknown>) : null;
+      const num = pr && typeof pr["number"] === "number" ? (pr["number"] as number) : 0;
+      const title = pr && typeof pr["title"] === "string" ? (pr["title"] as string) : "";
+      const merged = pr && pr["merged"] === true;
+      const verb = action === "closed" ? (merged ? "Merged" : "Closed") : action === "opened" ? "Opened" : action === "reopened" ? "Reopened" : capitalize(action);
+      const icon = merged ? "git-merge" : action === "closed" ? "git-pull-request" : "git-pull-request";
+      const link = num
+        ? `<a href="/${escapeAttr(repoName)}/pull/${num}">${escapeText(title || "#" + num)}</a>`
+        : escapeText(title);
+      return { icon, line: `${escapeText(verb)} pull request ${link} in ${repoLink} ${when}` };
+    }
+    case "PullRequestReviewEvent": {
+      const pr = payload["pull_request"] && typeof payload["pull_request"] === "object" ? (payload["pull_request"] as Record<string, unknown>) : null;
+      const num = pr && typeof pr["number"] === "number" ? (pr["number"] as number) : 0;
+      const link = num ? `<a href="/${escapeAttr(repoName)}/pull/${num}">#${num}</a>` : "";
+      return { icon: "eye", line: `Reviewed pull request ${link} in ${repoLink} ${when}` };
+    }
+    case "PullRequestReviewCommentEvent": {
+      const pr = payload["pull_request"] && typeof payload["pull_request"] === "object" ? (payload["pull_request"] as Record<string, unknown>) : null;
+      const num = pr && typeof pr["number"] === "number" ? (pr["number"] as number) : 0;
+      const link = num ? `<a href="/${escapeAttr(repoName)}/pull/${num}">#${num}</a>` : "";
+      return { icon: "comment", line: `Commented on pull request ${link} in ${repoLink} ${when}` };
+    }
+    case "IssuesEvent": {
+      const action = typeof payload["action"] === "string" ? (payload["action"] as string) : "";
+      const issue = payload["issue"] && typeof payload["issue"] === "object" ? (payload["issue"] as Record<string, unknown>) : null;
+      const num = issue && typeof issue["number"] === "number" ? (issue["number"] as number) : 0;
+      const title = issue && typeof issue["title"] === "string" ? (issue["title"] as string) : "";
+      const verb = action === "closed" ? "Closed" : action === "opened" ? "Opened" : action === "reopened" ? "Reopened" : capitalize(action);
+      const icon = action === "closed" ? "issue-closed" : action === "reopened" ? "issue-reopened" : "issue-opened";
+      const link = num
+        ? `<a href="/${escapeAttr(repoName)}/issues/${num}">${escapeText(title || "#" + num)}</a>`
+        : escapeText(title);
+      return { icon, line: `${escapeText(verb)} issue ${link} in ${repoLink} ${when}` };
+    }
+    case "IssueCommentEvent": {
+      const issue = payload["issue"] && typeof payload["issue"] === "object" ? (payload["issue"] as Record<string, unknown>) : null;
+      const num = issue && typeof issue["number"] === "number" ? (issue["number"] as number) : 0;
+      const title = issue && typeof issue["title"] === "string" ? (issue["title"] as string) : "";
+      const isPull = issue && !!issue["pull_request"];
+      const path = isPull ? "pull" : "issues";
+      const link = num
+        ? `<a href="/${escapeAttr(repoName)}/${path}/${num}">${escapeText(title || "#" + num)}</a>`
+        : "";
+      return { icon: "comment", line: `Commented on ${isPull ? "pull request" : "issue"} ${link} in ${repoLink} ${when}` };
+    }
+    case "CreateEvent": {
+      const refType = typeof payload["ref_type"] === "string" ? (payload["ref_type"] as string) : "";
+      const ref = typeof payload["ref"] === "string" ? (payload["ref"] as string) : "";
+      if (refType === "repository") {
+        return { icon: "repo", line: `Created repository ${repoLink} ${when}` };
+      }
+      const label = ref ? `<code>${escapeText(ref)}</code>` : refType;
+      return { icon: refType === "tag" ? "tag" : "git-branch", line: `Created ${escapeText(refType)} ${label} in ${repoLink} ${when}` };
+    }
+    case "DeleteEvent": {
+      const refType = typeof payload["ref_type"] === "string" ? (payload["ref_type"] as string) : "";
+      const ref = typeof payload["ref"] === "string" ? (payload["ref"] as string) : "";
+      return { icon: "trashcan", line: `Deleted ${escapeText(refType)} <code>${escapeText(ref)}</code> in ${repoLink} ${when}` };
+    }
+    case "ForkEvent": {
+      const fork = payload["forkee"] && typeof payload["forkee"] === "object" ? (payload["forkee"] as Record<string, unknown>) : null;
+      const forkName = fork && typeof fork["full_name"] === "string" ? (fork["full_name"] as string) : "";
+      const forkLink = forkName ? `<a href="/${escapeAttr(forkName)}">${escapeText(forkName)}</a>` : "a fork";
+      return { icon: "repo-forked", line: `Forked ${repoLink} to ${forkLink} ${when}` };
+    }
+    case "WatchEvent":
+      return { icon: "star", line: `Starred ${repoLink} ${when}` };
+    case "ReleaseEvent": {
+      const action = typeof payload["action"] === "string" ? (payload["action"] as string) : "";
+      const release = payload["release"] && typeof payload["release"] === "object" ? (payload["release"] as Record<string, unknown>) : null;
+      const tag = release && typeof release["tag_name"] === "string" ? (release["tag_name"] as string) : "";
+      const name = release && typeof release["name"] === "string" ? (release["name"] as string) : tag;
+      const html = release && typeof release["html_url"] === "string" ? (release["html_url"] as string) : "";
+      const link = html ? `<a href="${escapeAttr(html)}">${escapeText(name || tag || "release")}</a>` : escapeText(name);
+      const verb = action === "published" ? "Released" : capitalize(action);
+      return { icon: "tag", line: `${escapeText(verb)} ${link} in ${repoLink} ${when}` };
+    }
+    case "PublicEvent":
+      return { icon: "unlock", line: `Made ${repoLink} public ${when}` };
+    case "MemberEvent": {
+      const member = payload["member"] && typeof payload["member"] === "object" ? (payload["member"] as Record<string, unknown>) : null;
+      const memberLogin = member && typeof member["login"] === "string" ? (member["login"] as string) : "";
+      const link = memberLogin ? `<a href="/${escapeAttr(memberLogin)}">${escapeText(memberLogin)}</a>` : "a collaborator";
+      return { icon: "person", line: `Added ${link} as a collaborator on ${repoLink} ${when}` };
+    }
+    case "CommitCommentEvent": {
+      const comment = payload["comment"] && typeof payload["comment"] === "object" ? (payload["comment"] as Record<string, unknown>) : null;
+      const sha = comment && typeof comment["commit_id"] === "string" ? (comment["commit_id"] as string).slice(0, 7) : "";
+      const link = sha ? `<a href="/${escapeAttr(repoName)}/commit/${escapeAttr(sha)}"><code>${escapeText(sha)}</code></a>` : "";
+      return { icon: "comment", line: `Commented on commit ${link} in ${repoLink} ${when}` };
+    }
+    case "GollumEvent": {
+      const pages = Array.isArray(payload["pages"]) ? (payload["pages"] as unknown[]) : [];
+      return { icon: "book", line: `Updated <strong>${pages.length}</strong> wiki page${pages.length === 1 ? "" : "s"} in ${repoLink} ${when}` };
+    }
+    default:
+      return null;
+  }
+}
+
+function renderActivityItem(item: ActivityItem): string {
+  return `
+    <li class="oldgh-activity__item">
+      <span class="oldgh-activity__icon">${octicon(item.iconName, { size: 14 })}</span>
+      <span class="oldgh-activity__line">${item.line}</span>
+    </li>
+  `;
+}
+
+function capitalize(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
 }
 
 async function hydrateStars(root: HTMLElement, login: string): Promise<void> {
@@ -139,6 +363,7 @@ function renderTabBody(v: ProfileView, tab: string): string {
     <div class="oldgh-profile__readme-slot"></div>
     ${v.pinned.length > 0 ? renderPinned(v) : ""}
     ${renderContributions(v)}
+    <div class="oldgh-profile__activity-slot"></div>
   `;
 }
 

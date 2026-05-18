@@ -1846,6 +1846,99 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="4"],
 html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="4"] { background: #39d353; }
 
+/* profile public activity feed */
+.oldgh-profile__activity {
+  margin-top: 24px;
+}
+.oldgh-activity {
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  background: var(--gh-bg-elev);
+  overflow: hidden;
+}
+.oldgh-activity__group {
+  border-bottom: 1px solid var(--gh-border);
+}
+.oldgh-activity__group:last-child {
+  border-bottom: 0;
+}
+.oldgh-activity__month {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--gh-bg-canvas-subtle, #fafafa);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--gh-fg-default);
+  user-select: none;
+}
+.oldgh-activity__month::-webkit-details-marker {
+  display: none;
+}
+.oldgh-activity__month::before {
+  content: "▸";
+  display: inline-block;
+  width: 12px;
+  font-size: 9px;
+  color: var(--gh-fg-muted);
+  transition: transform 0.1s;
+}
+.oldgh-activity__group[open] > .oldgh-activity__month::before {
+  transform: rotate(90deg);
+}
+.oldgh-activity__month-label {
+  flex: 1;
+  margin-left: 4px;
+}
+.oldgh-activity__month-count {
+  font-weight: normal;
+  color: var(--gh-fg-muted);
+  font-size: 11px;
+}
+.oldgh-activity__list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.oldgh-activity__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--gh-fg-default);
+}
+.oldgh-activity__item:hover {
+  background: var(--gh-bg-canvas-subtle, #fafafa);
+}
+.oldgh-activity__icon {
+  flex: 0 0 16px;
+  color: var(--gh-fg-muted);
+  margin-top: 2px;
+}
+.oldgh-activity__line {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+}
+.oldgh-activity__line a {
+  color: var(--gh-link);
+}
+.oldgh-activity__line code {
+  font-size: 11px;
+  padding: 1px 4px;
+  background: var(--gh-bg-canvas-subtle, #f6f8fa);
+  border-radius: 3px;
+}
+.oldgh-activity__when {
+  color: var(--gh-fg-muted);
+  font-size: 11px;
+}
+
 /* issues + pulls list */
 .oldgh-repo-issues > .oldgh-page {
   padding-top: 12px;
