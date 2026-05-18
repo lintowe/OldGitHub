@@ -247,7 +247,29 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     throw err;
   } finally {
     hideProgress();
+    scrollToHashIfPresent(loc);
   }
+}
+
+function scrollToHashIfPresent(loc: Location | URL): void {
+  const hash = (loc instanceof URL ? loc.hash : loc.hash) || "";
+  if (!hash || hash === "#") return;
+  const id = hash.replace(/^#/, "");
+  // Try immediately and again after a short delay to handle async content
+  // (highlight loaders, hydrated tabs, scraped frames) that paint after dispatch returns.
+  const tryScroll = (): boolean => {
+    let el: Element | null = null;
+    try {
+      el = document.getElementById(id) ?? document.querySelector(`[id="${CSS.escape(id)}"]`);
+    } catch {
+      el = document.getElementById(id);
+    }
+    if (!el) return false;
+    el.scrollIntoView({ block: "start" });
+    return true;
+  };
+  if (tryScroll()) return;
+  window.setTimeout(() => { if (!tryScroll()) window.setTimeout(tryScroll, 400); }, 80);
 }
 
 function insertBodyNotFound(message: string): void {
