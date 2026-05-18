@@ -1777,7 +1777,8 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
   padding: 10px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .oldgh-profile__contribs-graph table {
   border-collapse: separate;
