@@ -44,13 +44,17 @@ export async function mountProfile(login: string, tab: string, query: string): P
     void hydrateActivity(root, login);
   }
   decorateContributionCells(root);
+  // tool-tip custom elements relocate themselves asynchronously; retry once they have
+  setTimeout(() => decorateContributionCells(root), 100);
+  setTimeout(() => decorateContributionCells(root), 500);
 }
 
 function decorateContributionCells(root: HTMLElement): void {
   const graph = root.querySelector<HTMLElement>(".oldgh-profile__contribs-graph");
   if (!graph) return;
   for (const cell of Array.from(graph.querySelectorAll<HTMLElement>(".ContributionCalendar-day, td.day"))) {
-    if (cell.getAttribute("title")) continue;
+    const existing = cell.getAttribute("title");
+    if (existing && /contributions? on/i.test(existing)) continue;
     const labelId = cell.getAttribute("aria-labelledby");
     let label: string | null = null;
     if (labelId) {
