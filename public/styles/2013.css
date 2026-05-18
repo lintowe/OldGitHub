@@ -5728,6 +5728,27 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   border-radius: 3px;
 }
 
+.oldgh-issues__empty {
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--gh-fg-faint);
+  border: 1px dashed var(--gh-border-default);
+  border-radius: 3px;
+  margin-top: 12px;
+}
+.oldgh-issues__empty p {
+  margin: 0;
+}
+.oldgh-issues__empty p + p {
+  margin-top: 8px;
+}
+.oldgh-issues__empty-hint {
+  font-size: 12px;
+  max-width: 460px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* ======================= */
 /* profile achievements tab */
 /* ======================= */

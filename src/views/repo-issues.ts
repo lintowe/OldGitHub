@@ -54,7 +54,7 @@ function renderShell(v: IssueListView, kind: "issues" | "pulls"): string {
         </li>
       </ul>
 
-      ${v.rows.length === 0 ? renderEmpty(kind) : `
+      ${v.rows.length === 0 ? renderEmpty(kind, v) : `
         <ul class="oldgh-issues__list">
           ${v.rows.map((r) => renderRow(v, r, kind)).join("")}
         </ul>
@@ -125,7 +125,18 @@ function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): str
   `;
 }
 
-function renderEmpty(kind: "issues" | "pulls"): string {
+function renderEmpty(kind: "issues" | "pulls", v: IssueListView): string {
+  const noneAtAll = v.openCount === 0 && v.closedCount === 0;
+  if (noneAtAll) {
+    return `
+      <div class="oldgh-issues__empty">
+        <p>No ${kind} here.</p>
+        <p class="oldgh-issues__empty-hint">${kind === "pulls"
+          ? "Either no one has opened a pull request yet, or this repository doesn't accept them."
+          : "Either nothing has been reported yet, or this repository has issues disabled."}</p>
+      </div>
+    `;
+  }
   return `<p class="oldgh-profile__muted">No ${kind} match the current filters.</p>`;
 }
 

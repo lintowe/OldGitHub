@@ -172,7 +172,7 @@ function renderRepoRow(r: RepoResult): string {
         ${r.isArchived ? `<span class="oldgh-search__tag oldgh-search__tag--warn">Archived</span>` : ""}
       </h2>
       ${r.description ? `<p class="oldgh-search__desc">${escapeText(r.description)}</p>` : ""}
-      ${r.topics.length > 0 ? `<p class="oldgh-search__topics">${r.topics.slice(0, 6).map((t) => `<a class="oldgh-search__topic" href="/topics/${escapeAttr(t)}">${escapeText(t)}</a>`).join(" ")}</p>` : ""}
+      ${r.topics.length > 0 ? `<p class="oldgh-search__topics">${r.topics.slice(0, 6).map((t) => `<a class="oldgh-search__topic" href="/topics/${encodeURIComponent(t)}">${escapeText(t)}</a>`).join(" ")}</p>` : ""}
       <ul class="oldgh-search__meta">
         ${r.language ? `<li><span class="oldgh-search__lang-dot" style="background:${langColor}"></span>${escapeText(r.language)}</li>` : ""}
         <li>${octicon("star", { size: 12 })} ${formatCount(r.stargazers)}</li>
