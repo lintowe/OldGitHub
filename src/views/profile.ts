@@ -145,49 +145,38 @@ function renderTabBody(v: ProfileView, tab: string): string {
 async function hydrateProfileReadme(root: HTMLElement, login: string): Promise<void> {
   const slot = root.querySelector<HTMLElement>(".oldgh-profile__readme-slot");
   if (!slot) return;
+  const url = `https://api.github.com/repos/${encodeURIComponent(login)}/${encodeURIComponent(login)}/readme`;
   try {
-    const resp = await fetch(`https://api.github.com/repos/${encodeURIComponent(login)}/${encodeURIComponent(login)}/readme`, {
+    const htmlResp = await fetch(url, {
       credentials: "omit",
-      headers: { Accept: "application/vnd.github.html+json" },
+      cache: "no-cache",
+      headers: { Accept: "application/vnd.github.html" },
     });
-    if (!resp.ok) {
-      if (resp.status === 404) return;
-      // try the raw fallback
-      const rawResp = await fetch(`https://raw.githubusercontent.com/${encodeURIComponent(login)}/${encodeURIComponent(login)}/HEAD/README.md`, {
-        credentials: "omit",
-      });
-      if (!rawResp.ok) return;
-      const md = await rawResp.text();
-      slot.innerHTML = `
-        <section class="oldgh-profile__readme">
-          <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>${escapeText(login)}</strong></h3>
-          <article class="oldgh-profile__readme-body markdown-body"><pre style="white-space:pre-wrap">${escapeText(md.slice(0, 50000))}</pre></article>
-        </section>
-      `;
+    if (htmlResp.ok) {
+      const ct = htmlResp.headers.get("content-type") || "";
+      const text = await htmlResp.text();
+      const looksHtml = ct.includes("html") || /^\s*</.test(text);
+      if (looksHtml && text.trim()) {
+        slot.innerHTML = `
+          <section class="oldgh-profile__readme">
+            <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>${escapeText(login)}</strong></h3>
+            <article class="oldgh-profile__readme-body markdown-body">${text}</article>
+          </section>
+        `;
+        return;
+      }
+    } else if (htmlResp.status === 404) {
       return;
     }
-    const data = (await resp.json()) as Record<string, unknown>;
-    const html = typeof data["html"] === "string" ? data["html"] : (typeof data["content"] === "string" ? null : null);
-    if (!html) {
-      // fetch as html via accept header — sometimes API returns content
-      const htmlResp = await fetch(`https://api.github.com/repos/${encodeURIComponent(login)}/${encodeURIComponent(login)}/readme`, {
-        credentials: "omit",
-        headers: { Accept: "application/vnd.github.html" },
-      });
-      if (!htmlResp.ok) return;
-      const rendered = await htmlResp.text();
-      slot.innerHTML = `
-        <section class="oldgh-profile__readme">
-          <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>${escapeText(login)}</strong></h3>
-          <article class="oldgh-profile__readme-body markdown-body">${rendered}</article>
-        </section>
-      `;
-      return;
-    }
+    const rawResp = await fetch(`https://raw.githubusercontent.com/${encodeURIComponent(login)}/${encodeURIComponent(login)}/HEAD/README.md`, {
+      credentials: "omit",
+    });
+    if (!rawResp.ok) return;
+    const md = await rawResp.text();
     slot.innerHTML = `
       <section class="oldgh-profile__readme">
         <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>${escapeText(login)}</strong></h3>
-        <article class="oldgh-profile__readme-body markdown-body">${html}</article>
+        <article class="oldgh-profile__readme-body markdown-body"><pre style="white-space:pre-wrap">${escapeText(md.slice(0, 50000))}</pre></article>
       </section>
     `;
   } catch {

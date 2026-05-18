@@ -69,43 +69,73 @@ export async function getIssueList(
   const sort = sortClause.sort ?? "updated";
   const direction = sortClause.direction ?? "desc";
 
-  const apiUrl = new URL(`${API}/repos/${owner}/${repo}/${kind === "pulls" ? "pulls" : "issues"}`);
-  apiUrl.searchParams.set("state", state);
-  apiUrl.searchParams.set("per_page", "30");
-  apiUrl.searchParams.set("page", String(page));
-  apiUrl.searchParams.set("sort", sort);
-  apiUrl.searchParams.set("direction", direction);
-  if (labels) apiUrl.searchParams.set("labels", labels);
-  if (author && kind === "issues") apiUrl.searchParams.set("creator", author);
-  if (assignee) apiUrl.searchParams.set("assignee", assignee);
-  if (milestone) apiUrl.searchParams.set("milestone", milestone);
+  const needsSearch = (kind === "pulls" && !!author) || /\b(involves|mentions|review|review-requested|reviewed-by|commenter|head|base):/i.test(qStr);
 
   if (isApiRateLimited()) {
     return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
   }
-  const resp = await fetchApi(apiUrl.toString(), {
-    credentials: "omit",
-    headers: { Accept: "application/vnd.github+json" },
-  });
-  if (resp.status === 403 || resp.status === 429) {
-    return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
-  }
-  if (!resp.ok) {
-    throw new AdapterFailure("getIssueList", `${apiUrl.pathname} responded ${resp.status}`);
-  }
-  const data = (await resp.json()) as unknown[];
-  const rows: IssueRow[] = [];
-  for (const raw of data) {
-    const parsed = parseRow(raw, kind);
-    if (parsed) {
-      if (kind === "issues" && parsed.isPullRequest) continue;
-      rows.push(parsed);
-    }
-  }
 
-  const linkHeader = resp.headers.get("link") || "";
-  const hasNext = /<[^>]+>;\s*rel="next"/i.test(linkHeader);
-  const hasPrev = /<[^>]+>;\s*rel="prev"/i.test(linkHeader);
+  let rows: IssueRow[];
+  let hasNext: boolean;
+  let hasPrev: boolean;
+
+  if (needsSearch) {
+    const searchQ = buildSearchQuery(owner, repo, kind, state, qStr);
+    const searchUrl = `${API}/search/issues?q=${encodeURIComponent(searchQ)}&per_page=30&page=${page}&sort=${sort}&order=${direction}`;
+    const resp = await fetchApi(searchUrl, {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (resp.status === 403 || resp.status === 429) {
+      return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
+    }
+    if (!resp.ok) {
+      throw new AdapterFailure("getIssueList", `search responded ${resp.status}`);
+    }
+    const data = (await resp.json()) as { items?: unknown[] };
+    rows = [];
+    for (const raw of data.items ?? []) {
+      const parsed = parseRow(raw, kind);
+      if (parsed) rows.push(parsed);
+    }
+    const linkHeader = resp.headers.get("link") || "";
+    hasNext = /<[^>]+>;\s*rel="next"/i.test(linkHeader);
+    hasPrev = /<[^>]+>;\s*rel="prev"/i.test(linkHeader);
+  } else {
+    const apiUrl = new URL(`${API}/repos/${owner}/${repo}/${kind === "pulls" ? "pulls" : "issues"}`);
+    apiUrl.searchParams.set("state", state);
+    apiUrl.searchParams.set("per_page", "30");
+    apiUrl.searchParams.set("page", String(page));
+    apiUrl.searchParams.set("sort", sort);
+    apiUrl.searchParams.set("direction", direction);
+    if (labels) apiUrl.searchParams.set("labels", labels);
+    if (author && kind === "issues") apiUrl.searchParams.set("creator", author);
+    if (assignee) apiUrl.searchParams.set("assignee", assignee);
+    if (milestone) apiUrl.searchParams.set("milestone", milestone);
+
+    const resp = await fetchApi(apiUrl.toString(), {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (resp.status === 403 || resp.status === 429) {
+      return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
+    }
+    if (!resp.ok) {
+      throw new AdapterFailure("getIssueList", `${apiUrl.pathname} responded ${resp.status}`);
+    }
+    const data = (await resp.json()) as unknown[];
+    rows = [];
+    for (const raw of data) {
+      const parsed = parseRow(raw, kind);
+      if (parsed) {
+        if (kind === "issues" && parsed.isPullRequest) continue;
+        rows.push(parsed);
+      }
+    }
+    const linkHeader = resp.headers.get("link") || "";
+    hasNext = /<[^>]+>;\s*rel="next"/i.test(linkHeader);
+    hasPrev = /<[^>]+>;\s*rel="prev"/i.test(linkHeader);
+  }
 
   const counts = await getCounts(owner, repo, kind);
 
@@ -266,12 +296,12 @@ function parseRow(raw: unknown, kind: "issues" | "pulls"): IssueRow | null {
 
   const isPullRequest = kind === "pulls" || !!r["pull_request"];
   let merged = false;
-  let isDraft = false;
-  if (kind === "pulls") {
-    merged = !!r["merged_at"];
-    isDraft = r["draft"] === true;
+  let isDraft = r["draft"] === true;
+  if (typeof r["merged_at"] === "string" && r["merged_at"]) {
+    merged = true;
   } else if (r["pull_request"] && typeof r["pull_request"] === "object") {
-    merged = !!(r["pull_request"] as Record<string, unknown>)["merged_at"];
+    const pr = r["pull_request"] as Record<string, unknown>;
+    if (typeof pr["merged_at"] === "string" && pr["merged_at"]) merged = true;
   }
 
   const userRaw = r["user"];
@@ -343,6 +373,20 @@ function parseRow(raw: unknown, kind: "issues" | "pulls"): IssueRow | null {
     isDraft,
     merged,
   };
+}
+
+function buildSearchQuery(owner: string, repo: string, kind: "issues" | "pulls", state: "open" | "closed" | "all", qStr: string): string {
+  const parts: string[] = [`repo:${owner}/${repo}`, kind === "pulls" ? "type:pr" : "type:issue"];
+  if (state !== "all") parts.push(`is:${state}`);
+  const cleaned = qStr
+    .replace(/\bis:(open|closed|all)\b/gi, "")
+    .replace(/\btype:(issue|pr)\b/gi, "")
+    .replace(/\brepo:[^\s]+/gi, "")
+    .replace(/\bsort:[\w-]+\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (cleaned) parts.push(cleaned);
+  return parts.join(" ");
 }
 
 function extractLabels(q: string): string | null {
