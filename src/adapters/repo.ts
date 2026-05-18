@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi, isApiRateLimited } from "./rate-limit";
 
 export type RepoSummary = {
   owner: string;
@@ -28,7 +29,11 @@ export async function getRepoSummary(owner: string, repo: string): Promise<RepoS
   const cached = summaryCache.get(key);
   if (cached && cached.expires > now) return cached.value;
 
-  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+  if (isApiRateLimited()) {
+    throw new AdapterFailure("getRepoSummary", "API rate-limited; skipping");
+  }
+
+  const resp = await fetchApi(`https://api.github.com/repos/${owner}/${repo}`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });

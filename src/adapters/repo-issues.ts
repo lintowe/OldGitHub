@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi, isApiRateLimited } from "./rate-limit";
 
 export type IssueState = "OPEN" | "CLOSED";
 
@@ -79,7 +80,10 @@ export async function getIssueList(
   if (assignee) apiUrl.searchParams.set("assignee", assignee);
   if (milestone) apiUrl.searchParams.set("milestone", milestone);
 
-  const resp = await fetch(apiUrl.toString(), {
+  if (isApiRateLimited()) {
+    return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
+  }
+  const resp = await fetchApi(apiUrl.toString(), {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });

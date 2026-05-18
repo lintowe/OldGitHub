@@ -1,5 +1,6 @@
 import { AdapterFailure } from "./index";
 import { extractEmbeddedPayload, fetchRepoPage, parseRepoPage } from "./_page";
+import { fetchApi, isApiRateLimited } from "./rate-limit";
 
 export type TreeItem = {
   name: string;
@@ -95,13 +96,15 @@ export type RepoBlobView = {
 export async function getRepoBlob(owner: string, repo: string, refAndPath: string): Promise<RepoBlobView> {
   const { branch, path } = await resolveBranchAndPath(owner, repo, refAndPath);
 
+  if (isApiRateLimited()) {
+    return loadBlobViaRaw(owner, repo, branch, path);
+  }
   const contentsUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(branch)}`;
-  const resp = await fetch(contentsUrl, {
+  const resp = await fetchApi(contentsUrl, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
   if (resp.status === 403 || resp.status === 429) {
-    // rate-limited — fall back to raw.githubusercontent.com which is unauth-friendly
     return loadBlobViaRaw(owner, repo, branch, path);
   }
   if (!resp.ok) {
