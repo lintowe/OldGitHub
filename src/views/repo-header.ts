@@ -6,6 +6,7 @@ const TABS = [
   { key: "code", label: "Code", path: "", icon: "code" },
   { key: "issues", label: "Issues", path: "/issues", icon: "issue-opened" },
   { key: "pulls", label: "Pull requests", path: "/pulls", icon: "git-pull-request" },
+  { key: "discussions", label: "Discussions", path: "/discussions", icon: "comment-discussion" },
   { key: "actions", label: "Actions", path: "/actions", icon: "play" },
   { key: "projects", label: "Projects", path: "/projects", icon: "project" },
   { key: "wiki", label: "Wiki", path: "/wiki", icon: "book" },
@@ -193,6 +194,7 @@ function renderActionButton(b: ActionButton): string {
 function isTabAvailable(s: RepoSummary, key: TabKey): boolean {
   switch (key) {
     case "issues": return s.hasIssues;
+    case "discussions": return s.hasDiscussions;
     case "wiki": return s.hasWiki;
     case "projects": return s.hasProjects;
     default: return true;
@@ -223,6 +225,7 @@ function currentTabKey(owner: string, repo: string, pathname: string): TabKey {
   }
   if (rest.startsWith("/issues") || rest.startsWith("/labels") || rest.startsWith("/milestones") || rest.startsWith("/milestone/")) return "issues";
   if (rest.startsWith("/pulls") || rest.startsWith("/pull/")) return "pulls";
+  if (rest.startsWith("/discussions")) return "discussions";
   if (rest.startsWith("/actions") || rest.startsWith("/runs/")) return "actions";
   if (rest.startsWith("/projects")) return "projects";
   if (rest.startsWith("/wiki")) return "wiki";
