@@ -88,12 +88,18 @@ export async function hydrateTreeTable(root: HTMLElement, ctx: TreeTableContext)
     if (!ci) return;
     const msgCell = row.querySelector<HTMLTableCellElement>("[data-msg]");
     const ageCell = row.querySelector<HTMLTableCellElement>("[data-age]");
-    if (msgCell) msgCell.innerHTML = ci.shortMessageHtmlLink;
+    if (msgCell) msgCell.innerHTML = sanitizeBodyHtml(ci.shortMessageHtmlLink);
     if (ageCell) {
       ageCell.textContent = relativeTime(ci.date);
       ageCell.title = absoluteTime(ci.date);
     }
   });
+}
+
+function sanitizeBodyHtml(html: string): string {
+  return html
+    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }
 
 function pathSegments(path: string): string {
