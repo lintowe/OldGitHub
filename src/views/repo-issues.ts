@@ -119,29 +119,22 @@ function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): str
           ${r.milestone ? ` <span class="oldgh-issues__milestone">${octicon("milestone", { size: 12 })}<a href="${escapeAttr(r.milestone.url)}">${escapeText(r.milestone.title)}</a></span>` : ""}
         </p>
       </div>
-      ${assignees}
-      ${commentsBadge}
+      <div class="oldgh-issues__meta-right">${assignees}${commentsBadge}</div>
     </li>
   `;
 }
 
 function renderEmpty(kind: "issues" | "pulls", v: IssueListView): string {
   const noneAtAll = v.openCount === 0 && v.closedCount === 0;
-  if (noneAtAll) {
-    return `
-      <div class="oldgh-issues__empty">
+  const inner = noneAtAll
+    ? `<div class="oldgh-issues__empty">
         <p>No ${kind} here.</p>
         <p class="oldgh-issues__empty-hint">${kind === "pulls"
           ? "Either no one has opened a pull request yet, or this repository doesn't accept them."
           : "Either nothing has been reported yet, or this repository has issues disabled."}</p>
-      </div>
-    `;
-  }
-  return `
-    <div class="oldgh-issues__list oldgh-issues__list--empty">
-      <p class="oldgh-issues__filter-empty">No ${kind} match the current filters.</p>
-    </div>
-  `;
+      </div>`
+    : `<p class="oldgh-issues__filter-empty">No ${kind} match the current filters.</p>`;
+  return `<div class="oldgh-issues__list oldgh-issues__list--empty">${inner}</div>`;
 }
 
 function renderPagination(v: IssueListView, kind: "issues" | "pulls"): string {

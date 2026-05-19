@@ -2262,10 +2262,8 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-left: 10px;
   color: var(--gh-fg-muted);
   font-size: var(--gh-size-sm);
-  align-self: center;
 }
 .oldgh-issues__comments:hover {
   color: var(--gh-link);
@@ -2322,6 +2320,13 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   align-items: center;
   gap: 4px;
   margin-left: 12px;
+}
+.oldgh-issues__meta-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: center;
+  flex-shrink: 0;
 }
 .oldgh-issues__assignees {
   display: inline-flex;
@@ -8843,9 +8848,6 @@ html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--action_required {
   padding: 36px 24px;
   text-align: center;
   color: var(--gh-fg-faint);
-  border: 1px dashed var(--gh-border);
-  border-radius: 3px;
-  margin-top: 12px;
 }
 .oldgh-issues__empty p {
   margin: 0;
