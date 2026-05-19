@@ -229,7 +229,7 @@ function renderRelease(owner: string, repo: string, r: Release): string {
           <div class="oldgh-releases__badges">${badges.join("")}</div>
         </header>
         <div class="oldgh-releases__body markdown-body">
-          ${r.bodyHtml || (r.body ? `<pre class="oldgh-releases__plain">${escapeText(r.body)}</pre>` : `<p class="oldgh-releases__no-body">No description provided.</p>`)}
+          ${r.bodyHtml ? sanitizeBodyHtml(r.bodyHtml) : (r.body ? `<pre class="oldgh-releases__plain">${escapeText(r.body)}</pre>` : `<p class="oldgh-releases__no-body">No description provided.</p>`)}
         </div>
         ${renderAssets(r)}
       </div>
@@ -280,6 +280,12 @@ function readString(o: Record<string, unknown>, key: string): string | null {
 function readNumber(o: Record<string, unknown>, key: string): number | null {
   const v = o[key];
   return typeof v === "number" ? v : null;
+}
+
+function sanitizeBodyHtml(html: string): string {
+  return html
+    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }
 
 function escapeText(s: string): string {

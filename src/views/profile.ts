@@ -585,7 +585,7 @@ async function hydrateOrgReadme(root: HTMLElement, login: string): Promise<void>
     slot.innerHTML = `
       <section class="oldgh-profile__readme">
         <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>.github</strong></h3>
-        <article class="oldgh-profile__readme-body markdown-body">${text}</article>
+        <article class="oldgh-profile__readme-body markdown-body">${sanitizeBodyHtml(text)}</article>
       </section>
     `;
   } catch {
@@ -611,7 +611,7 @@ async function hydrateProfileReadme(root: HTMLElement, login: string): Promise<v
         slot.innerHTML = `
           <section class="oldgh-profile__readme">
             <h3 class="oldgh-profile__section-title">${octicon("book", { size: 14 })} ${escapeText(login)}/<strong>${escapeText(login)}</strong></h3>
-            <article class="oldgh-profile__readme-body markdown-body">${text}</article>
+            <article class="oldgh-profile__readme-body markdown-body">${sanitizeBodyHtml(text)}</article>
           </section>
         `;
         return;
@@ -674,7 +674,7 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
       container.innerHTML = renderProjectsFromFrame(frame, login);
       return;
     }
-    for (const node of Array.from(frame.querySelectorAll("script, style"))) node.remove();
+    for (const node of Array.from(frame.querySelectorAll("script, style, iframe, object, embed"))) node.remove();
     for (const node of Array.from(frame.querySelectorAll<HTMLElement>("*"))) {
       for (const attr of Array.from(node.attributes)) {
         if (/^on/i.test(attr.name)) node.removeAttribute(attr.name);
@@ -1242,6 +1242,12 @@ function renderContributions(v: ProfileView): string {
 
 function stripUrl(url: string): string {
   return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
+function sanitizeBodyHtml(html: string): string {
+  return html
+    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }
 
 function escapeText(s: string): string {
