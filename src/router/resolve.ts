@@ -25,6 +25,14 @@ export type Route =
 export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring" | "people";
 
 const OUT_OF_SCOPE_PREFIXES = [
+  // auth flows — must be native
+  "/login",
+  "/logout",
+  "/join",
+  "/signup",
+  "/session",
+  "/password_reset",
+  // app flows
   "/codespaces",
   "/sponsors",
   "/enterprises",

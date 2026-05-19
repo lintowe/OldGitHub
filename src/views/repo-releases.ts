@@ -33,14 +33,31 @@ type Release = {
   targetCommitish: string;
 };
 
-export async function mountRepoReleases(owner: string, repo: string, search: string): Promise<void> {
+export async function mountRepoReleases(owner: string, repo: string, search: string, tag?: string): Promise<void> {
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
-  root.innerHTML = renderShell();
+  root.innerHTML = renderShell(tag ? `Release ${tag}` : "Releases");
   adoptBodyRoot(root, ".oldgh-repo-header");
 
   const main = root.querySelector<HTMLElement>(".oldgh-releases__main");
   if (!main) return;
+
+  if (tag) {
+    try {
+      const raw = await fetchTagRelease(owner, repo, tag);
+      const latestRaw = await fetchLatest(owner, repo);
+      const latestId = latestRaw ? readNumber(latestRaw, "id") : null;
+      const release = parseRelease(raw, latestId);
+      if (!release) throw new Error("Could not parse release data");
+      main.innerHTML = `
+        <nav class="oldgh-releases__back"><a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/releases">${octicon("arrow-left", { size: 14 })} All releases</a></nav>
+        <ul class="oldgh-releases__list">${renderRelease(owner, repo, release)}</ul>
+      `;
+    } catch (err) {
+      main.innerHTML = `<div class="oldgh-releases__empty">Couldn't load release ${escapeText(tag)}: ${escapeText(err instanceof Error ? err.message : String(err))}</div>`;
+    }
+    return;
+  }
 
   const params = new URLSearchParams(search);
   const page = Math.max(1, parseInt(params.get("page") ?? "1", 10) || 1);
@@ -131,14 +148,23 @@ function parseAsset(raw: unknown): ReleaseAsset | null {
   };
 }
 
-function renderShell(): string {
+async function fetchTagRelease(owner: string, repo: string, tag: string): Promise<unknown> {
+  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/tags/${encodeURIComponent(tag)}`, {
+    credentials: "omit",
+    headers: { Accept: "application/vnd.github.html+json" },
+  });
+  if (!resp.ok) throw new AdapterFailure("getTagRelease", `release responded ${resp.status}`);
+  return resp.json();
+}
+
+function renderShell(title: string): string {
   return `
     <div class="oldgh-page">
       <header class="oldgh-releases__header">
-        <h1>Releases</h1>
+        <h1>${escapeText(title)}</h1>
       </header>
       <div class="oldgh-releases__main">
-        <div class="oldgh-releases__loading">Loading releases…</div>
+        <div class="oldgh-releases__loading">Loading…</div>
       </div>
     </div>
   `;

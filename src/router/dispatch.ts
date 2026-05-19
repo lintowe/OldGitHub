@@ -57,7 +57,7 @@ type BodyState =
   | { kind: "actions"; owner: string; repo: string; query: string; workflowPath: string | null }
   | { kind: "actions-run"; owner: string; repo: string; runId: string }
   | { kind: "pulse"; owner: string; repo: string }
-  | { kind: "graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
+  | { kind: "graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" | "community" | "network" }
   | { kind: "projects"; owner: string; repo: string; query: string }
   | { kind: "security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "discussions"; owner: string; repo: string; subPath: string; query: string }
@@ -473,10 +473,23 @@ async function applyBodyState(target: BodyState): Promise<void> {
   if (target.kind === "repo-other") {
     const prefix = `/${target.owner}/${target.repo}`;
     const subPath = target.pathname.startsWith(prefix) ? target.pathname.slice(prefix.length) : target.pathname;
-    if (subPath === "/releases" || subPath.startsWith("/releases?") || subPath === "/releases/" || subPath.startsWith("/releases/latest")) {
+    if (subPath === "/releases" || subPath.startsWith("/releases?") || subPath === "/releases/") {
       await mountRepoReleases(target.owner, target.repo, target.search);
       bodyState = target;
       return;
+    }
+    if (subPath.startsWith("/releases/latest")) {
+      await mountRepoReleases(target.owner, target.repo, "");
+      bodyState = target;
+      return;
+    }
+    if (subPath.startsWith("/releases/tag/")) {
+      const tag = decodeURIComponent(subPath.slice("/releases/tag/".length).split("/")[0] ?? "");
+      if (tag) {
+        await mountRepoReleases(target.owner, target.repo, "", tag);
+        bodyState = target;
+        return;
+      }
     }
     const listMatch = matchRepoList(subPath);
     if (listMatch) {
