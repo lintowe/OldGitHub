@@ -6702,6 +6702,153 @@ html[data-oldgh-theme="dark"] .oldgh-discussions__state--answered { color: #d2a8
   flex-shrink: 0;
 }
 
+/* Watching list */
+.oldgh-watching { padding-top: 14px; padding-bottom: 60px; }
+.oldgh-watching__header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  margin-bottom: 14px;
+}
+.oldgh-watching__header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--gh-fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.oldgh-watching__header h1 .octicon { color: var(--gh-fg-muted); }
+.oldgh-watching__sub {
+  margin: 6px 0 0;
+  color: var(--gh-fg-muted);
+  max-width: 72ch;
+  line-height: 1.55;
+}
+.oldgh-watching__loading,
+.oldgh-watching__empty {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--gh-fg-muted);
+}
+.oldgh-watching__empty .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
+.oldgh-watching__empty h2 {
+  margin: 12px 0 8px;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--gh-fg);
+}
+.oldgh-watching__empty p {
+  margin: 0 auto;
+  max-width: 56ch;
+  color: var(--gh-fg-muted);
+  line-height: 1.6;
+}
+.oldgh-watching__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  border: 1px solid var(--gh-border);
+  border-bottom: 0;
+  border-radius: var(--gh-radius) var(--gh-radius) 0 0;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+}
+.oldgh-watching__bar strong { color: var(--gh-fg); }
+.oldgh-watching__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: 0 0 var(--gh-radius) var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  overflow: hidden;
+}
+.oldgh-watching__row {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  align-items: flex-start;
+}
+.oldgh-watching__row:last-child { border-bottom: 0; }
+.oldgh-watching__avatar img {
+  border-radius: 3px;
+  border: 1px solid var(--gh-border);
+  display: block;
+}
+.oldgh-watching__main { flex: 1; min-width: 0; }
+.oldgh-watching__title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.oldgh-watching__title .octicon { color: var(--gh-fg-muted); margin-right: 2px; }
+.oldgh-watching__title strong { color: var(--gh-fg); }
+.oldgh-watching__slash { color: var(--gh-fg-faint); }
+.oldgh-watching__chip {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--gh-border-faint);
+  background: var(--gh-bg-stripe);
+  border-radius: 10px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-watching__desc {
+  margin: 4px 0;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+  line-height: 1.5;
+}
+.oldgh-watching__meta {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 6px 0 0;
+  padding: 0;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-watching__meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.oldgh-watching__manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--gh-btn-border);
+  border-radius: var(--gh-radius);
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  color: var(--gh-fg);
+  flex-shrink: 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+[data-oldgh-theme="dark"] .oldgh-watching__manage {
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+.oldgh-watching__manage:hover { text-decoration: none; background: var(--gh-bg-stripe); }
+
 /* Sponsors Explore */
 .oldgh-sponsors { padding-top: 14px; padding-bottom: 60px; }
 .oldgh-sponsors__hero {
