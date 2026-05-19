@@ -6702,6 +6702,187 @@ html[data-oldgh-theme="dark"] .oldgh-discussions__state--answered { color: #d2a8
   flex-shrink: 0;
 }
 
+/* Sponsors Explore */
+.oldgh-sponsors { padding-top: 14px; padding-bottom: 60px; }
+.oldgh-sponsors__hero {
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(234, 76, 137, 0.10) 0%, var(--gh-bg-stripe) 100%);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  margin-bottom: 20px;
+}
+html[data-oldgh-theme="dark"] .oldgh-sponsors__hero {
+  background: linear-gradient(135deg, rgba(234, 76, 137, 0.18) 0%, var(--gh-bg-elev) 100%);
+}
+.oldgh-sponsors__hero h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--gh-fg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.oldgh-sponsors__hero h1 .octicon {
+  color: #ea4c89;
+}
+.oldgh-sponsors__hero p {
+  margin: 0 0 16px;
+  color: var(--gh-fg-muted);
+  max-width: 72ch;
+  line-height: 1.55;
+}
+.oldgh-sponsors__hero-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.oldgh-sponsors__hero-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-link);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 14px;
+  background: var(--gh-bg-elev);
+}
+.oldgh-sponsors__hero-nav a:hover {
+  text-decoration: none;
+  border-color: var(--gh-border);
+  background: var(--gh-bg-stripe);
+}
+.oldgh-sponsors__hero-nav a.is-active {
+  color: var(--gh-fg);
+  font-weight: bold;
+  border-color: var(--gh-border);
+  background: var(--gh-bg);
+}
+.oldgh-sponsors__section {
+  margin-bottom: 22px;
+}
+.oldgh-sponsors__section-head {
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-sponsors__section-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--gh-fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.oldgh-sponsors__loading,
+.oldgh-sponsors__empty {
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-sponsors__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.oldgh-sponsors__card {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+.oldgh-sponsors__card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+}
+.oldgh-sponsors__avatar img {
+  border-radius: 4px;
+  border: 1px solid var(--gh-border);
+  display: block;
+}
+.oldgh-sponsors__body {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.oldgh-sponsors__name {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.oldgh-sponsors__name strong {
+  color: var(--gh-fg);
+}
+.oldgh-sponsors__login {
+  color: var(--gh-fg-muted);
+  font-size: 12px;
+}
+.oldgh-sponsors__type {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg-stripe);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 8px;
+  padding: 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: bold;
+}
+.oldgh-sponsors__tagline {
+  margin: 4px 0;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg);
+  line-height: 1.5;
+}
+.oldgh-sponsors__bio {
+  margin: 4px 0;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.oldgh-sponsors__btn {
+  align-self: flex-start;
+  margin-top: 8px;
+  color: #ea4c89 !important;
+  border-color: rgba(234, 76, 137, 0.5) !important;
+}
+.oldgh-sponsors__btn:hover {
+  background: rgba(234, 76, 137, 0.08) !important;
+}
+html[data-oldgh-theme="dark"] .oldgh-sponsors__btn {
+  color: #ff7eb6 !important;
+  border-color: rgba(255, 126, 182, 0.5) !important;
+}
+html[data-oldgh-theme="dark"] .oldgh-sponsors__btn:hover {
+  background: rgba(255, 126, 182, 0.12) !important;
+}
+
 /* Security Advisories */
 .oldgh-security__advisory-empty {
   background: var(--gh-bg-elev);

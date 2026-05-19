@@ -31,6 +31,7 @@ import { mountRepoSecurity, unmountRepoSecurity } from "@/views/repo-security";
 import { mountRepoDiscussions, unmountRepoDiscussions } from "@/views/repo-discussions";
 import { mountMarketplace, unmountMarketplace } from "@/views/marketplace";
 import { mountCollections, unmountCollections } from "@/views/collections";
+import { mountSponsors, unmountSponsors } from "@/views/sponsors";
 import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
@@ -510,6 +511,8 @@ async function applyBodyState(target: BodyState): Promise<void> {
       await mountMarketplace(target.pathname, target.search);
     } else if (target.subkind === "collections") {
       await mountCollections(target.pathname);
+    } else if (target.subkind === "sponsors") {
+      await mountSponsors(target.pathname, target.search);
     } else if (target.subkind === "issues") {
       await mountMeIssues("issue", target.pathname, target.search);
     } else if (target.subkind === "pulls") {
@@ -618,6 +621,7 @@ function unmountBody(): void {
   unmountRepoDiscussions();
   unmountMarketplace();
   unmountCollections();
+  unmountSponsors();
   unmountMeIssues();
   unmountProfile();
 }

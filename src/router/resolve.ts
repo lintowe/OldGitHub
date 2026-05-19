@@ -85,6 +85,10 @@ const TOP_LEVEL_NON_REPO = new Set([
 ]);
 
 export function resolveRoute(pathname: string, search: string): Route {
+  // Intercept /sponsors/explore before the out-of-scope check below catches /sponsors/*.
+  if (pathname === "/sponsors/explore" || pathname.startsWith("/sponsors/explore?") || pathname.startsWith("/sponsors/explore/")) {
+    return { kind: "top-level", subkind: "sponsors", pathname, search, title: "Sponsors" };
+  }
   for (const prefix of OUT_OF_SCOPE_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
       return { kind: "out-of-scope" };
