@@ -460,9 +460,9 @@ function truncateHtml(html: string, maxChars: number): string {
   tmp.innerHTML = html;
   const text = tmp.textContent || "";
   if (text.length <= maxChars) {
-    // strip any embedded styles / scripts as a safety
+    // strip embedded scripts / interactive elements as a safety
     return tmp.innerHTML
-      .replace(/<\/?(script|style|iframe)[^>]*>/gi, "")
+      .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
       .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
   }
   return escapeText(text.slice(0, maxChars).trim() + "…");

@@ -84,6 +84,9 @@ function cleanScrapedContent(el: Element): void {
     ".js-error-boundary",
     "script",
     "style",
+    "iframe",
+    "object",
+    "embed",
   ];
   for (const sel of removeSelectors) {
     el.querySelectorAll(sel).forEach((n) => n.remove());
