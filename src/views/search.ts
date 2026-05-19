@@ -179,7 +179,7 @@ function renderRepoRow(r: RepoResult): string {
       <h2 class="oldgh-search__name">
         <img class="oldgh-search__avatar" src="${escapeAttr(r.ownerAvatar)}" width="20" height="20" alt="" />
         <a href="/${escapeAttr(r.ownerLogin)}">${escapeText(r.ownerLogin)}</a> /
-        <a href="${escapeAttr(r.htmlUrl)}"><strong>${escapeText(r.repoName)}</strong></a>
+        <a href="/${escapeAttr(r.ownerLogin)}/${escapeAttr(r.repoName)}"><strong>${escapeText(r.repoName)}</strong></a>
         ${r.isPrivate ? `<span class="oldgh-search__tag">Private</span>` : ""}
         ${r.isFork ? `<span class="oldgh-search__tag">Fork</span>` : ""}
         ${r.isArchived ? `<span class="oldgh-search__tag oldgh-search__tag--warn">Archived</span>` : ""}
@@ -226,7 +226,7 @@ function renderIssueRow(it: IssueResult): string {
     <li class="oldgh-search__row oldgh-search__row--issue">
       <span class="oldgh-search__state ${stateClass}">${stateIcon}</span>
       <div class="oldgh-search__issue-main">
-        <a class="oldgh-search__issue-title" href="${escapeAttr(it.htmlUrl)}">${escapeText(it.title)}</a>
+        <a class="oldgh-search__issue-title" href="/${escapeAttr(it.repoFullName)}/${it.isPull ? "pull" : "issues"}/${it.number}">${escapeText(it.title)}</a>
         ${labels ? `<div class="oldgh-search__labels">${labels}</div>` : ""}
         <div class="oldgh-search__issue-meta">
           ${escapeText(it.repoFullName)} #${it.number} opened ${relativeTimeSpan(it.createdAt)}
@@ -245,11 +245,11 @@ function renderUserResults(summary: SearchSummary, items: UserResult[], ctx: Sor
     <ul class="oldgh-search__list oldgh-search__list--users">
       ${items.map((u) => `
         <li class="oldgh-search__row oldgh-search__row--user">
-          <a href="${escapeAttr(u.htmlUrl)}" class="oldgh-search__user-avatar">
+          <a href="/${escapeAttr(u.login)}" class="oldgh-search__user-avatar">
             <img src="${escapeAttr(u.avatarUrl)}" width="48" height="48" alt="" />
           </a>
           <div class="oldgh-search__user-main">
-            <a class="oldgh-search__user-name" href="${escapeAttr(u.htmlUrl)}"><strong>${escapeText(u.login)}</strong></a>
+            <a class="oldgh-search__user-name" href="/${escapeAttr(u.login)}"><strong>${escapeText(u.login)}</strong></a>
             <span class="oldgh-search__user-type">${escapeText(u.type)}</span>
           </div>
         </li>
@@ -266,8 +266,8 @@ function renderCodeResults(summary: SearchSummary, items: CodeResult[], ctx: Sor
       ${items.map((c) => `
         <li class="oldgh-search__row oldgh-search__row--code">
           <h2 class="oldgh-search__name">
-            <a href="https://github.com/${escapeAttr(c.repoFullName)}">${escapeText(c.repoFullName)}</a>
-            — <a href="${escapeAttr(c.htmlUrl)}"><code>${escapeText(c.path)}</code></a>
+            <a href="/${escapeAttr(c.repoFullName)}">${escapeText(c.repoFullName)}</a>
+            — <a href="${c.htmlUrl.replace("https://github.com", "")}"><code>${escapeText(c.path)}</code></a>
           </h2>
           ${c.textMatches.slice(0, 2).map((m) => `<pre class="oldgh-search__code-snippet">${escapeText(m.fragment)}</pre>`).join("")}
         </li>
@@ -284,13 +284,13 @@ function renderCommitResults(summary: SearchSummary, items: CommitResult[], ctx:
       ${items.map((c) => `
         <li class="oldgh-search__row oldgh-search__row--commit">
           <div class="oldgh-search__commit-main">
-            <a class="oldgh-search__commit-title" href="${escapeAttr(c.htmlUrl)}">${escapeText(c.messageHeadline)}</a>
+            <a class="oldgh-search__commit-title" href="${c.htmlUrl.replace("https://github.com", "")}">${escapeText(c.messageHeadline)}</a>
             <div class="oldgh-search__commit-meta">
               ${escapeText(c.repoFullName)} · ${c.authorLogin ? `<a href="/${escapeAttr(c.authorLogin)}">${escapeText(c.authorLogin)}</a> committed ` : ""}
               ${c.date ? relativeTimeSpan(c.date) : ""}
             </div>
           </div>
-          <code class="oldgh-search__sha"><a href="${escapeAttr(c.htmlUrl)}">${escapeText(c.abbrevSha)}</a></code>
+          <code class="oldgh-search__sha"><a href="${c.htmlUrl.replace("https://github.com", "")}">${escapeText(c.abbrevSha)}</a></code>
         </li>
       `).join("")}
     </ul>
@@ -305,7 +305,7 @@ function renderTopicResults(summary: SearchSummary, items: TopicResult[], ctx: S
       ${items.map((t) => `
         <li class="oldgh-search__row oldgh-search__row--topic">
           <h2 class="oldgh-search__name">
-            <a href="${escapeAttr(t.htmlUrl)}"><strong>${escapeText(t.displayName || t.name)}</strong></a>
+            <a href="/topics/${encodeURIComponent(t.name)}"><strong>${escapeText(t.displayName || t.name)}</strong></a>
             ${t.featured ? `<span class="oldgh-search__tag">Featured</span>` : ""}
           </h2>
           ${t.shortDescription ? `<p class="oldgh-search__desc">${escapeText(t.shortDescription)}</p>` : ""}

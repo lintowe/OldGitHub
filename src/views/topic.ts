@@ -220,7 +220,7 @@ function renderRepoRow(r: TopicRepo): string {
         <img class="oldgh-topic__repo-avatar" src="${escapeAttr(r.ownerAvatar)}" width="20" height="20" alt="" />
         <a href="/${escapeAttr(r.ownerLogin)}">${escapeText(r.ownerLogin)}</a>
         <span class="oldgh-topic__repo-slash">/</span>
-        <a href="${escapeAttr(r.htmlUrl)}"><strong>${escapeText(r.repoName)}</strong></a>
+        <a href="/${escapeAttr(r.ownerLogin)}/${escapeAttr(r.repoName)}"><strong>${escapeText(r.repoName)}</strong></a>
       </h2>
       ${r.description ? `<p class="oldgh-topic__repo-desc">${escapeText(r.description)}</p>` : ""}
       <ul class="oldgh-topic__repo-meta">

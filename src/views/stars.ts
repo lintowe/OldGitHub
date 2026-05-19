@@ -206,7 +206,7 @@ function renderRow(r: StarredRepo): string {
       <h2 class="oldgh-stars__name">
         <img class="oldgh-stars__avatar" src="${escapeAttr(r.ownerAvatar)}" width="20" height="20" alt="" />
         <a href="/${escapeAttr(r.ownerLogin)}">${escapeText(r.ownerLogin)}</a> /
-        <a href="${escapeAttr(r.htmlUrl)}"><strong>${escapeText(r.repoName)}</strong></a>
+        <a href="/${escapeAttr(r.ownerLogin)}/${escapeAttr(r.repoName)}"><strong>${escapeText(r.repoName)}</strong></a>
         ${r.isPrivate ? `<span class="oldgh-search__tag">Private</span>` : ""}
         ${r.isFork ? `<span class="oldgh-search__tag">Fork</span>` : ""}
         ${r.isArchived ? `<span class="oldgh-search__tag oldgh-search__tag--warn">Archived</span>` : ""}

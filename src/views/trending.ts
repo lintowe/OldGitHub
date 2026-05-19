@@ -306,7 +306,7 @@ function renderRow(r: TrendingRepo, rank: number): string {
         <h2 class="oldgh-trending__name">
           <img class="oldgh-trending__avatar" src="${escapeAttr(r.ownerAvatar)}" width="20" height="20" alt="" />
           <a href="/${escapeAttr(r.ownerLogin)}">${escapeText(r.ownerLogin)}</a> /
-          <a href="${escapeAttr(r.htmlUrl)}"><strong>${escapeText(r.repoName)}</strong></a>
+          <a href="/${escapeAttr(r.ownerLogin)}/${escapeAttr(r.repoName)}"><strong>${escapeText(r.repoName)}</strong></a>
         </h2>
         ${r.description ? `<p class="oldgh-trending__desc">${escapeText(r.description)}</p>` : ""}
         <ul class="oldgh-trending__meta">

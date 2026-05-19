@@ -4125,6 +4125,7 @@ html[data-oldgh-theme="dark"] .oldgh-diff__hunk .oldgh-diff__num { background: r
   grid-template-columns: 220px 1fr;
   gap: 18px;
 }
+.oldgh-search__results { min-width: 0; }
 .oldgh-search__rail-box {
   border: 1px solid var(--gh-border);
   border-radius: 3px;
@@ -4345,6 +4346,7 @@ html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   border-radius: 3px;
   border: 1px solid var(--gh-border-faint);
 }
+.oldgh-search__user-main { flex: 1; min-width: 0; }
 .oldgh-search__user-name { font-size: var(--gh-size-lg); }
 .oldgh-search__user-type {
   display: block;
@@ -8208,6 +8210,7 @@ html[data-oldgh-theme="dark"] .oldgh-explore__topic:hover {
   border-bottom: 1px solid var(--gh-border-faint);
 }
 .oldgh-trending__row:last-child { border-bottom: 0; }
+.oldgh-trending__main { min-width: 0; }
 .oldgh-trending__rank {
   font-family: var(--gh-font-mono);
   font-size: 11px;
