@@ -19,7 +19,7 @@ export type Route =
   | { kind: "repo-discussion"; owner: string; repo: string; number: number }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
-  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "topic" | "collections" | "sponsors" | "other"; pathname: string; search: string; title: string }
+  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "topic" | "topics" | "collections" | "sponsors" | "other"; pathname: string; search: string; title: string }
   | { kind: "todo"; name: string };
 
 export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring" | "people";
@@ -89,6 +89,10 @@ export function resolveRoute(pathname: string, search: string): Route {
   if (pathname === "/sponsors/explore" || pathname.startsWith("/sponsors/explore?") || pathname.startsWith("/sponsors/explore/")) {
     return { kind: "top-level", subkind: "sponsors", pathname, search, title: "Sponsors" };
   }
+  // Intercept individual sponsor profile pages — render them in the 2013 frame instead of falling through to native.
+  if (pathname.startsWith("/sponsors/") && !pathname.startsWith("/sponsors/explore")) {
+    return { kind: "top-level", subkind: "other", pathname, search, title: "Sponsors" };
+  }
   for (const prefix of OUT_OF_SCOPE_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
       return { kind: "out-of-scope" };
@@ -115,6 +119,9 @@ export function resolveRoute(pathname: string, search: string): Route {
 
   if (first === "topics" && segs.length >= 2) {
     return { kind: "top-level", subkind: "topic", pathname, search, title: `Topic: ${segs[1]}` };
+  }
+  if (first === "topics" && segs.length === 1) {
+    return { kind: "top-level", subkind: "topics", pathname, search, title: "Topics" };
   }
   if (first === "collections") {
     return { kind: "top-level", subkind: "collections", pathname, search, title: segs[1] ? `Collection: ${segs[1]}` : "Collections" };
@@ -237,6 +244,10 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-graphs", owner, repo, subkind: "community" };
   }
 
+  if (segs[2] === "network" && segs.length > 3) {
+    // /owner/repo/network/dependencies and similar sub-pages — pass through to native GitHub
+    return { kind: "out-of-scope" };
+  }
   if (segs[2] === "network") {
     return { kind: "repo-graphs", owner, repo, subkind: "network" };
   }

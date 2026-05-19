@@ -33,6 +33,7 @@ import { mountMarketplace, unmountMarketplace } from "@/views/marketplace";
 import { mountCollections, unmountCollections } from "@/views/collections";
 import { mountSponsors, unmountSponsors } from "@/views/sponsors";
 import { mountWatching, unmountWatching } from "@/views/watching";
+import { mountTopics, unmountTopics } from "@/views/topics";
 import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
@@ -516,6 +517,8 @@ async function applyBodyState(target: BodyState): Promise<void> {
       await mountSponsors(target.pathname, target.search);
     } else if (target.subkind === "watching") {
       await mountWatching(target.pathname, target.search);
+    } else if (target.subkind === "topics") {
+      await mountTopics(target.pathname, target.search);
     } else if (target.subkind === "issues") {
       await mountMeIssues("issue", target.pathname, target.search);
     } else if (target.subkind === "pulls") {
@@ -626,6 +629,7 @@ function unmountBody(): void {
   unmountCollections();
   unmountSponsors();
   unmountWatching();
+  unmountTopics();
   unmountMeIssues();
   unmountProfile();
 }
