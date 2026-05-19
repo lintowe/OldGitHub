@@ -32,10 +32,17 @@ export async function getWiki(owner: string, repo: string, page: string): Promis
   const pageTitle = doc.querySelector(".gh-header-title")?.textContent?.trim() || page;
   const metaText = doc.querySelector(".gh-header-meta")?.textContent?.replace(/\s+/g, " ").trim() || "";
   const bodyEl = doc.querySelector(".markdown-body");
-  if (!bodyEl) {
+  const isEmptyWiki =
+    !bodyEl &&
+    !!doc.querySelector(".blankslate, [data-testid='blankslate'], h3.f3-light, .container-lg [data-target*='wiki']");
+  const bodyHtml = bodyEl
+    ? bodyEl.innerHTML
+    : isEmptyWiki
+      ? `<div class="oldgh-wiki__empty"><h2>This wiki is empty.</h2><p>Wikis let you write longer-form content about your project: design notes, getting-started guides, references, anything that doesn't fit a README. Create the first page on <a href="https://github.com/${owner}/${repo}/wiki" rel="noreferrer">GitHub's wiki editor</a>.</p></div>`
+      : "";
+  if (!bodyEl && !isEmptyWiki) {
     throw new AdapterFailure("getWiki", "no .markdown-body found");
   }
-  const bodyHtml = bodyEl.innerHTML;
 
   const pages: WikiPageRef[] = [];
   const seen = new Set<string>();

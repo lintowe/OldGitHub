@@ -39,10 +39,15 @@ export async function mountStars(pathname: string, search: string): Promise<void
     return;
   }
 
+  const params = new URLSearchParams(search);
+  const sort = params.get("sort") ?? "created"; // created = recently starred
+  const direction = params.get("direction") ?? "desc";
+  const languageFilter = params.get("language") ?? "";
+
   root.innerHTML = `
     <div class="oldgh-page">
       <header class="oldgh-stars__header">
-        <h1>${escapeText(login)}'s Stars</h1>
+        <h1>${octicon("star", { size: 22 })} ${escapeText(login)}'s Stars</h1>
         <p class="oldgh-stars__sub">Repositories starred by <a href="/${escapeAttr(login)}">${escapeText(login)}</a></p>
       </header>
       <div class="oldgh-stars__loading">Loading stars…</div>
@@ -50,12 +55,8 @@ export async function mountStars(pathname: string, search: string): Promise<void
   `;
   adoptBodyRoot(root);
 
-  const params = new URLSearchParams(search);
-  const sort = params.get("sort") ?? "created"; // created = recently starred
-  const direction = params.get("direction") ?? "desc";
-
   try {
-    const resp = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}/starred?per_page=50&sort=${encodeURIComponent(sort)}&direction=${encodeURIComponent(direction)}`, {
+    const resp = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}/starred?per_page=100&sort=${encodeURIComponent(sort)}&direction=${encodeURIComponent(direction)}`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github.star+json" },
     });
@@ -64,15 +65,94 @@ export async function mountStars(pathname: string, search: string): Promise<void
     const items = data.map(parseStarred).filter((s): s is StarredRepo => s !== null);
     const loading = root.querySelector(".oldgh-stars__loading");
     if (loading) loading.remove();
-    const list = document.createElement("div");
-    list.className = "oldgh-stars__list-wrap";
-    list.innerHTML = renderList(items);
     const page = root.querySelector(".oldgh-page");
-    page?.appendChild(list);
+    if (page) {
+      const layout = document.createElement("div");
+      layout.className = "oldgh-stars__layout";
+      layout.innerHTML = renderLayout(items, { login, sort, direction, languageFilter });
+      page.appendChild(layout);
+      bindStarsSort(layout);
+    }
   } catch (err) {
     const loading = root.querySelector(".oldgh-stars__loading");
     if (loading) loading.textContent = `Couldn't load stars: ${err instanceof Error ? err.message : String(err)}`;
   }
+}
+
+type StarsCtx = { login: string; sort: string; direction: string; languageFilter: string };
+
+function renderLayout(items: StarredRepo[], ctx: StarsCtx): string {
+  const filtered = ctx.languageFilter
+    ? items.filter((r) => (r.language || "").toLowerCase() === ctx.languageFilter.toLowerCase())
+    : items;
+  const langCounts = new Map<string, number>();
+  for (const it of items) {
+    const k = it.language || "Unknown";
+    langCounts.set(k, (langCounts.get(k) ?? 0) + 1);
+  }
+  const sortedLangs = Array.from(langCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12);
+
+  return `
+    <aside class="oldgh-stars__sidebar">
+      <div class="oldgh-stars__sidebox">
+        <h3>${octicon("flame", { size: 14 })} Stats</h3>
+        <ul class="oldgh-stars__stats">
+          <li><strong>${items.length}</strong> repositories starred</li>
+          <li><strong>${langCounts.size}</strong> languages</li>
+        </ul>
+      </div>
+      ${sortedLangs.length > 0 ? `
+        <div class="oldgh-stars__sidebox">
+          <h3>${octicon("code", { size: 14 })} Languages</h3>
+          <ul class="oldgh-stars__lang-list">
+            ${ctx.languageFilter ? `<li><a href="/${escapeAttr(ctx.login)}?tab=stars">${octicon("x", { size: 12 })} Clear filter</a></li>` : ""}
+            ${sortedLangs.map(([lang, count]) => `
+              <li class="${ctx.languageFilter.toLowerCase() === lang.toLowerCase() ? "is-active" : ""}">
+                <a href="/${escapeAttr(ctx.login)}?tab=stars&language=${encodeURIComponent(lang)}">
+                  ${lang !== "Unknown" ? `<span class="oldgh-search__lang-dot" style="background:${languageColor(lang)}"></span>` : ""}
+                  ${escapeText(lang)}
+                  <span class="oldgh-stars__lang-count">${count}</span>
+                </a>
+              </li>
+            `).join("")}
+          </ul>
+        </div>
+      ` : ""}
+    </aside>
+    <main class="oldgh-stars__main">
+      <div class="oldgh-stars__bar">
+        <div class="oldgh-stars__count">
+          <strong>${filtered.length}</strong> ${filtered.length === 1 ? "result" : "results"}
+          ${ctx.languageFilter ? ` · filtered by <strong>${escapeText(ctx.languageFilter)}</strong>` : ""}
+        </div>
+        <label class="oldgh-stars__sort">
+          <span>Sort:</span>
+          <select data-oldgh-stars-sort>
+            <option value="created:desc"${ctx.sort === "created" && ctx.direction === "desc" ? " selected" : ""}>Recently starred</option>
+            <option value="created:asc"${ctx.sort === "created" && ctx.direction === "asc" ? " selected" : ""}>Earliest starred</option>
+            <option value="updated:desc"${ctx.sort === "updated" ? " selected" : ""}>Recently active</option>
+          </select>
+        </label>
+      </div>
+      ${renderList(filtered)}
+    </main>
+  `;
+}
+
+function bindStarsSort(root: HTMLElement): void {
+  const select = root.querySelector<HTMLSelectElement>("select[data-oldgh-stars-sort]");
+  if (!select) return;
+  select.addEventListener("change", () => {
+    const [sort, direction] = select.value.split(":");
+    const params = new URLSearchParams(window.location.search);
+    if (sort) params.set("sort", sort);
+    if (direction) params.set("direction", direction);
+    const href = `${window.location.pathname}?${params.toString()}`;
+    history.pushState({}, "", href);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
 }
 
 export function unmountStars(): void {

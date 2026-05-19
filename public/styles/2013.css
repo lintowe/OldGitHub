@@ -748,34 +748,37 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
 }
 
 .oldgh-repo-home__clone {
-  background: var(--gh-bg-elev);
-  border: 1px solid var(--gh-border);
-  border-radius: var(--gh-radius);
-  padding: 10px;
-  width: 360px;
-  max-width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
   margin-left: auto;
-  box-shadow: var(--gh-shadow-soft);
+  flex: 0 1 auto;
 }
 .oldgh-repo-home__clone-tabs {
   display: flex;
   gap: 0;
   border: 1px solid var(--gh-btn-border);
-  border-radius: var(--gh-radius);
+  border-right: none;
+  border-top-left-radius: var(--gh-radius);
+  border-bottom-left-radius: var(--gh-radius);
   overflow: hidden;
-  width: max-content;
-  margin-bottom: 8px;
 }
 .oldgh-repo-home__clone-tab {
-  padding: 4px 10px;
+  padding: 0 10px;
   font-family: inherit;
   font-size: var(--gh-size-xs);
   font-weight: bold;
-  color: var(--gh-fg);
+  color: var(--gh-fg-muted);
   background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
   border: none;
   border-right: 1px solid var(--gh-btn-border);
   cursor: pointer;
+  line-height: 26px;
+  height: 28px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+[data-oldgh-theme="dark"] .oldgh-repo-home__clone-tab {
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
 .oldgh-repo-home__clone-tab:last-child {
   border-right: none;
@@ -784,33 +787,50 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   background: var(--gh-bg-elev);
   color: var(--gh-fg);
   cursor: default;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.06);
+}
+.oldgh-repo-home__clone-body {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--gh-border);
+  background: var(--gh-bg-elev);
 }
 .oldgh-repo-home__clone-pane {
   display: flex;
-  gap: 0;
   align-items: stretch;
 }
 .oldgh-repo-home__clone-pane input {
-  flex: 1;
-  padding: 4px 8px;
+  width: 240px;
+  padding: 0 8px;
   font-family: var(--gh-font-mono);
   font-size: var(--gh-size-sm);
   color: var(--gh-fg);
-  background: var(--gh-bg-subtle);
-  border: 1px solid var(--gh-border);
-  border-right: none;
-  border-top-left-radius: var(--gh-radius);
-  border-bottom-left-radius: var(--gh-radius);
+  background: var(--gh-bg-elev);
+  border: none;
   outline: none;
+  height: 28px;
 }
-.oldgh-repo-home__clone-pane .oldgh-btn {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+.oldgh-repo-home__clone-body .oldgh-repo-home__copy {
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  border-right: none;
+  border-left: 1px solid var(--gh-border);
+  background: var(--gh-bg-subtle);
+  padding: 0 8px;
+  height: 28px;
 }
 .oldgh-repo-home__clone-actions {
-  margin-top: 8px;
   display: flex;
-  justify-content: flex-end;
+}
+.oldgh-repo-home__clone-actions .oldgh-btn,
+.oldgh-repo-home__zip {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+  height: 28px;
+  line-height: 26px;
+  padding: 0 10px;
 }
 
 /* file tree table */
@@ -1965,15 +1985,38 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   padding: 0;
   width: auto !important;
 }
+.oldgh-profile__contribs-graph tbody tr > td.ContributionCalendar-label:first-child,
+.oldgh-profile__contribs-graph tbody tr > th.ContributionCalendar-label:first-child {
+  width: 28px !important;
+  min-width: 28px;
+  text-align: right;
+  padding: 0 6px 0 0 !important;
+  vertical-align: middle;
+  position: static !important;
+  clip-path: none !important;
+  overflow: visible !important;
+}
 .oldgh-profile__contribs-graph .ContributionCalendar-label {
   font-size: 9px !important;
   color: var(--gh-fg-muted) !important;
   font-weight: normal !important;
   padding: 0 4px 0 0 !important;
   text-align: left;
+  line-height: 11px;
 }
 .oldgh-profile__contribs-graph thead .ContributionCalendar-label {
   padding-bottom: 2px !important;
+}
+/* Mon/Wed/Fri labels: modern GitHub sets clip-path: none inline; we make that
+   work in our compact grid. Sun/Tue/Thu/Sat have clip-path: inset(50%) and
+   stay screen-reader-only — leave them alone. */
+.oldgh-profile__contribs-graph tbody tr > td.ContributionCalendar-label[style*="clip-path: inset"] {
+  width: 28px !important;
+}
+.oldgh-profile__contribs-graph tbody tr > td.ContributionCalendar-label[style*="clip-path: none"] span,
+.oldgh-profile__contribs-graph tbody tr > th.ContributionCalendar-label span {
+  font-size: 9px;
+  color: var(--gh-fg-muted);
 }
 /* hide the modern "tooltip" / "scoping" auxiliary content that may render */
 .oldgh-profile__contribs-graph tool-tip,
@@ -2693,6 +2736,26 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   border-bottom: 1px solid var(--gh-border);
   padding-bottom: 10px;
   margin-bottom: 16px;
+}
+.oldgh-wiki__empty {
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-wiki__empty h2 {
+  font-size: 20px;
+  font-weight: 300;
+  margin: 0 0 10px;
+  color: var(--gh-fg);
+}
+.oldgh-wiki__empty p {
+  margin: 0 auto;
+  max-width: 56ch;
+  color: var(--gh-fg-muted);
+  line-height: 1.6;
 }
 .oldgh-wiki__title {
   font-size: 22px;
@@ -5409,6 +5472,116 @@ html[data-oldgh-theme="dark"] .oldgh-discussion__answer-head {
   font-size: var(--gh-size-h1);
   font-weight: normal;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.oldgh-stars__header h1 .octicon {
+  color: #cea61b;
+}
+.oldgh-stars__layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.oldgh-stars__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: var(--gh-size-sm);
+}
+.oldgh-stars__sidebox {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  overflow: hidden;
+}
+.oldgh-stars__sidebox h3 {
+  margin: 0;
+  padding: 8px 12px;
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  border-bottom: 1px solid var(--gh-border-faint);
+  font-size: var(--gh-size-md);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.oldgh-stars__stats {
+  list-style: none;
+  margin: 0;
+  padding: 6px 12px;
+}
+.oldgh-stars__stats li {
+  padding: 4px 0;
+  color: var(--gh-fg-muted);
+}
+.oldgh-stars__stats strong {
+  color: var(--gh-fg);
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 4px;
+}
+.oldgh-stars__lang-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.oldgh-stars__lang-list li a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  color: var(--gh-fg);
+}
+.oldgh-stars__lang-list li a:hover {
+  background: var(--gh-bg-stripe);
+  text-decoration: none;
+}
+.oldgh-stars__lang-list li.is-active a {
+  background: var(--gh-bg-stripe);
+  font-weight: bold;
+}
+.oldgh-stars__lang-count {
+  margin-left: auto;
+  color: var(--gh-fg-faint);
+  font-size: 11px;
+}
+.oldgh-stars__main {
+  min-width: 0;
+}
+.oldgh-stars__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  margin-bottom: 6px;
+  gap: 14px;
+}
+.oldgh-stars__count {
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+}
+.oldgh-stars__count strong {
+  color: var(--gh-fg);
+}
+.oldgh-stars__sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-stars__sort select {
+  padding: 3px 6px;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  color: var(--gh-fg);
+  font-size: var(--gh-size-sm);
 }
 .oldgh-stars__sub {
   margin: 6px 0 0;
@@ -6166,50 +6339,134 @@ html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--action_required {
 .oldgh-achievements {
   margin-top: 4px;
 }
-.oldgh-achievements__heading {
-  margin: 0 0 14px;
-  font-size: 14px;
-  font-weight: bold;
+.oldgh-achievements__intro {
+  padding: 14px 16px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  margin-bottom: 16px;
+}
+.oldgh-achievements__intro h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 300;
   color: var(--gh-fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.oldgh-achievements__intro h3 .octicon {
+  color: #cea61b;
+}
+.oldgh-achievements__intro p {
+  margin: 0;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+}
+.oldgh-achievements__count {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  background: var(--gh-bg-stripe);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 10px;
+  color: var(--gh-fg-muted);
+  vertical-align: middle;
 }
 .oldgh-achievements__grid {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
 }
 .oldgh-achievements__item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 10px;
+  gap: 8px;
+  padding: 16px 12px 14px;
   background: var(--gh-bg-elev);
   border: 1px solid var(--gh-border);
-  border-radius: 4px;
+  border-radius: var(--gh-radius);
   box-shadow: var(--gh-shadow-soft);
+  position: relative;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+.oldgh-achievements__item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+}
+.oldgh-achievements__icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .oldgh-achievements__icon {
-  width: 96px;
-  height: 96px;
+  width: 80px;
+  height: 80px;
   display: block;
+}
+.oldgh-achievements__tier {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: linear-gradient(to bottom, #f9d05a, #d8a624);
+  color: #5a4408;
+  border: 1px solid #b08613;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 .oldgh-achievements__meta {
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  min-height: 0;
 }
 .oldgh-achievements__name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   color: var(--gh-fg);
 }
-.oldgh-achievements__tier {
+.oldgh-achievements__desc {
   font-size: 11px;
   color: var(--gh-fg-muted);
+  line-height: 1.4;
+}
+.oldgh-achievements__empty {
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-achievements__empty .octicon {
+  color: #cea61b;
+  margin-bottom: 8px;
+}
+.oldgh-achievements__empty h3 {
+  margin: 8px 0;
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--gh-fg);
+}
+.oldgh-achievements__empty p {
+  margin: 0 auto;
+  max-width: 48ch;
+  color: var(--gh-fg-muted);
+  line-height: 1.6;
 }
 
 /* ======================= */

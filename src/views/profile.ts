@@ -139,25 +139,54 @@ function formatRange(startIso: string, endIso: string): string {
 function decorateContributionCells(root: HTMLElement): void {
   const graph = root.querySelector<HTMLElement>(".oldgh-profile__contribs-graph");
   if (!graph) return;
+  // Build a map of tool-tip[for] -> text, searching the whole document since
+  // GitHub's custom element relocates tool-tips to the document body.
+  const tipMap = new Map<string, string>();
+  for (const tip of Array.from(document.querySelectorAll<HTMLElement>("tool-tip[for]"))) {
+    const forId = tip.getAttribute("for");
+    if (!forId) continue;
+    const text = tip.textContent?.replace(/\s+/g, " ").trim();
+    if (text) tipMap.set(forId, text);
+  }
   for (const cell of Array.from(graph.querySelectorAll<HTMLElement>(".ContributionCalendar-day, td.day"))) {
     const existing = cell.getAttribute("title");
     if (existing && /contributions? on/i.test(existing)) continue;
-    const labelId = cell.getAttribute("aria-labelledby");
     let label: string | null = null;
-    if (labelId) {
-      // tool-tip elements auto-relocate to document body, so search globally
-      label = document.getElementById(labelId)?.textContent?.replace(/\s+/g, " ").trim() || null;
+    const cellId = cell.getAttribute("id");
+    if (cellId && tipMap.has(cellId)) {
+      label = tipMap.get(cellId) || null;
     }
     if (!label) {
-      const tipNeighbor = cell.querySelector<HTMLElement>("tool-tip, .sr-only");
+      const labelId = cell.getAttribute("aria-labelledby");
+      if (labelId) {
+        label = document.getElementById(labelId)?.textContent?.replace(/\s+/g, " ").trim() || null;
+      }
+    }
+    if (!label) {
+      const tipNeighbor = cell.querySelector<HTMLElement>("tool-tip, .sr-only, span");
       if (tipNeighbor) label = tipNeighbor.textContent?.replace(/\s+/g, " ").trim() || null;
     }
     if (!label) {
+      // Synthesize from data-date + data-level when GitHub didn't ship a tool-tip.
       const date = cell.getAttribute("data-date");
-      if (date) label = `${date}`;
+      const level = cell.getAttribute("data-level");
+      if (date) {
+        const human = formatGraphDate(date);
+        if (level === "0" || !level) label = `No contributions on ${human}`;
+        else if (level === "1") label = `1–3 contributions on ${human}`;
+        else if (level === "2") label = `4–6 contributions on ${human}`;
+        else if (level === "3") label = `7–9 contributions on ${human}`;
+        else label = `10+ contributions on ${human}`;
+      }
     }
     if (label) cell.setAttribute("title", label);
   }
+}
+
+function formatGraphDate(iso: string): string {
+  const d = new Date(iso + "T12:00:00Z");
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 }
 
 
@@ -714,7 +743,7 @@ function renderPeopleFromFrame(frame: Element): string {
 }
 
 function renderAchievementsFromFrame(frame: Element): string {
-  type A = { slug: string; name: string; iconUrl: string; tier: string | null };
+  type A = { slug: string; name: string; iconUrl: string; tier: string | null; description: string | null };
   const earned: A[] = [];
   for (const d of Array.from(frame.querySelectorAll<HTMLElement>("details[data-achievement-slug]"))) {
     const slug = d.getAttribute("data-achievement-slug") || "";
@@ -723,21 +752,44 @@ function renderAchievementsFromFrame(frame: Element): string {
     const name = img?.getAttribute("alt")?.replace(/^Achievement:\s*/i, "").trim() || slug;
     const tierEl = d.querySelector(".achievement-tier, [class*='tier']");
     const tier = tierEl?.textContent?.trim() || null;
-    if (slug && iconUrl) earned.push({ slug, name, iconUrl, tier });
+    // Description: pick the first paragraph from the popover body (skip the title).
+    let description: string | null = null;
+    for (const p of Array.from(d.querySelectorAll<HTMLElement>(".Popover-message p, .Popover p, .position-absolute p"))) {
+      const txt = (p.textContent || "").trim();
+      if (txt && txt.length > 4 && !/^achievement:\s/i.test(txt) && txt !== name) {
+        description = txt;
+        break;
+      }
+    }
+    if (slug && iconUrl) earned.push({ slug, name, iconUrl, tier, description });
   }
   if (earned.length === 0) {
-    return `<p class="oldgh-profile__muted">No achievements yet.</p>`;
+    return `
+      <section class="oldgh-achievements">
+        <div class="oldgh-achievements__empty">
+          ${octicon("trophy", { size: 36 })}
+          <h3>No achievements earned yet.</h3>
+          <p>Achievements highlight specific events on GitHub. Open pull requests, ship releases, sponsor maintainers — they accumulate over time.</p>
+        </div>
+      </section>
+    `;
   }
   return `
     <section class="oldgh-achievements">
-      <h3 class="oldgh-achievements__heading">Earned achievements</h3>
+      <header class="oldgh-achievements__intro">
+        <h3>${octicon("trophy", { size: 18 })} Achievements <span class="oldgh-achievements__count">${earned.length}</span></h3>
+        <p>Highlights and milestones earned across GitHub activity.</p>
+      </header>
       <ul class="oldgh-achievements__grid">
         ${earned.map((a) => `
-          <li class="oldgh-achievements__item">
-            <img class="oldgh-achievements__icon" src="${escapeAttr(a.iconUrl)}" alt="${escapeAttr(a.name)}" width="96" height="96" />
+          <li class="oldgh-achievements__item" title="${escapeAttr(a.description || a.name)}">
+            <div class="oldgh-achievements__icon-wrap">
+              <img class="oldgh-achievements__icon" src="${escapeAttr(a.iconUrl)}" alt="${escapeAttr(a.name)}" width="80" height="80" />
+              ${a.tier ? `<span class="oldgh-achievements__tier">×${escapeText(a.tier.replace(/^x/i, ""))}</span>` : ""}
+            </div>
             <div class="oldgh-achievements__meta">
               <span class="oldgh-achievements__name">${escapeText(a.name)}</span>
-              ${a.tier ? `<span class="oldgh-achievements__tier">${escapeText(a.tier)}</span>` : ""}
+              ${a.description ? `<span class="oldgh-achievements__desc">${escapeText(a.description.slice(0, 120))}</span>` : ""}
             </div>
           </li>
         `).join("")}
