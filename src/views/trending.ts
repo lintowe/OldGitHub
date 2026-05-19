@@ -98,7 +98,7 @@ async function scrapeTrendingHtml(period: TrendingPeriod, language: string): Pro
       const slug = href.replace(/^\/+/, "");
       const [owner, repoName] = slug.split("/");
       if (!owner || !repoName) continue;
-      const description = row.querySelector<HTMLElement>("p")?.textContent?.trim() || null;
+      const description = row.querySelector<HTMLElement>("p.col-9, p.color-fg-muted.my-1")?.textContent?.trim() || null;
       const langEl = row.querySelector<HTMLElement>("[itemprop='programmingLanguage']");
       const language = langEl?.textContent?.trim() || null;
       const dot = row.querySelector<HTMLElement>(".repo-language-color");
