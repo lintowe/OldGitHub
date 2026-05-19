@@ -2037,16 +2037,19 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 .oldgh-profile__contribs-graph thead .ContributionCalendar-label {
   padding-bottom: 2px !important;
 }
-/* Mon/Wed/Fri labels: modern GitHub sets clip-path: none inline; we make that
-   work in our compact grid. Sun/Tue/Thu/Sat have clip-path: inset(50%) and
-   stay screen-reader-only — leave them alone. */
-.oldgh-profile__contribs-graph tbody tr > td.ContributionCalendar-label[style*="clip-path: inset"] {
-  width: 28px !important;
-}
-.oldgh-profile__contribs-graph tbody tr > td.ContributionCalendar-label[style*="clip-path: none"] span,
+/* modern github day label spans use position:absolute + bottom:-3px; since we
+   force the parent td to position:static those spans escape the cell — reset them */
+.oldgh-profile__contribs-graph tbody tr > td.ContributionCalendar-label span,
 .oldgh-profile__contribs-graph tbody tr > th.ContributionCalendar-label span {
-  font-size: 9px;
-  color: var(--gh-fg-muted);
+  position: static !important;
+  bottom: auto !important;
+  font-size: 9px !important;
+  color: var(--gh-fg-muted) !important;
+}
+/* hide day rows github visually clips with Circle(0) — sun/tue/thu/sat */
+.oldgh-profile__contribs-graph tbody tr > td.ContributionCalendar-label span[style*="Circle"],
+.oldgh-profile__contribs-graph tbody tr > th.ContributionCalendar-label span[style*="Circle"] {
+  display: none !important;
 }
 /* hide the modern "tooltip" / "scoping" auxiliary content that may render */
 .oldgh-profile__contribs-graph tool-tip,
