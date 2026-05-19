@@ -58,7 +58,9 @@ function renderGroup(v: CommitsView, g: { title: string; commits: CommitEntry[] 
 function renderCommit(v: CommitsView, c: CommitEntry): string {
   const primaryAuthor = c.authors[0];
   const shortOid = c.oid.slice(0, 7);
-  const messageHtml = c.shortMessageMarkdownLink ?? `<a href="${escapeAttr(c.url)}" title="${escapeAttr(c.shortMessage)}">${escapeText(c.shortMessage)}</a>`;
+  const messageHtml = c.shortMessageMarkdownLink
+    ? sanitizeBodyHtml(c.shortMessageMarkdownLink)
+    : `<a href="${escapeAttr(c.url)}" title="${escapeAttr(c.shortMessage)}">${escapeText(c.shortMessage)}</a>`;
   const browseHref = `/${v.owner}/${v.repo}/tree/${c.oid}${v.path ? "/" + pathSegments(v.path) : ""}`;
   return `
     <li class="oldgh-repo-commits__item">
@@ -113,6 +115,12 @@ function renderPagination(v: CommitsView): string {
 
 function pathSegments(path: string): string {
   return path.split("/").map(encodeURIComponent).join("/");
+}
+
+function sanitizeBodyHtml(html: string): string {
+  return html
+    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }
 
 function escapeText(s: string): string {

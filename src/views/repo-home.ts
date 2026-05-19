@@ -157,7 +157,7 @@ function renderReadme(o: RepoOverview): string {
         ${octicon("book", { size: 16 })}
         <a href="/${o.owner}/${o.repo}/blob/${encodeURIComponent(o.branch)}/${escapeAttr(pathSegments(o.readme.path))}">${escapeText(o.readme.path)}</a>
       </div>
-      <div class="oldgh-repo-home__readme-body">${o.readme.html}</div>
+      <div class="oldgh-repo-home__readme-body">${sanitizeBodyHtml(o.readme.html)}</div>
     </section>
   `;
 }
@@ -195,6 +195,12 @@ function bindCopyButtons(root: HTMLElement): void {
       }, 1200);
     });
   });
+}
+
+function sanitizeBodyHtml(html: string): string {
+  return html
+    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }
 
 function escapeText(s: string): string {
