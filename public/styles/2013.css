@@ -226,6 +226,9 @@ html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"] {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+/* utility */
+.oldgh-fg-muted { color: var(--gh-fg-muted); }
+
 /* page container */
 .oldgh-page {
   max-width: 980px;
