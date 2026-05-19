@@ -12,14 +12,14 @@ export type Route =
   | { kind: "repo-actions"; owner: string; repo: string; query: string; workflowPath?: string }
   | { kind: "repo-actions-run"; owner: string; repo: string; runId: string }
   | { kind: "repo-pulse"; owner: string; repo: string }
-  | { kind: "repo-graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" }
+  | { kind: "repo-graphs"; owner: string; repo: string; subkind: "contributors" | "commit-activity" | "code-frequency" | "traffic" | "community" | "network" }
   | { kind: "repo-projects"; owner: string; repo: string; query: string }
   | { kind: "repo-security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "repo-discussions"; owner: string; repo: string; subPath: string; query: string }
   | { kind: "repo-discussion"; owner: string; repo: string; number: number }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
-  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "other"; pathname: string; search: string; title: string }
+  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "topic" | "other"; pathname: string; search: string; title: string }
   | { kind: "todo"; name: string };
 
 export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring" | "people";
@@ -109,6 +109,9 @@ export function resolveRoute(pathname: string, search: string): Route {
   const topLevel = matchTopLevel(first, pathname, search);
   if (topLevel) return topLevel;
 
+  if (first === "topics" && segs.length >= 2) {
+    return { kind: "top-level", subkind: "topic", pathname, search, title: `Topic: ${segs[1]}` };
+  }
   if (TOP_LEVEL_NON_REPO.has(first)) {
     return { kind: "top-level", subkind: "other", pathname, search, title: prettyTitleFromPath(pathname) };
   }
@@ -221,6 +224,14 @@ export function resolveRoute(pathname: string, search: string): Route {
     if (sub === "contributors" || sub === "commit-activity" || sub === "code-frequency" || sub === "traffic") {
       return { kind: "repo-graphs", owner, repo, subkind: sub };
     }
+  }
+
+  if (segs[2] === "community") {
+    return { kind: "repo-graphs", owner, repo, subkind: "community" };
+  }
+
+  if (segs[2] === "network") {
+    return { kind: "repo-graphs", owner, repo, subkind: "network" };
   }
 
   if (segs[2] === "projects") {

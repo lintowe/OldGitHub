@@ -2,17 +2,25 @@ import {
   getRepoContributors,
   getRepoCommitActivity,
   getRepoCodeFrequency,
+  getCommunityProfile,
+  getRepoForks,
   type ContributorsView,
   type ContributorEntry,
   type CommitActivityView,
   type CodeFrequencyView,
+  type CommunityView,
+  type CommunityFile,
+  type NetworkView,
+  type NetworkFork,
 } from "@/adapters/repo-graphs";
+import { octicon } from "@/icons";
+import { absoluteTime, relativeTime } from "@/util/time";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 import { renderInsightsNav } from "./repo-pulse";
 
 const ROOT_CLASS = "oldgh-repo-graphs";
 
-export type GraphsSubkind = "contributors" | "commit-activity" | "code-frequency" | "traffic";
+export type GraphsSubkind = "contributors" | "commit-activity" | "code-frequency" | "traffic" | "community" | "network";
 
 export async function mountRepoGraphs(owner: string, repo: string, subkind: GraphsSubkind): Promise<void> {
   const root = document.createElement("div");
@@ -32,6 +40,12 @@ export async function mountRepoGraphs(owner: string, repo: string, subkind: Grap
     } else if (subkind === "code-frequency") {
       const view = await getRepoCodeFrequency(owner, repo);
       main.innerHTML = renderCodeFrequency(view);
+    } else if (subkind === "community") {
+      const view = await getCommunityProfile(owner, repo);
+      main.innerHTML = renderCommunity(owner, repo, view);
+    } else if (subkind === "network") {
+      const view = await getRepoForks(owner, repo);
+      main.innerHTML = renderNetwork(view);
     } else {
       main.innerHTML = `<div class="oldgh-graphs__empty">${escapeText(graphTitle(subkind))} view isn't built natively yet — open the modern GitHub page <a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/graphs/${escapeAttr(subkind)}">here</a>.</div>`;
     }
@@ -227,7 +241,127 @@ function graphTitle(subkind: GraphsSubkind): string {
     case "commit-activity": return "Commit activity";
     case "code-frequency": return "Code frequency";
     case "traffic": return "Traffic";
+    case "community": return "Community";
+    case "network": return "Network";
   }
+}
+
+function renderCommunity(owner: string, repo: string, v: CommunityView): string {
+  const present = v.files.filter((f) => f.present).length;
+  const total = v.files.length;
+  const pct = v.healthPercentage || Math.round((present / Math.max(1, total)) * 100);
+  const grade = pct >= 90 ? "A" : pct >= 70 ? "B" : pct >= 50 ? "C" : "D";
+  const gradeClass = pct >= 90 ? "a" : pct >= 70 ? "b" : pct >= 50 ? "c" : "d";
+  return `
+    <header class="oldgh-graphs__header">
+      <h1>Community Standards</h1>
+      <p class="oldgh-graphs__sub">How this repository compares to <a href="https://opensource.guide/" rel="noreferrer">recommended community standards</a>.</p>
+    </header>
+    <div class="oldgh-community">
+      <div class="oldgh-community__score">
+        <div class="oldgh-community__grade oldgh-community__grade--${gradeClass}">
+          <span class="oldgh-community__grade-letter">${grade}</span>
+          <span class="oldgh-community__grade-pct">${pct}%</span>
+        </div>
+        <div class="oldgh-community__score-text">
+          <strong>${present} of ${total}</strong> recommended items present.
+          <p>Maintainers ship faster when a repo is welcoming to new contributors. Each item below is a small but real lift.</p>
+        </div>
+      </div>
+      <ul class="oldgh-community__checklist">
+        ${v.files.map((f) => renderCommunityRow(owner, repo, f)).join("")}
+      </ul>
+      ${v.updatedAt ? `<p class="oldgh-community__updated">Updated <time datetime="${escapeAttr(v.updatedAt)}" title="${escapeAttr(absoluteTime(v.updatedAt))}">${escapeText(relativeTime(v.updatedAt))}</time></p>` : ""}
+    </div>
+  `;
+}
+
+function renderCommunityRow(owner: string, repo: string, f: CommunityFile): string {
+  const icon = f.present
+    ? `<span class="oldgh-community__check oldgh-community__check--on">${octicon("check", { size: 14 })}</span>`
+    : `<span class="oldgh-community__check oldgh-community__check--off">${octicon("dot", { size: 14 })}</span>`;
+  const setupHref = communitySetupHref(owner, repo, f.key);
+  const link = f.htmlUrl
+    ? `<a class="oldgh-community__link" href="${escapeAttr(f.htmlUrl)}">${escapeText(f.label)}</a>`
+    : `<span class="oldgh-community__label">${escapeText(f.label)}</span>`;
+  return `
+    <li class="oldgh-community__row ${f.present ? "is-present" : "is-missing"}">
+      ${icon}
+      ${link}
+      ${!f.present && setupHref
+        ? `<a class="oldgh-btn oldgh-community__add" href="${escapeAttr(setupHref)}">Add</a>`
+        : ""}
+    </li>
+  `;
+}
+
+function communitySetupHref(owner: string, repo: string, key: string): string | null {
+  switch (key) {
+    case "description":
+      return `/${owner}/${repo}/settings`;
+    case "readme":
+      return `/${owner}/${repo}/new/HEAD?filename=README.md`;
+    case "license":
+      return `/${owner}/${repo}/community/license/new?branch=HEAD`;
+    case "contributing":
+      return `/${owner}/${repo}/new/HEAD?filename=CONTRIBUTING.md`;
+    case "code_of_conduct":
+    case "code_of_conduct_file":
+      return `/${owner}/${repo}/community/code-of-conduct/new?branch=HEAD`;
+    case "issue_template":
+      return `/${owner}/${repo}/issues/templates/edit`;
+    case "pull_request_template":
+      return `/${owner}/${repo}/new/HEAD?filename=.github/PULL_REQUEST_TEMPLATE.md`;
+    case "security":
+      return `/${owner}/${repo}/security/policy/edit`;
+    default:
+      return null;
+  }
+}
+
+function renderNetwork(v: NetworkView): string {
+  if (v.totalForks === 0 && v.forks.length === 0) {
+    return `
+      <header class="oldgh-graphs__header">
+        <h1>Network</h1>
+        <p class="oldgh-graphs__sub">No one has forked this repository yet.</p>
+      </header>
+    `;
+  }
+  return `
+    <header class="oldgh-graphs__header">
+      <h1>Network</h1>
+      <p class="oldgh-graphs__sub">
+        Showing <strong>${v.forks.length}</strong> of <strong>${v.totalForks.toLocaleString()}</strong>
+        ${v.totalForks === 1 ? "fork" : "forks"} of <strong>${escapeText(v.owner)}/${escapeText(v.repo)}</strong>.
+      </p>
+    </header>
+    <ul class="oldgh-network">
+      ${v.forks.map(renderNetworkRow).join("")}
+    </ul>
+  `;
+}
+
+function renderNetworkRow(f: NetworkFork): string {
+  return `
+    <li class="oldgh-network__row">
+      <a class="oldgh-network__avatar" href="/${escapeAttr(f.ownerLogin)}">
+        <img src="${escapeAttr(f.ownerAvatar)}" width="32" height="32" alt="" />
+      </a>
+      <div class="oldgh-network__main">
+        <h3 class="oldgh-network__title">
+          <a href="${escapeAttr(f.htmlUrl)}">${escapeText(f.ownerLogin)}/<strong>${escapeText(f.repoName)}</strong></a>
+        </h3>
+        ${f.description ? `<p class="oldgh-network__desc">${escapeText(f.description)}</p>` : ""}
+        <ul class="oldgh-network__meta">
+          <li>${octicon("star", { size: 12 })} ${f.stars.toLocaleString()}</li>
+          <li>${octicon("repo-forked", { size: 12 })} ${f.forks.toLocaleString()}</li>
+          <li>${octicon("git-branch", { size: 12 })} ${escapeText(f.defaultBranch)}</li>
+          ${f.pushedAt ? `<li>Pushed <time datetime="${escapeAttr(f.pushedAt)}" title="${escapeAttr(absoluteTime(f.pushedAt))}">${escapeText(relativeTime(f.pushedAt))}</time></li>` : ""}
+        </ul>
+      </div>
+    </li>
+  `;
 }
 
 function escapeText(s: string): string {

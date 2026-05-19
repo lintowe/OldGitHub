@@ -4783,6 +4783,154 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
 .oldgh-codefreq__swatch--add { background: #6cc644; }
 .oldgh-codefreq__swatch--del { background: #bd2c00; }
 
+/* Community standards */
+.oldgh-community {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  overflow: hidden;
+}
+.oldgh-community__score {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+}
+.oldgh-community__grade {
+  flex: 0 0 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.oldgh-community__grade-letter {
+  font-size: 36px;
+  font-weight: bold;
+  line-height: 1;
+}
+.oldgh-community__grade-pct {
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 2px;
+}
+.oldgh-community__grade--a { background: linear-gradient(to bottom, #6cc644, #4a934a); }
+.oldgh-community__grade--b { background: linear-gradient(to bottom, #a0c850, #6c9c2e); }
+.oldgh-community__grade--c { background: linear-gradient(to bottom, #d8a624, #a37614); }
+.oldgh-community__grade--d { background: linear-gradient(to bottom, #bd2c00, #931f00); }
+.oldgh-community__score-text {
+  flex: 1;
+}
+.oldgh-community__score-text strong {
+  font-size: 18px;
+  color: var(--gh-fg);
+}
+.oldgh-community__score-text p {
+  margin: 6px 0 0;
+  color: var(--gh-fg-muted);
+  line-height: 1.5;
+  max-width: 60ch;
+}
+.oldgh-community__checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.oldgh-community__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  font-size: var(--gh-size-md);
+}
+.oldgh-community__row:last-child { border-bottom: 0; }
+.oldgh-community__row.is-present { color: var(--gh-fg); }
+.oldgh-community__row.is-missing { color: var(--gh-fg-muted); }
+.oldgh-community__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex: 0 0 22px;
+}
+.oldgh-community__check--on { background: #6cc644; color: #fff; }
+.oldgh-community__check--off {
+  background: var(--gh-bg-stripe);
+  color: var(--gh-fg-faint);
+  border: 1px solid var(--gh-border-faint);
+}
+.oldgh-community__link { color: var(--gh-link); flex: 1; }
+.oldgh-community__label { flex: 1; }
+.oldgh-community__add { margin-left: auto; }
+.oldgh-community__updated {
+  padding: 10px 18px;
+  margin: 0;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-faint);
+  border-top: 1px solid var(--gh-border-faint);
+  background: var(--gh-bg-subtle);
+}
+
+/* Network / forks list */
+.oldgh-network {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-network__row {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-network__row:last-child { border-bottom: 0; }
+.oldgh-network__avatar img {
+  border-radius: 3px;
+  border: 1px solid var(--gh-border);
+  display: block;
+}
+.oldgh-network__main { min-width: 0; flex: 1; }
+.oldgh-network__title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: normal;
+}
+.oldgh-network__title strong { color: var(--gh-fg); }
+.oldgh-network__desc {
+  margin: 4px 0 0;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+}
+.oldgh-network__meta {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-network__meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Releases page */
 .oldgh-repo-releases { padding-top: 14px; }
 .oldgh-releases__header {

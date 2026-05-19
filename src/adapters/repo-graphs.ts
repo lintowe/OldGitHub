@@ -177,3 +177,147 @@ function readObj(v: unknown): Record<string, unknown> | null {
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
+
+export type CommunityFile = {
+  key: string;
+  label: string;
+  present: boolean;
+  url: string | null;
+  htmlUrl: string | null;
+};
+
+export type CommunityView = {
+  owner: string;
+  repo: string;
+  healthPercentage: number;
+  updatedAt: string | null;
+  files: CommunityFile[];
+  contentReportsEnabled: boolean;
+};
+
+const COMMUNITY_LABELS: Record<string, string> = {
+  description: "Description",
+  readme: "README",
+  code_of_conduct: "Code of conduct",
+  code_of_conduct_file: "Code of conduct file",
+  contributing: "Contributing",
+  license: "License",
+  pull_request_template: "Pull request template",
+  issue_template: "Issue template",
+  security: "Security policy",
+};
+
+const COMMUNITY_ORDER = [
+  "description",
+  "readme",
+  "code_of_conduct",
+  "code_of_conduct_file",
+  "contributing",
+  "license",
+  "pull_request_template",
+  "issue_template",
+  "security",
+];
+
+export async function getCommunityProfile(owner: string, repo: string): Promise<CommunityView> {
+  const resp = await fetch(`${API}/repos/${owner}/${repo}/community/profile`, {
+    credentials: "omit",
+    headers: { Accept: "application/vnd.github+json" },
+  });
+  if (!resp.ok) {
+    throw new AdapterFailure("getCommunityProfile", `responded ${resp.status}`);
+  }
+  const data = (await resp.json()) as Record<string, unknown>;
+  const healthPercentage = typeof data["health_percentage"] === "number" ? (data["health_percentage"] as number) : 0;
+  const updatedAt = typeof data["updated_at"] === "string" ? (data["updated_at"] as string) : null;
+  const contentReportsEnabled = data["content_reports_enabled"] === true;
+  const filesObj = (data["files"] && typeof data["files"] === "object" ? (data["files"] as Record<string, unknown>) : {}) || {};
+  const description = typeof data["description"] === "string" && (data["description"] as string).trim().length > 0;
+  const files: CommunityFile[] = [];
+  for (const key of COMMUNITY_ORDER) {
+    if (key === "description") {
+      files.push({ key, label: COMMUNITY_LABELS[key]!, present: description, url: null, htmlUrl: null });
+      continue;
+    }
+    const entry = filesObj[key];
+    if (entry === null || entry === undefined) {
+      files.push({ key, label: COMMUNITY_LABELS[key]!, present: false, url: null, htmlUrl: null });
+      continue;
+    }
+    if (typeof entry === "object") {
+      const e = entry as Record<string, unknown>;
+      const url = typeof e["url"] === "string" ? (e["url"] as string) : null;
+      const htmlUrl = typeof e["html_url"] === "string" ? (e["html_url"] as string) : null;
+      const name = typeof e["name"] === "string" ? (e["name"] as string) : null;
+      const label = name ? `${COMMUNITY_LABELS[key]} (${name})` : COMMUNITY_LABELS[key]!;
+      files.push({ key, label, present: !!(url || htmlUrl), url, htmlUrl });
+    }
+  }
+  return { owner, repo, healthPercentage, updatedAt, files, contentReportsEnabled };
+}
+
+export type NetworkFork = {
+  fullName: string;
+  ownerLogin: string;
+  ownerAvatar: string;
+  ownerType: string;
+  repoName: string;
+  htmlUrl: string;
+  description: string | null;
+  stars: number;
+  forks: number;
+  pushedAt: string | null;
+  defaultBranch: string;
+};
+
+export type NetworkView = {
+  owner: string;
+  repo: string;
+  forks: NetworkFork[];
+  totalForks: number;
+};
+
+export async function getRepoForks(owner: string, repo: string): Promise<NetworkView> {
+  const [parentResp, forksResp] = await Promise.all([
+    fetch(`${API}/repos/${owner}/${repo}`, {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github+json" },
+    }),
+    fetch(`${API}/repos/${owner}/${repo}/forks?per_page=50&sort=newest`, {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github+json" },
+    }),
+  ]);
+  let totalForks = 0;
+  if (parentResp.ok) {
+    const parent = (await parentResp.json()) as Record<string, unknown>;
+    if (typeof parent["forks_count"] === "number") totalForks = parent["forks_count"] as number;
+  }
+  if (!forksResp.ok) {
+    throw new AdapterFailure("getRepoForks", `responded ${forksResp.status}`);
+  }
+  const data = (await forksResp.json()) as unknown;
+  const arr = Array.isArray(data) ? data : [];
+  const forks: NetworkFork[] = [];
+  for (const r of arr) {
+    if (!r || typeof r !== "object") continue;
+    const ro = r as Record<string, unknown>;
+    const ownerObj = ro["owner"] && typeof ro["owner"] === "object" ? (ro["owner"] as Record<string, unknown>) : null;
+    const fullName = typeof ro["full_name"] === "string" ? (ro["full_name"] as string) : null;
+    if (!fullName) continue;
+    forks.push({
+      fullName,
+      ownerLogin: (ownerObj && typeof ownerObj["login"] === "string" ? (ownerObj["login"] as string) : fullName.split("/")[0]) ?? "",
+      ownerAvatar: (ownerObj && typeof ownerObj["avatar_url"] === "string" ? (ownerObj["avatar_url"] as string) : "") ?? "",
+      ownerType: (ownerObj && typeof ownerObj["type"] === "string" ? (ownerObj["type"] as string) : "User") ?? "User",
+      repoName: (typeof ro["name"] === "string" ? (ro["name"] as string) : fullName.split("/")[1]) ?? "",
+      htmlUrl: (typeof ro["html_url"] === "string" ? (ro["html_url"] as string) : `https://github.com/${fullName}`),
+      description: typeof ro["description"] === "string" ? (ro["description"] as string) : null,
+      stars: typeof ro["stargazers_count"] === "number" ? (ro["stargazers_count"] as number) : 0,
+      forks: typeof ro["forks_count"] === "number" ? (ro["forks_count"] as number) : 0,
+      pushedAt: typeof ro["pushed_at"] === "string" ? (ro["pushed_at"] as string) : null,
+      defaultBranch: typeof ro["default_branch"] === "string" ? (ro["default_branch"] as string) : "main",
+    });
+  }
+  return { owner, repo, forks, totalForks };
+}
