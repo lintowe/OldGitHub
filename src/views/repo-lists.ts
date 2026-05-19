@@ -224,7 +224,7 @@ async function renderMilestones(owner: string, repo: string, state: string, page
     return `
       <li class="oldgh-repo-list__milestone">
         <h3 class="oldgh-repo-list__milestone-title">
-          <a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/milestone/${number}">${escapeText(title)}</a>
+          <a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/issues?milestone=${encodeURIComponent(String(number))}">${escapeText(title)}</a>
         </h3>
         ${desc ? `<p class="oldgh-repo-list__milestone-desc">${escapeText(desc)}</p>` : ""}
         <div class="oldgh-repo-list__milestone-bar"><span style="width:${pct}%"></span></div>

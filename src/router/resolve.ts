@@ -191,6 +191,13 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-compare", owner, repo, range };
   }
 
+  if (segs[2] === "milestone" && segs.length >= 4) {
+    // /owner/repo/milestone/N — redirect to issues list filtered by milestone
+    const ms = segs[3]!;
+    const milestoneSearch = search ? `milestone=${ms}&${search}` : `milestone=${ms}`;
+    return { kind: "repo-issues", owner, repo, query: milestoneSearch, subkind: "issues" };
+  }
+
   if (segs[2] === "issues" && segs.length === 3) {
     return { kind: "repo-issues", owner, repo, query: search, subkind: "issues" };
   }
