@@ -1268,9 +1268,7 @@ html[data-oldgh-theme="dark"] .oldgh-repo-blob__truncated > p {
   background: var(--gh-bg-subtle);
   border: 1px solid var(--gh-border-faint);
   border-radius: var(--gh-radius);
-  font-family: var(--gh-font-mono);
   font-size: var(--gh-size-sm);
-  white-space: pre-wrap;
   color: var(--gh-fg);
   line-height: 1.5;
 }

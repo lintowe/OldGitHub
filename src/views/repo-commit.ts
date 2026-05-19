@@ -48,7 +48,7 @@ function renderHeader(c: CommitView): string {
         <h1 class="oldgh-repo-commit__title">${escapeText(c.shortMessage)}</h1>
         <a class="oldgh-btn oldgh-repo-commit__sha" href="${escapeAttr(c.url)}" title="${escapeAttr(c.oid)}"><code>${escapeText(shortOid)}</code></a>
       </div>
-      ${c.bodyMessageHtml ? `<pre class="oldgh-repo-commit__body">${sanitizeBodyHtml(c.bodyMessageHtml)}</pre>` : ""}
+      ${c.bodyMessageHtml ? `<div class="oldgh-repo-commit__body markdown-body">${sanitizeBodyHtml(c.bodyMessageHtml)}</div>` : ""}
       <div class="oldgh-repo-commit__meta">
         ${renderAuthor(author)}${commBy}
         on <a href="${escapeAttr(c.url)}" title="${escapeAttr(absoluteTime(c.committedDate))}">${escapeText(relativeTime(c.committedDate))}</a>
