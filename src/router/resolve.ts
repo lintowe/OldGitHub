@@ -191,6 +191,8 @@ export function resolveRoute(pathname: string, search: string): Route {
 
   if (segs[2] === "compare" && segs.length >= 4) {
     const range = segs.slice(3).join("/");
+    // single-branch compares (no ".." separator) are PR creation forms — let GitHub handle them
+    if (!range.includes("..")) return { kind: "out-of-scope" };
     return { kind: "repo-compare", owner, repo, range };
   }
 
