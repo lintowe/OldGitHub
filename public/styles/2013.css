@@ -5783,6 +5783,191 @@ html[data-oldgh-theme="dark"] .oldgh-discussion__answer-head {
   color: var(--gh-fg-faint);
 }
 
+/* Repo Discussions list */
+.oldgh-repo-discussions { padding-top: 14px; padding-bottom: 60px; }
+.oldgh-discussions__header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  margin-bottom: 16px;
+}
+.oldgh-discussions__header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--gh-fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.oldgh-discussions__header h1 .octicon { color: var(--gh-fg-muted); }
+.oldgh-discussions__sub {
+  margin: 6px 0 0;
+  color: var(--gh-fg-muted);
+}
+.oldgh-discussions__loading,
+.oldgh-discussions__empty {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--gh-fg-muted);
+}
+.oldgh-discussions__empty .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
+.oldgh-discussions__empty h2 {
+  margin: 12px 0 8px;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--gh-fg);
+}
+.oldgh-discussions__empty p {
+  margin: 0 auto 8px;
+  max-width: 56ch;
+  line-height: 1.55;
+}
+.oldgh-discussions__cta { margin-top: 18px !important; }
+.oldgh-discussions__empty-small {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--gh-fg-faint);
+}
+.oldgh-discussions__layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.oldgh-discussions__sidebar {
+  font-size: var(--gh-size-sm);
+}
+.oldgh-discussions__sidebox {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  overflow: hidden;
+}
+.oldgh-discussions__sidebox h3 {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: var(--gh-size-md);
+  font-weight: bold;
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  border-bottom: 1px solid var(--gh-border-faint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.oldgh-discussions__sidebox ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.oldgh-discussions__sidebox ul li a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  color: var(--gh-fg);
+  font-size: var(--gh-size-sm);
+}
+.oldgh-discussions__sidebox ul li a:hover {
+  background: var(--gh-bg-stripe);
+  text-decoration: none;
+}
+.oldgh-discussions__cat-emoji {
+  font-size: 14px;
+  width: 16px;
+  text-align: center;
+  display: inline-flex;
+  justify-content: center;
+}
+.oldgh-discussions__feed {
+  min-width: 0;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  overflow: hidden;
+}
+.oldgh-discussions__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  border-bottom: 1px solid var(--gh-border-faint);
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+}
+.oldgh-discussions__toolbar strong { color: var(--gh-fg); }
+.oldgh-discussions__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.oldgh-discussions__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-discussions__item:last-child { border-bottom: 0; }
+.oldgh-discussions__item:hover { background: var(--gh-bg-stripe); }
+.oldgh-discussions__state {
+  flex: 0 0 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
+.oldgh-discussions__state--open { color: #6cc644; }
+.oldgh-discussions__state--answered { color: #6e5494; }
+html[data-oldgh-theme="dark"] .oldgh-discussions__state--answered { color: #d2a8ff; }
+.oldgh-discussions__state--closed { color: var(--gh-fg-muted); }
+.oldgh-discussions__item-main { flex: 1; min-width: 0; }
+.oldgh-discussions__item-title {
+  margin: 0;
+  font-size: var(--gh-size-lg);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.oldgh-discussions__item-title a { color: var(--gh-fg); }
+.oldgh-discussions__item-title a:hover { color: var(--gh-link); }
+.oldgh-discussions__item-num { color: var(--gh-fg-muted); font-weight: normal; }
+.oldgh-discussions__pin { color: #cea61b; }
+.oldgh-discussions__item-meta {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--gh-fg-muted);
+}
+.oldgh-discussions__item-meta a { color: var(--gh-link); }
+.oldgh-discussions__cat-chip {
+  background: var(--gh-bg-stripe);
+  border: 1px solid var(--gh-border-faint);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+  color: var(--gh-fg);
+}
+.oldgh-discussions__comments {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--gh-fg-muted);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
 /* Repo Security */
 .oldgh-repo-security { padding-top: 14px; padding-bottom: 60px; }
 .oldgh-security__header {

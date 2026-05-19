@@ -28,6 +28,7 @@ import { mountExplore, unmountExplore } from "@/views/explore";
 import { mountTopic, unmountTopic } from "@/views/topic";
 import { mountRepoProjects, unmountRepoProjects } from "@/views/repo-projects";
 import { mountRepoSecurity, unmountRepoSecurity } from "@/views/repo-security";
+import { mountRepoDiscussions, unmountRepoDiscussions } from "@/views/repo-discussions";
 import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
@@ -459,8 +460,7 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "discussions") {
-    const subPath = target.subPath + (target.query ? "?" + target.query : "");
-    await mountRepoSection(target.owner, target.repo, "discussions", subPath, "Discussions");
+    await mountRepoDiscussions(target.owner, target.repo, target.subPath, target.query);
     bodyState = target;
     return;
   }
@@ -613,6 +613,7 @@ function unmountBody(): void {
   unmountTopic();
   unmountRepoProjects();
   unmountRepoSecurity();
+  unmountRepoDiscussions();
   unmountMeIssues();
   unmountProfile();
 }
