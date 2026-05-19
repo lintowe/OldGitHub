@@ -367,7 +367,7 @@ function renderUserCard(c: UserCard): string {
       <img class="oldgh-hovercard__avatar" src="${escapeAttr(c.avatarUrl)}" width="64" height="64" alt="" />
       <div class="oldgh-hovercard__head-text">
         ${c.name ? `<div class="oldgh-hovercard__name">${escapeText(c.name)}</div>` : ""}
-        <a class="oldgh-hovercard__login" href="${escapeAttr(c.htmlUrl)}">${escapeText(c.login)}</a>
+        <a class="oldgh-hovercard__login" href="/${escapeAttr(c.login)}">${escapeText(c.login)}</a>
         ${c.type === "Organization" ? `<span class="oldgh-hovercard__chip">Organization</span>` : ""}
       </div>
     </header>
@@ -389,7 +389,7 @@ function renderRepoCard(c: RepoCard): string {
       <div class="oldgh-hovercard__head-text">
         <div class="oldgh-hovercard__login">
           <a href="/${escapeAttr(ownerLogin ?? "")}">${escapeText(ownerLogin ?? "")}</a> /
-          <a href="${escapeAttr(c.htmlUrl)}"><strong>${escapeText(repoName ?? "")}</strong></a>
+          <a href="/${escapeAttr(ownerLogin ?? "")}/${escapeAttr(repoName ?? "")}"><strong>${escapeText(repoName ?? "")}</strong></a>
         </div>
         <div class="oldgh-hovercard__chips">
           ${c.isPrivate ? `<span class="oldgh-hovercard__chip">Private</span>` : ""}
@@ -438,7 +438,7 @@ function renderIssueCard(c: IssueCard): string {
     <header class="oldgh-hovercard__head">
       <span class="oldgh-hovercard__state ${stateCls}">${stateIcon}</span>
       <div class="oldgh-hovercard__head-text">
-        <a class="oldgh-hovercard__issue-title" href="${escapeAttr(c.htmlUrl)}">${escapeText(c.title)}</a>
+        <a class="oldgh-hovercard__issue-title" href="/${escapeAttr(c.owner)}/${escapeAttr(c.repo)}/${c.isPull ? "pull" : "issues"}/${c.number}">${escapeText(c.title)}</a>
         <div class="oldgh-hovercard__issue-meta">
           <span class="oldgh-hovercard__state-label">${escapeText(stateLabel)}</span>
           · ${escapeText(c.owner)}/${escapeText(c.repo)}#${c.number}${dateNote}
