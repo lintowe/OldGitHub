@@ -7,11 +7,33 @@ import { mountHovercards } from "@/views/hovercards";
 function eagerStyle(): void {
   document.documentElement.setAttribute("data-oldgh", "active");
   document.documentElement.setAttribute("data-oldgh-mounted", "pending");
-  // Default to light at document_start so there's no flash; applyTheme() will
-  // upgrade to dark/auto once chrome.storage is reachable.
-  document.documentElement.setAttribute("data-oldgh-theme", "light");
+  // Read the cached theme from localStorage (sync) to avoid a light→dark flash
+  // before chrome.storage.sync resolves. applyTheme() reconciles to the true
+  // stored value shortly after.
+  const cached = readCachedTheme();
+  const initial = resolveInitial(cached);
+  document.documentElement.setAttribute("data-oldgh-theme", initial);
   forceGitHubColorModeNeutral();
   injectThemeStylesheet();
+}
+
+function readCachedTheme(): string | null {
+  try {
+    return localStorage.getItem("oldgh:theme-cache");
+  } catch {
+    return null;
+  }
+}
+
+function resolveInitial(cached: string | null): "light" | "dark" {
+  if (cached === "light" || cached === "dark") return cached;
+  // "auto" or no cache: trust prefers-color-scheme for the first paint
+  try {
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+  } catch {
+    // matchMedia unavailable
+  }
+  return "light";
 }
 
 async function boot(): Promise<void> {

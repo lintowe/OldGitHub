@@ -58,6 +58,13 @@ function resolve(theme: Theme): "light" | "dark" {
 
 function setEffectiveTheme(effective: "light" | "dark"): void {
   document.documentElement.setAttribute("data-oldgh-theme", effective);
+  // Cache the resolved theme so the next page-load can use it synchronously
+  // during eagerStyle, before chrome.storage.sync resolves.
+  try {
+    localStorage.setItem("oldgh:theme-cache", effective);
+  } catch {
+    // localStorage may be unavailable (e.g. third-party context)
+  }
 }
 
 function rewireMediaListener(theme: Theme): void {
