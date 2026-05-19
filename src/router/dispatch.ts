@@ -24,6 +24,7 @@ import { mountNotifications, unmountNotifications } from "@/views/notifications"
 import { mountSearch, unmountSearch } from "@/views/search";
 import { mountStars, unmountStars } from "@/views/stars";
 import { mountTrending, unmountTrending } from "@/views/trending";
+import { mountExplore, unmountExplore } from "@/views/explore";
 import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
@@ -498,6 +499,8 @@ async function applyBodyState(target: BodyState): Promise<void> {
       await mountStars(target.pathname, target.search);
     } else if (target.subkind === "trending") {
       await mountTrending(target.pathname, target.search);
+    } else if (target.subkind === "explore") {
+      await mountExplore();
     } else if (target.subkind === "issues") {
       await mountMeIssues("issue", target.pathname, target.search);
     } else if (target.subkind === "pulls") {
@@ -599,6 +602,7 @@ function unmountBody(): void {
   unmountSearch();
   unmountStars();
   unmountTrending();
+  unmountExplore();
   unmountMeIssues();
   unmountProfile();
 }
