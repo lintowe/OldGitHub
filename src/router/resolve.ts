@@ -148,11 +148,13 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-home", owner, repo };
   }
 
-  // Pass-through routes: forms and creation flows that GitHub renders far better natively.
+  // Pass-through routes: forms, creation flows, and file downloads that GitHub handles natively.
   if (
     (segs[2] === "issues" && segs[3] === "new") ||
     (segs[2] === "discussions" && segs[3] === "new") ||
     (segs[2] === "compare" && segs[3] === "new") ||
+    (segs[2] === "compare" && segs.length === 3) ||
+    (segs[2] === "releases" && segs[3] === "download") ||
     segs[2] === "settings" ||
     segs[2] === "fork" ||
     segs[2] === "subscription" ||
@@ -161,7 +163,8 @@ export function resolveRoute(pathname: string, search: string): Route {
     segs[2] === "new" ||
     segs[2] === "delete" ||
     segs[2] === "merge_queue" ||
-    segs[2] === "deployments"
+    segs[2] === "deployments" ||
+    segs[2] === "archive"
   ) {
     return { kind: "out-of-scope" };
   }

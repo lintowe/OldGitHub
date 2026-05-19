@@ -21,23 +21,40 @@ type TrendingRepo = {
 
 type TrendingPeriod = "daily" | "weekly" | "monthly";
 
-export async function mountTrending(_pathname: string, search: string): Promise<void> {
+type TrendingDev = {
+  login: string;
+  name: string | null;
+  avatarUrl: string;
+  popRepo: { name: string; description: string | null } | null;
+};
+
+export async function mountTrending(pathname: string, search: string): Promise<void> {
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
 
   const params = new URLSearchParams(search);
   const period: TrendingPeriod = (params.get("since") as TrendingPeriod) || "weekly";
-  const language = params.get("language") ?? "";
 
-  root.innerHTML = renderShell(period, language);
+  // parse /trending/developers and /trending/{language} from path
+  const pathSegs = pathname.split("/").filter(Boolean);
+  const isDevelopers = pathSegs[1] === "developers";
+  const pathLanguage = !isDevelopers && pathSegs[1] ? decodeURIComponent(pathSegs[1]) : "";
+  const language = params.get("language") ?? pathLanguage;
+
+  root.innerHTML = renderShell(period, language, isDevelopers);
   adoptBodyRoot(root);
 
   const main = root.querySelector<HTMLElement>(".oldgh-trending__list-wrap");
   if (!main) return;
 
   try {
-    const items = await fetchTrending(period, language);
-    main.innerHTML = renderList(items);
+    if (isDevelopers) {
+      const devs = await fetchDevelopers(period);
+      main.innerHTML = renderDevList(devs);
+    } else {
+      const items = await fetchTrending(period, language);
+      main.innerHTML = renderList(items);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (/rate-?limit|status 40[39]|status 429/i.test(msg)) {
@@ -45,7 +62,7 @@ export async function mountTrending(_pathname: string, search: string): Promise<
         <div class="oldgh-trending__empty">
           ${octicon("clock", { size: 36 })}
           <p>You've hit GitHub's anonymous API rate limit. Trending will work again in a few minutes.</p>
-          <p><a href="https://github.com/trending${language ? `/${encodeURIComponent(language)}` : ""}?since=${encodeURIComponent(period)}">Open trending on modern GitHub</a></p>
+          <p><a href="https://github.com/trending${isDevelopers ? "/developers" : language ? `/${encodeURIComponent(language)}` : ""}?since=${encodeURIComponent(period)}">Open trending on modern GitHub</a></p>
         </div>
       `;
       return;
@@ -123,6 +140,69 @@ function parseShortCount(s: string): number | null {
   return Math.round(n);
 }
 
+async function fetchDevelopers(period: TrendingPeriod): Promise<TrendingDev[]> {
+  const resp = await fetch(`https://github.com/trending/developers?since=${encodeURIComponent(period)}`, {
+    credentials: "include",
+    headers: { Accept: "text/html" },
+  });
+  if (!resp.ok) return [];
+  const html = await resp.text();
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const rows = doc.querySelectorAll<HTMLElement>("article.Box-row");
+  const out: TrendingDev[] = [];
+  for (const row of Array.from(rows)) {
+    const avatarImg = row.querySelector<HTMLImageElement>("img.avatar-user, img[src*='avatars']");
+    const avatarUrl = avatarImg?.getAttribute("src") || "";
+    const linkAnchors = Array.from(row.querySelectorAll<HTMLAnchorElement>("a[href^='/']"));
+    const userLink = linkAnchors.find((a) => /^\/[\w.-]+\/?$/.test(a.getAttribute("href") || ""));
+    const loginHref = userLink?.getAttribute("href") || "";
+    const login = loginHref.replace(/^\/+|\/+$/g, "");
+    if (!login) continue;
+    const nameEl = row.querySelector<HTMLElement>(".h3 a, .lh-condensed a");
+    const nameText = nameEl?.textContent?.trim() || null;
+    const popRepoAnchor = row.querySelector<HTMLAnchorElement>(".h4 a, [data-hovercard-type='repository']");
+    let popRepo: TrendingDev["popRepo"] = null;
+    if (popRepoAnchor) {
+      const repoName = popRepoAnchor.textContent?.trim() || "";
+      const desc = row.querySelector<HTMLElement>(".f6.color-fg-muted, p.color-fg-muted")?.textContent?.trim() || null;
+      if (repoName) popRepo = { name: repoName, description: desc };
+    }
+    out.push({ login, name: nameText && nameText !== login ? nameText : null, avatarUrl, popRepo });
+  }
+  return out;
+}
+
+function renderDevList(devs: TrendingDev[]): string {
+  if (devs.length === 0) {
+    return `<div class="oldgh-trending__empty">No trending developers found.</div>`;
+  }
+  return `
+    <ol class="oldgh-trending__dev-list">
+      ${devs.map((d, i) => `
+        <li class="oldgh-trending__dev-row">
+          <span class="oldgh-trending__rank">#${i + 1}</span>
+          <a class="oldgh-trending__dev-avatar" href="/${escapeAttr(d.login)}">
+            <img src="${escapeAttr(d.avatarUrl)}" width="48" height="48" alt="" />
+          </a>
+          <div class="oldgh-trending__dev-main">
+            <div class="oldgh-trending__dev-name">
+              ${d.name ? `<a href="/${escapeAttr(d.login)}"><strong>${escapeText(d.name)}</strong></a>` : ""}
+              <a class="oldgh-trending__dev-login" href="/${escapeAttr(d.login)}">${escapeText(d.login)}</a>
+            </div>
+            ${d.popRepo ? `
+              <div class="oldgh-trending__dev-repo">
+                ${octicon("repo", { size: 12 })}
+                <a href="/${escapeAttr(d.login)}/${escapeAttr(d.popRepo.name)}">${escapeText(d.popRepo.name)}</a>
+                ${d.popRepo.description ? `<span class="oldgh-trending__dev-pop-desc">${escapeText(d.popRepo.description)}</span>` : ""}
+              </div>
+            ` : ""}
+          </div>
+        </li>
+      `).join("")}
+    </ol>
+  `;
+}
+
 async function searchTrendingFallback(period: TrendingPeriod, language: string): Promise<TrendingRepo[]> {
   const days = period === "daily" ? 1 : period === "weekly" ? 7 : 30;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -160,30 +240,40 @@ function parseRepo(raw: unknown): TrendingRepo | null {
   };
 }
 
-function renderShell(period: TrendingPeriod, language: string): string {
+function renderShell(period: TrendingPeriod, language: string, isDevelopers: boolean): string {
   const periodTabs: Array<{ key: TrendingPeriod; label: string }> = [
     { key: "daily", label: "Today" },
     { key: "weekly", label: "This week" },
     { key: "monthly", label: "This month" },
   ];
+  const baseHref = isDevelopers ? "/trending/developers" : "/trending";
+  const periodLinks = periodTabs.map((t) => {
+    const href = `${baseHref}?since=${t.key}${!isDevelopers && language ? `&language=${encodeURIComponent(language)}` : ""}`;
+    return `<a class="${period === t.key ? "is-active" : ""}" href="${href}">${escapeText(t.label)}</a>`;
+  }).join("");
   return `
     <div class="oldgh-page">
       <header class="oldgh-trending__header">
-        <h1>Trending</h1>
+        <h1>Trending ${isDevelopers ? "Developers" : "Repositories"}</h1>
         <p class="oldgh-trending__sub">See what the GitHub community is most excited about ${escapeText(period === "daily" ? "today" : period === "weekly" ? "this week" : "this month")}.</p>
       </header>
+      <div class="oldgh-trending__type-switch">
+        <a class="${!isDevelopers ? "is-active" : ""}" href="/trending?since=${encodeURIComponent(period)}${language ? `&language=${encodeURIComponent(language)}` : ""}">Repositories</a>
+        <a class="${isDevelopers ? "is-active" : ""}" href="/trending/developers?since=${encodeURIComponent(period)}">Developers</a>
+      </div>
       <div class="oldgh-trending__bar">
         <nav class="oldgh-trending__tabs">
-          ${periodTabs.map((t) => `<a class="${period === t.key ? "is-active" : ""}" href="/trending?since=${t.key}${language ? `&language=${encodeURIComponent(language)}` : ""}">${escapeText(t.label)}</a>`).join("")}
+          ${periodLinks}
         </nav>
+        ${!isDevelopers ? `
         <form class="oldgh-trending__lang" action="/trending" method="get">
           <input type="hidden" name="since" value="${escapeAttr(period)}" />
           <label>Language: <input name="language" value="${escapeAttr(language)}" placeholder="any" /></label>
           <button type="submit" class="oldgh-btn">Filter</button>
-        </form>
+        </form>` : ""}
       </div>
       <div class="oldgh-trending__list-wrap">
-        <div class="oldgh-trending__loading">Loading trending repositories…</div>
+        <div class="oldgh-trending__loading">Loading trending ${isDevelopers ? "developers" : "repositories"}…</div>
       </div>
     </div>
   `;
