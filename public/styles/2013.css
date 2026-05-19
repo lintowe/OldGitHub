@@ -3873,6 +3873,9 @@ html[data-oldgh-theme="dark"] .oldgh-pr-file__del { color: #ff7b72; }
   user-select: none;
   background: var(--gh-bg-subtle);
 }
+html[data-oldgh-theme="dark"] .oldgh-pr-file .oldgh-diff .oldgh-diff__num {
+  color: rgba(255, 255, 255, 0.3);
+}
 .oldgh-pr-file .oldgh-diff .oldgh-diff__code {
   white-space: pre-wrap;
   word-break: break-all;

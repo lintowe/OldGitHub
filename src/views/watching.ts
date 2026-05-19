@@ -177,7 +177,7 @@ function renderRow(r: WatchedRepo): string {
               : octicon("repo", { size: 14 })}
           <a href="/${escapeAttr(r.ownerLogin)}">${escapeText(r.ownerLogin)}</a>
           <span class="oldgh-watching__slash">/</span>
-          <a href="${escapeAttr(r.url)}"><strong>${escapeText(r.repoName)}</strong></a>
+          <a href="/${escapeAttr(r.ownerLogin)}/${escapeAttr(r.repoName)}"><strong>${escapeText(r.repoName)}</strong></a>
           ${r.isPrivate ? `<span class="oldgh-watching__chip">Private</span>` : ""}
         </h3>
         ${r.description ? `<p class="oldgh-watching__desc">${escapeText(r.description)}</p>` : ""}
