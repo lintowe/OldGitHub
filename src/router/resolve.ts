@@ -300,6 +300,10 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-security", owner, repo, subkind: sub === "advisories" ? "advisories" : "overview" };
   }
 
+  if (segs[2] === "releases" && segs[3] === "download") {
+    return { kind: "out-of-scope" };
+  }
+
   if (segs[2] === "discussions") {
     if (segs.length >= 4) {
       const num = parseInt(segs[3]!, 10);
