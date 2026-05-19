@@ -1809,6 +1809,46 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
   margin-top: 14px;
 }
 
+/* profile stars tab — renders same repo items as the repos tab */
+.oldgh-profile__repos-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+}
+.oldgh-profile__repo {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-profile__repo:last-child { border-bottom: none; }
+.oldgh-profile__repo-name {
+  margin: 0 0 4px;
+  font-size: var(--gh-size-lg);
+  font-weight: normal;
+}
+.oldgh-profile__repo-name a { color: var(--gh-link); font-weight: bold; }
+.oldgh-profile__repo-desc {
+  margin: 0 0 6px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+  line-height: 1.4;
+}
+.oldgh-profile__repo-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-profile__repo-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* contribution legend */
 .oldgh-profile__contribs-legend {
   display: flex;
