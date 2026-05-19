@@ -321,11 +321,6 @@ const COVERED_REPO_KINDS = new Set<Route["kind"]>([
   "repo-other",
 ]);
 
-export function isCovered(pathname: string): boolean {
-  const route = resolveRoute(pathname, "");
-  return COVERED_REPO_KINDS.has(route.kind) || route.kind === "profile";
-}
-
 const COVERED_PROFILE_TABS = new Set<ProfileTab>(["overview", "repositories", "stars", "followers", "following", "achievements", "projects", "packages", "sponsoring", "people"]);
 
 export function isFullyCoveredUrl(pathname: string, search: string): boolean {
