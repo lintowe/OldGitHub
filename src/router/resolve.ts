@@ -151,10 +151,14 @@ export function resolveRoute(pathname: string, search: string): Route {
   // Pass-through routes: forms, creation flows, and file downloads that GitHub handles natively.
   if (
     (segs[2] === "issues" && segs[3] === "new") ||
+    (segs[2] === "issues" && segs[3] === "templates") ||
+    (segs[2] === "issues" && segs[3] === "choose") ||
     (segs[2] === "discussions" && segs[3] === "new") ||
     (segs[2] === "compare" && segs[3] === "new") ||
     (segs[2] === "compare" && segs.length === 3) ||
     (segs[2] === "releases" && segs[3] === "download") ||
+    (segs[2] === "releases" && segs[3] === "new") ||
+    (segs[2] === "releases" && segs[3] === "edit") ||
     segs[2] === "settings" ||
     segs[2] === "fork" ||
     segs[2] === "subscription" ||
@@ -231,7 +235,10 @@ export function resolveRoute(pathname: string, search: string): Route {
   }
 
   if (segs[2] === "wiki") {
-    const page = segs.slice(3).join("/") || "Home";
+    const wikiSegs = segs.slice(3);
+    // underscore paths (_edit, _new, _history, _compare) are native GitHub forms/views
+    if (wikiSegs.some((s) => s.startsWith("_"))) return { kind: "out-of-scope" };
+    const page = wikiSegs.join("/") || "Home";
     return { kind: "repo-wiki", owner, repo, page };
   }
 
@@ -266,6 +273,8 @@ export function resolveRoute(pathname: string, search: string): Route {
   }
 
   if (segs[2] === "community") {
+    // sub-pages like /community/license/new and /community/code-of-conduct/new are native GitHub forms
+    if (segs.length > 3) return { kind: "out-of-scope" };
     return { kind: "repo-graphs", owner, repo, subkind: "community" };
   }
 
@@ -278,11 +287,16 @@ export function resolveRoute(pathname: string, search: string): Route {
   }
 
   if (segs[2] === "projects") {
+    // individual project boards and creation forms → native GitHub
+    if (segs.length > 3) return { kind: "out-of-scope" };
     return { kind: "repo-projects", owner, repo, query: search };
   }
 
   if (segs[2] === "security") {
     const sub = segs[3];
+    // policy editor and individual/new advisory pages → native GitHub
+    if (sub === "policy") return { kind: "out-of-scope" };
+    if (sub === "advisories" && segs.length > 4) return { kind: "out-of-scope" };
     return { kind: "repo-security", owner, repo, subkind: sub === "advisories" ? "advisories" : "overview" };
   }
 

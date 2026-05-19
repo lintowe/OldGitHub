@@ -48,7 +48,7 @@ function renderHeader(c: CommitView): string {
         <h1 class="oldgh-repo-commit__title">${escapeText(c.shortMessage)}</h1>
         <a class="oldgh-btn oldgh-repo-commit__sha" href="${escapeAttr(c.url)}" title="${escapeAttr(c.oid)}"><code>${escapeText(shortOid)}</code></a>
       </div>
-      ${c.bodyMessageHtml ? `<pre class="oldgh-repo-commit__body">${escapeText(c.bodyMessageHtml)}</pre>` : ""}
+      ${c.bodyMessageHtml ? `<pre class="oldgh-repo-commit__body">${sanitizeBodyHtml(c.bodyMessageHtml)}</pre>` : ""}
       <div class="oldgh-repo-commit__meta">
         ${renderAuthor(author)}${commBy}
         on <a href="${escapeAttr(c.url)}" title="${escapeAttr(absoluteTime(c.committedDate))}">${escapeText(relativeTime(c.committedDate))}</a>
@@ -61,6 +61,12 @@ function renderHeader(c: CommitView): string {
 function renderAuthor(a: PersonRef | undefined): string {
   if (!a) return "";
   return `<img class="oldgh-repo-commit__avatar" src="${escapeAttr(a.avatarUrl)}" alt="" width="20" height="20" /> <a href="${escapeAttr(a.path)}"><strong>${escapeText(a.displayName)}</strong></a> authored`;
+}
+
+function sanitizeBodyHtml(html: string): string {
+  return html
+    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }
 
 function escapeText(s: string): string {
