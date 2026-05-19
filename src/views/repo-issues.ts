@@ -137,7 +137,11 @@ function renderEmpty(kind: "issues" | "pulls", v: IssueListView): string {
       </div>
     `;
   }
-  return `<p class="oldgh-profile__muted">No ${kind} match the current filters.</p>`;
+  return `
+    <div class="oldgh-issues__list oldgh-issues__list--empty">
+      <p class="oldgh-issues__filter-empty">No ${kind} match the current filters.</p>
+    </div>
+  `;
 }
 
 function renderPagination(v: IssueListView, kind: "issues" | "pulls"): string {
@@ -189,7 +193,7 @@ function sanitizeTitleHtml(html: string): string {
   // GH's titleHtml may contain <g-emoji> or <code> tags — those are safe to keep
   // but strip <script>/<style>/event attributes as a precaution
   return html
-    .replace(/<\/?(script|style)[^>]*>/gi, "")
+    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
     .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }
 

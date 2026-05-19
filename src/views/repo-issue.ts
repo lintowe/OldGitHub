@@ -169,6 +169,9 @@ async function hydrateScrapedBody(
       "[aria-label*='error' i][role='alert']",
       "script",
       "style",
+      "iframe",
+      "object",
+      "embed",
     ]) {
       inner.querySelectorAll(sel).forEach((n) => n.remove());
     }
@@ -763,7 +766,7 @@ function relativeTimeLink(iso: string): string {
 
 function sanitizeTitleHtml(html: string): string {
   return html
-    .replace(/<\/?(script|style)[^>]*>/gi, "")
+    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
     .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
 }
 

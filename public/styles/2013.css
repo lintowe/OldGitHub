@@ -2340,6 +2340,13 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   gap: 8px;
   margin-top: 16px;
 }
+.oldgh-issues__filter-empty {
+  margin: 0;
+  padding: 24px 16px;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+  text-align: center;
+}
 
 /* state pills */
 .oldgh-state {

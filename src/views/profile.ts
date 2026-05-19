@@ -1226,7 +1226,7 @@ function renderContributions(v: ProfileView): string {
   return `
     <section class="oldgh-profile__contribs">
       ${v.contributionHeading ? `<h3 class="oldgh-profile__section-title">${escapeText(v.contributionHeading)}</h3>` : `<h3 class="oldgh-profile__section-title">Contributions</h3>`}
-      <div class="oldgh-profile__contribs-graph">${v.contributionGraphHtml}</div>
+      <div class="oldgh-profile__contribs-graph">${sanitizeBodyHtml(v.contributionGraphHtml)}</div>
       <div class="oldgh-profile__contribs-legend">
         <span>Less</span>
         <span class="oldgh-profile__contribs-legend-cell" data-level="0"></span>
