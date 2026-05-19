@@ -27,6 +27,7 @@ import { mountTrending, unmountTrending } from "@/views/trending";
 import { mountExplore, unmountExplore } from "@/views/explore";
 import { mountTopic, unmountTopic } from "@/views/topic";
 import { mountRepoProjects, unmountRepoProjects } from "@/views/repo-projects";
+import { mountRepoSecurity, unmountRepoSecurity } from "@/views/repo-security";
 import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
@@ -449,8 +450,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "security") {
-    const subPath = target.subkind === "advisories" ? "/security/advisories" : "/security";
-    await mountRepoSection(target.owner, target.repo, "security", subPath, "Security");
+    if (target.subkind === "advisories") {
+      await mountRepoSection(target.owner, target.repo, "security", "/security/advisories", "Security advisories");
+    } else {
+      await mountRepoSecurity(target.owner, target.repo, "overview");
+    }
     bodyState = target;
     return;
   }
@@ -608,6 +612,7 @@ function unmountBody(): void {
   unmountExplore();
   unmountTopic();
   unmountRepoProjects();
+  unmountRepoSecurity();
   unmountMeIssues();
   unmountProfile();
 }

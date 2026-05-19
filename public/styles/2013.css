@@ -5783,6 +5783,176 @@ html[data-oldgh-theme="dark"] .oldgh-discussion__answer-head {
   color: var(--gh-fg-faint);
 }
 
+/* Repo Security */
+.oldgh-repo-security { padding-top: 14px; padding-bottom: 60px; }
+.oldgh-security__header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  margin-bottom: 16px;
+}
+.oldgh-security__header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--gh-fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.oldgh-security__header h1 .octicon { color: var(--gh-fg-muted); }
+.oldgh-security__header strong { color: var(--gh-fg); font-weight: bold; }
+.oldgh-security__layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.oldgh-security__sidebar {
+  font-size: var(--gh-size-sm);
+}
+.oldgh-security__nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  overflow: hidden;
+}
+.oldgh-security__nav li a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: var(--gh-fg);
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-security__nav li:last-child a { border-bottom: 0; }
+.oldgh-security__nav li a:hover {
+  background: var(--gh-bg-stripe);
+  text-decoration: none;
+}
+.oldgh-security__nav li.is-active a {
+  background: var(--gh-bg-stripe);
+  border-left: 3px solid var(--gh-link);
+  padding-left: 9px;
+  font-weight: bold;
+}
+.oldgh-security__nav .octicon { color: var(--gh-fg-muted); }
+
+.oldgh-security__main { min-width: 0; }
+.oldgh-security__loading,
+.oldgh-security__empty {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--gh-fg-muted);
+}
+.oldgh-security__hero {
+  display: flex;
+  gap: 16px;
+  padding: 16px 18px;
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  margin-bottom: 16px;
+}
+.oldgh-security__hero-icon {
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6cc644;
+}
+.oldgh-security__hero-text h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--gh-fg);
+}
+.oldgh-security__hero-text p {
+  margin: 0;
+  color: var(--gh-fg-muted);
+}
+.oldgh-security__hero-text strong { color: var(--gh-fg); }
+.oldgh-security__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  overflow: hidden;
+}
+.oldgh-security__feature {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  align-items: flex-start;
+}
+.oldgh-security__feature:last-child { border-bottom: 0; }
+.oldgh-security__feature-icon {
+  flex: 0 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gh-fg-muted);
+  padding-top: 2px;
+}
+.oldgh-security__feature-main { flex: 1; min-width: 0; }
+.oldgh-security__feature-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--gh-fg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.oldgh-security__feature-desc {
+  margin: 4px 0 0;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+  line-height: 1.55;
+}
+.oldgh-security__feature-action {
+  flex-shrink: 0;
+  align-self: center;
+  white-space: nowrap;
+}
+.oldgh-security__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 10px;
+}
+.oldgh-security__status--on {
+  background: rgba(108, 198, 68, 0.18);
+  color: #2c662d;
+  border: 1px solid rgba(108, 198, 68, 0.4);
+}
+html[data-oldgh-theme="dark"] .oldgh-security__status--on {
+  color: #7ee787;
+}
+.oldgh-security__status--off {
+  background: var(--gh-bg-stripe);
+  color: var(--gh-fg-muted);
+  border: 1px solid var(--gh-border-faint);
+}
+
 /* Repo Projects */
 .oldgh-projects { padding-top: 14px; padding-bottom: 60px; }
 .oldgh-projects__header {
