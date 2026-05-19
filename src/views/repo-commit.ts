@@ -37,7 +37,7 @@ function renderHeader(c: CommitView): string {
   const parents = c.parents.length > 0
     ? `<div class="oldgh-repo-commit__parents">
         ${c.parents.length === 2 ? "merge of " : "parent "}${c.parents
-          .map((p) => `<a href="/${escapeAttr(c.url.split("/").slice(1, 3).join("/"))}/commit/${escapeAttr(p)}"><code>${escapeText(p.slice(0, 7))}</code></a>`)
+          .map((p) => `<a href="/${escapeAttr(c.owner)}/${escapeAttr(c.repo)}/commit/${escapeAttr(p)}"><code>${escapeText(p.slice(0, 7))}</code></a>`)
           .join(" + ")}
       </div>`
     : "";
