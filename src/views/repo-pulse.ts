@@ -133,6 +133,7 @@ export function renderInsightsNav(active: "pulse" | "contributors" | "commit-act
     { key: "community", label: "Community standards", href: (o, r) => `/${o}/${r}/community` },
     { key: "commit-activity", label: "Commits", href: (o, r) => `/${o}/${r}/graphs/commit-activity` },
     { key: "code-frequency", label: "Code frequency", href: (o, r) => `/${o}/${r}/graphs/code-frequency` },
+    { key: "traffic", label: "Traffic", href: (o, r) => `/${o}/${r}/graphs/traffic` },
     { key: "dependency-graph", label: "Dependency graph", href: (o, r) => `/${o}/${r}/network/dependencies` },
     { key: "network", label: "Network", href: (o, r) => `/${o}/${r}/network` },
     { key: "forks", label: "Forks", href: (o, r) => `/${o}/${r}/forks` },

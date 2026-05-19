@@ -253,10 +253,15 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-pulse", owner, repo };
   }
 
-  if (segs[2] === "graphs" && segs.length >= 4) {
-    const sub = segs[3]!;
-    if (sub === "contributors" || sub === "commit-activity" || sub === "code-frequency" || sub === "traffic") {
-      return { kind: "repo-graphs", owner, repo, subkind: sub };
+  if (segs[2] === "graphs") {
+    if (segs.length >= 4) {
+      const sub = segs[3]!;
+      if (sub === "contributors" || sub === "commit-activity" || sub === "code-frequency" || sub === "traffic") {
+        return { kind: "repo-graphs", owner, repo, subkind: sub };
+      }
+    } else {
+      // /owner/repo/graphs with no subkind → default to contributors (mirrors GitHub's redirect)
+      return { kind: "repo-graphs", owner, repo, subkind: "contributors" };
     }
   }
 
