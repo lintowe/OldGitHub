@@ -103,7 +103,7 @@ function renderIssueList(title: string, items: PulseIssueRef[]): string {
       <ul>
         ${items.map((it) => `
           <li>
-            <a href="${escapeAttr(it.htmlUrl)}">${escapeText(it.title)}</a>
+            <a href="${it.htmlUrl.replace("https://github.com", "")}">${escapeText(it.title)}</a>
             <span class="oldgh-pulse__sublist-meta">#${it.number} ${it.user ? `· ${escapeText(it.user.login)}` : ""}</span>
           </li>
         `).join("")}
@@ -116,8 +116,8 @@ function renderCommitRow(c: PulseCommitRef): string {
   return `
     <li class="oldgh-pulse__commit">
       ${c.authorAvatar ? `<img src="${escapeAttr(c.authorAvatar)}" width="20" height="20" alt="" />` : ""}
-      <a class="oldgh-pulse__commit-msg" href="${escapeAttr(c.htmlUrl)}">${escapeText(c.headline)}</a>
-      <code class="oldgh-pulse__commit-sha"><a href="${escapeAttr(c.htmlUrl)}">${escapeText(c.abbrevSha)}</a></code>
+      <a class="oldgh-pulse__commit-msg" href="${c.htmlUrl.replace("https://github.com", "")}">${escapeText(c.headline)}</a>
+      <code class="oldgh-pulse__commit-sha"><a href="${c.htmlUrl.replace("https://github.com", "")}">${escapeText(c.abbrevSha)}</a></code>
       <span class="oldgh-pulse__commit-meta">
         ${c.authorLogin ? `<a href="/${escapeAttr(c.authorLogin)}">${escapeText(c.authorLogin)}</a>` : ""}
         ${c.date ? `<span title="${escapeAttr(absoluteTime(c.date))}">${escapeText(relativeTime(c.date))}</span>` : ""}

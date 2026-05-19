@@ -224,7 +224,7 @@ function renderRelease(owner: string, repo: string, r: Release): string {
       <div class="oldgh-releases__card">
         <header class="oldgh-releases__card-head">
           <h2 class="oldgh-releases__title">
-            <a href="${escapeAttr(r.htmlUrl)}">${escapeText(r.name)}</a>
+            <a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/releases/tag/${encodeURIComponent(r.tagName)}">${escapeText(r.name)}</a>
           </h2>
           <div class="oldgh-releases__badges">${badges.join("")}</div>
         </header>

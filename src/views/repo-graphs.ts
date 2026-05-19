@@ -106,11 +106,11 @@ function renderContributor(c: ContributorEntry, rank: number, maxCommits: number
   return `
     <li class="oldgh-graphs__contrib">
       <span class="oldgh-graphs__rank">#${rank}</span>
-      <a class="oldgh-graphs__avatar" href="${escapeAttr(c.htmlUrl)}">
+      <a class="oldgh-graphs__avatar" href="/${escapeAttr(c.login)}">
         <img src="${escapeAttr(c.avatarUrl)}" width="40" height="40" alt="" />
       </a>
       <div class="oldgh-graphs__contrib-main">
-        <a class="oldgh-graphs__name" href="${escapeAttr(c.htmlUrl)}"><strong>${escapeText(c.login)}</strong></a>
+        <a class="oldgh-graphs__name" href="/${escapeAttr(c.login)}"><strong>${escapeText(c.login)}</strong></a>
         <div class="oldgh-graphs__contrib-meta">
           <strong>${c.totalCommits.toLocaleString()}</strong> ${c.totalCommits === 1 ? "commit" : "commits"}
           · <span class="oldgh-graphs__add">+${c.totalAdditions.toLocaleString()}</span>
@@ -282,7 +282,7 @@ function renderCommunityRow(owner: string, repo: string, f: CommunityFile): stri
     : `<span class="oldgh-community__check oldgh-community__check--off">${octicon("dot", { size: 14 })}</span>`;
   const setupHref = communitySetupHref(owner, repo, f.key);
   const link = f.htmlUrl
-    ? `<a class="oldgh-community__link" href="${escapeAttr(f.htmlUrl)}">${escapeText(f.label)}</a>`
+    ? `<a class="oldgh-community__link" href="${f.htmlUrl.replace("https://github.com", "")}">${escapeText(f.label)}</a>`
     : `<span class="oldgh-community__label">${escapeText(f.label)}</span>`;
   return `
     <li class="oldgh-community__row ${f.present ? "is-present" : "is-missing"}">
@@ -350,7 +350,7 @@ function renderNetworkRow(f: NetworkFork): string {
       </a>
       <div class="oldgh-network__main">
         <h3 class="oldgh-network__title">
-          <a href="${escapeAttr(f.htmlUrl)}">${escapeText(f.ownerLogin)}/<strong>${escapeText(f.repoName)}</strong></a>
+          <a href="/${escapeAttr(f.ownerLogin)}/${escapeAttr(f.repoName)}">${escapeText(f.ownerLogin)}/<strong>${escapeText(f.repoName)}</strong></a>
         </h3>
         ${f.description ? `<p class="oldgh-network__desc">${escapeText(f.description)}</p>` : ""}
         <ul class="oldgh-network__meta">
