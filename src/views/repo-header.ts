@@ -221,13 +221,13 @@ function currentTabKey(owner: string, repo: string, pathname: string): TabKey {
   if (rest.startsWith("/tree/") || rest.startsWith("/blob/") || rest.startsWith("/commits") || rest.startsWith("/commit/") || rest.startsWith("/releases") || rest.startsWith("/tags") || rest.startsWith("/branches")) {
     return "code";
   }
-  if (rest.startsWith("/issues") || rest.startsWith("/labels") || rest.startsWith("/milestones")) return "issues";
+  if (rest.startsWith("/issues") || rest.startsWith("/labels") || rest.startsWith("/milestones") || rest.startsWith("/milestone/")) return "issues";
   if (rest.startsWith("/pulls") || rest.startsWith("/pull/")) return "pulls";
   if (rest.startsWith("/actions") || rest.startsWith("/runs/")) return "actions";
   if (rest.startsWith("/projects")) return "projects";
   if (rest.startsWith("/wiki")) return "wiki";
   if (rest.startsWith("/security") || rest.startsWith("/dependabot")) return "security";
-  if (rest.startsWith("/pulse") || rest.startsWith("/graphs") || rest.startsWith("/network")) return "insights";
+  if (rest.startsWith("/pulse") || rest.startsWith("/graphs") || rest.startsWith("/network") || rest.startsWith("/community")) return "insights";
   if (rest.startsWith("/settings")) return "settings";
   return "code";
 }
