@@ -29,6 +29,8 @@ import { mountTopic, unmountTopic } from "@/views/topic";
 import { mountRepoProjects, unmountRepoProjects } from "@/views/repo-projects";
 import { mountRepoSecurity, unmountRepoSecurity } from "@/views/repo-security";
 import { mountRepoDiscussions, unmountRepoDiscussions } from "@/views/repo-discussions";
+import { mountMarketplace, unmountMarketplace } from "@/views/marketplace";
+import { mountCollections, unmountCollections } from "@/views/collections";
 import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
@@ -451,11 +453,7 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "security") {
-    if (target.subkind === "advisories") {
-      await mountRepoSection(target.owner, target.repo, "security", "/security/advisories", "Security advisories");
-    } else {
-      await mountRepoSecurity(target.owner, target.repo, "overview");
-    }
+    await mountRepoSecurity(target.owner, target.repo, target.subkind === "advisories" ? "advisories" : "overview");
     bodyState = target;
     return;
   }
@@ -508,6 +506,10 @@ async function applyBodyState(target: BodyState): Promise<void> {
       await mountExplore();
     } else if (target.subkind === "topic") {
       await mountTopic(target.pathname, target.search);
+    } else if (target.subkind === "marketplace") {
+      await mountMarketplace(target.pathname, target.search);
+    } else if (target.subkind === "collections") {
+      await mountCollections(target.pathname);
     } else if (target.subkind === "issues") {
       await mountMeIssues("issue", target.pathname, target.search);
     } else if (target.subkind === "pulls") {
@@ -614,6 +616,8 @@ function unmountBody(): void {
   unmountRepoProjects();
   unmountRepoSecurity();
   unmountRepoDiscussions();
+  unmountMarketplace();
+  unmountCollections();
   unmountMeIssues();
   unmountProfile();
 }

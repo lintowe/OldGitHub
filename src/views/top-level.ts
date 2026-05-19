@@ -3,7 +3,7 @@ import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-top-level";
 
-export type TopLevelKind = "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "topic" | "other";
+export type TopLevelKind = "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "topic" | "collections" | "other";
 
 export async function mountTopLevel(
   kind: TopLevelKind,

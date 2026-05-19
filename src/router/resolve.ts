@@ -19,7 +19,7 @@ export type Route =
   | { kind: "repo-discussion"; owner: string; repo: string; number: number }
   | { kind: "repo-other"; owner: string; repo: string }
   | { kind: "profile"; login: string; tab: ProfileTab; query: string }
-  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "topic" | "other"; pathname: string; search: string; title: string }
+  | { kind: "top-level"; subkind: "dashboard" | "notifications" | "search" | "issues" | "pulls" | "stars" | "explore" | "trending" | "watching" | "marketplace" | "settings" | "topic" | "collections" | "other"; pathname: string; search: string; title: string }
   | { kind: "todo"; name: string };
 
 export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring" | "people";
@@ -111,6 +111,9 @@ export function resolveRoute(pathname: string, search: string): Route {
 
   if (first === "topics" && segs.length >= 2) {
     return { kind: "top-level", subkind: "topic", pathname, search, title: `Topic: ${segs[1]}` };
+  }
+  if (first === "collections") {
+    return { kind: "top-level", subkind: "collections", pathname, search, title: segs[1] ? `Collection: ${segs[1]}` : "Collections" };
   }
   if (TOP_LEVEL_NON_REPO.has(first)) {
     return { kind: "top-level", subkind: "other", pathname, search, title: prettyTitleFromPath(pathname) };

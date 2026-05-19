@@ -662,6 +662,18 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
       container.innerHTML = renderPeopleFromFrame(frame);
       return;
     }
+    if (tab === "packages") {
+      container.innerHTML = renderPackagesFromFrame(frame, login);
+      return;
+    }
+    if (tab === "sponsoring") {
+      container.innerHTML = renderSponsoringFromFrame(frame, login);
+      return;
+    }
+    if (tab === "projects") {
+      container.innerHTML = renderProjectsFromFrame(frame, login);
+      return;
+    }
     for (const node of Array.from(frame.querySelectorAll("script, style"))) node.remove();
     for (const node of Array.from(frame.querySelectorAll<HTMLElement>("*"))) {
       for (const attr of Array.from(node.attributes)) {
@@ -739,6 +751,235 @@ function renderPeopleFromFrame(frame: Element): string {
         </li>
       `).join("")}
     </ul>
+  `;
+}
+
+function renderPackagesFromFrame(frame: Element, login: string): string {
+  type P = {
+    name: string;
+    href: string;
+    registry: string | null;
+    description: string | null;
+    version: string | null;
+    isPrivate: boolean;
+    repo: string | null;
+  };
+  const packages: P[] = [];
+  const seen = new Set<string>();
+  for (const a of Array.from(frame.querySelectorAll<HTMLAnchorElement>("a[href*='/packages']"))) {
+    const href = a.getAttribute("href") || "";
+    const m = /\/([\w.-]+)\/packages\/([\w.-]+)\/package\/([\w.\-@/+%]+)/.exec(href);
+    if (!m) continue;
+    const registry = m[2]!;
+    const name = decodeURIComponent(m[3]!);
+    const key = `${registry}:${name}`;
+    if (seen.has(key)) continue;
+    const card = a.closest("li, article, .Box-row, .d-flex") || a;
+    const titleText = (a.textContent || "").trim();
+    const cleanName = titleText || name;
+    const descEl = card.querySelector<HTMLElement>("p.color-fg-muted, [data-test-selector='package-description']");
+    const description = descEl?.textContent?.trim() || null;
+    const versionEl = card.querySelector<HTMLElement>("[data-test-selector*='package-version'], [class*='version']");
+    const version = versionEl?.textContent?.replace(/\s+/g, " ").trim() || null;
+    const isPrivate = !!card.querySelector("svg.octicon-lock, [aria-label*='Private']");
+    const repoAnchor = Array.from(card.querySelectorAll<HTMLAnchorElement>("a[href]"))
+      .find((x) => /^\/[\w.-]+\/[\w.-]+\/?$/.test(x.getAttribute("href") || ""));
+    const repo = repoAnchor?.getAttribute("href")?.replace(/^\/+/, "") || null;
+    seen.add(key);
+    packages.push({
+      name: cleanName,
+      href: `https://github.com${href}`,
+      registry,
+      description,
+      version,
+      isPrivate,
+      repo,
+    });
+  }
+  if (packages.length === 0) {
+    return `
+      <section class="oldgh-packages">
+        <div class="oldgh-packages__empty">
+          ${octicon("package", { size: 40 })}
+          <h2>No packages published yet.</h2>
+          <p>Container, npm, NuGet, Maven, RubyGems and other packages published from @${escapeText(login)}'s repositories will appear here.</p>
+        </div>
+      </section>
+    `;
+  }
+  return `
+    <section class="oldgh-packages">
+      <header class="oldgh-packages__head">
+        <h3>${octicon("package", { size: 16 })} Packages <span class="oldgh-packages__count">${packages.length}</span></h3>
+      </header>
+      <ul class="oldgh-packages__list">
+        ${packages.map(renderPackageRow).join("")}
+      </ul>
+    </section>
+  `;
+}
+
+function renderPackageRow(p: { name: string; href: string; registry: string | null; description: string | null; version: string | null; isPrivate: boolean; repo: string | null }): string {
+  const registryIcon = packageRegistryIcon(p.registry);
+  return `
+    <li class="oldgh-packages__row">
+      <span class="oldgh-packages__icon">${registryIcon}</span>
+      <div class="oldgh-packages__main">
+        <h3 class="oldgh-packages__name">
+          <a href="${escapeAttr(p.href)}">${escapeText(p.name)}</a>
+          ${p.isPrivate ? `<span class="oldgh-packages__chip">Private</span>` : ""}
+        </h3>
+        ${p.description ? `<p class="oldgh-packages__desc">${escapeText(p.description)}</p>` : ""}
+        <div class="oldgh-packages__meta">
+          ${p.registry ? `<span class="oldgh-packages__registry">${escapeText(formatRegistry(p.registry))}</span>` : ""}
+          ${p.version ? `<span>${octicon("tag", { size: 11 })} ${escapeText(p.version)}</span>` : ""}
+          ${p.repo ? `<span>${octicon("repo", { size: 11 })} <a href="/${escapeAttr(p.repo)}">${escapeText(p.repo)}</a></span>` : ""}
+        </div>
+      </div>
+    </li>
+  `;
+}
+
+function packageRegistryIcon(registry: string | null): string {
+  switch (registry) {
+    case "npm": return octicon("package", { size: 18 });
+    case "container": case "docker": return octicon("container", { size: 18 });
+    case "rubygems": return octicon("ruby", { size: 18 });
+    case "maven": return octicon("file-binary", { size: 18 });
+    case "nuget": return octicon("file-binary", { size: 18 });
+    default: return octicon("package", { size: 18 });
+  }
+}
+
+function formatRegistry(registry: string): string {
+  switch (registry) {
+    case "npm": return "npm";
+    case "container": return "Container";
+    case "docker": return "Docker";
+    case "rubygems": return "RubyGems";
+    case "maven": return "Maven";
+    case "nuget": return "NuGet";
+    default: return registry;
+  }
+}
+
+function renderSponsoringFromFrame(frame: Element, login: string): string {
+  type S = { login: string; name: string | null; avatarUrl: string; tier: string | null };
+  const sponsorees: S[] = [];
+  const seen = new Set<string>();
+  for (const a of Array.from(frame.querySelectorAll<HTMLAnchorElement>("a[data-hovercard-type='user'], a[href^='/']"))) {
+    const href = a.getAttribute("href") || "";
+    const m = /^\/([\w.-]+)\/?$/.exec(href);
+    if (!m) continue;
+    const candidateLogin = m[1]!;
+    if (candidateLogin === login) continue;
+    if (seen.has(candidateLogin)) continue;
+    const card = a.closest("li, article, .Box-row, .d-flex");
+    if (!card) continue;
+    // Only count cards that look like sponsoring cards (have a sponsor button or tier hint).
+    if (!card.querySelector("a[href*='/sponsors/'], a[href*='sponsor'], [class*='tier']")) continue;
+    const avatarImg = card.querySelector<HTMLImageElement>("img.avatar, img[src*='avatars']");
+    const avatarUrl = avatarImg?.getAttribute("src") || `https://github.com/${candidateLogin}.png?size=64`;
+    const nameEl = card.querySelector<HTMLElement>("h3, .h3, .f4, [class*='heading']");
+    const name = nameEl?.textContent?.trim() || null;
+    const tierEl = card.querySelector<HTMLElement>("[class*='tier']");
+    const tier = tierEl?.textContent?.replace(/\s+/g, " ").trim() || null;
+    seen.add(candidateLogin);
+    sponsorees.push({ login: candidateLogin, name: name !== candidateLogin ? name : null, avatarUrl, tier });
+  }
+  if (sponsorees.length === 0) {
+    return `
+      <section class="oldgh-sponsoring">
+        <div class="oldgh-sponsoring__empty">
+          ${octicon("heart", { size: 40 })}
+          <h2>Not sponsoring anyone yet.</h2>
+          <p>Sponsorships fund maintainers of open-source projects. Open the <a href="/sponsors/explore">Sponsors directory</a> to find people @${escapeText(login)} relies on.</p>
+        </div>
+      </section>
+    `;
+  }
+  return `
+    <section class="oldgh-sponsoring">
+      <header class="oldgh-sponsoring__head">
+        <h3>${octicon("heart", { size: 16 })} Sponsoring <span class="oldgh-sponsoring__count">${sponsorees.length}</span></h3>
+        <p>Maintainers @${escapeText(login)} financially supports.</p>
+      </header>
+      <ul class="oldgh-sponsoring__grid">
+        ${sponsorees.map((s) => `
+          <li class="oldgh-sponsoring__card">
+            <a class="oldgh-sponsoring__avatar" href="/${escapeAttr(s.login)}">
+              <img src="${escapeAttr(s.avatarUrl)}" width="56" height="56" alt="" />
+            </a>
+            <div class="oldgh-sponsoring__main">
+              ${s.name ? `<a class="oldgh-sponsoring__name" href="/${escapeAttr(s.login)}"><strong>${escapeText(s.name)}</strong></a>` : ""}
+              <a class="oldgh-sponsoring__login" href="/${escapeAttr(s.login)}">@${escapeText(s.login)}</a>
+              ${s.tier ? `<span class="oldgh-sponsoring__tier">${escapeText(s.tier)}</span>` : ""}
+            </div>
+          </li>
+        `).join("")}
+      </ul>
+    </section>
+  `;
+}
+
+function renderProjectsFromFrame(frame: Element, login: string): string {
+  type P = { number: number; title: string; description: string | null; href: string; status: "open" | "closed"; itemCount: number | null };
+  const projects: P[] = [];
+  const seen = new Set<number>();
+  for (const a of Array.from(frame.querySelectorAll<HTMLAnchorElement>("a[href*='/projects/']"))) {
+    const href = a.getAttribute("href") || "";
+    const m = new RegExp(`^/${login}/projects/(\\d+)`).exec(href) || /^\/users\/[\w.-]+\/projects\/(\d+)/.exec(href);
+    if (!m) continue;
+    const num = parseInt(m[1]!, 10);
+    if (seen.has(num)) continue;
+    const card = a.closest("li, article, .Box-row");
+    if (!card) continue;
+    const title = (a.textContent || "").trim();
+    if (!title || title.length > 200) continue;
+    const descEl = card.querySelector<HTMLElement>("p.color-fg-muted, .text-small.color-fg-muted");
+    const description = descEl?.textContent?.trim() || null;
+    const stateEl = card.querySelector<HTMLElement>("[data-state], .State");
+    const status: "open" | "closed" = /closed/i.test(stateEl?.textContent || "") ? "closed" : "open";
+    const itemCountText = card.querySelector<HTMLElement>(".Counter")?.textContent || "";
+    const itemCount = parseInt(itemCountText.replace(/\D/g, ""), 10) || null;
+    seen.add(num);
+    projects.push({ number: num, title, description, href: `https://github.com${href}`, status, itemCount });
+  }
+  if (projects.length === 0) {
+    return `
+      <section class="oldgh-user-projects">
+        <div class="oldgh-user-projects__empty">
+          ${octicon("project", { size: 40 })}
+          <h2>No projects yet.</h2>
+          <p>User-level projects let @${escapeText(login)} plan personal work across repositories — roadmaps, todo boards, and so on.</p>
+        </div>
+      </section>
+    `;
+  }
+  return `
+    <section class="oldgh-user-projects">
+      <header class="oldgh-user-projects__head">
+        <h3>${octicon("project", { size: 16 })} Projects <span class="oldgh-user-projects__count">${projects.length}</span></h3>
+      </header>
+      <ul class="oldgh-user-projects__list">
+        ${projects.map((p) => `
+          <li class="oldgh-user-projects__row">
+            <span class="oldgh-user-projects__icon">${octicon("project", { size: 16 })}</span>
+            <div class="oldgh-user-projects__main">
+              <h3>
+                <a href="${escapeAttr(p.href)}">${escapeText(p.title)}</a>
+                <span class="oldgh-user-projects__num">#${p.number}</span>
+              </h3>
+              ${p.description ? `<p class="oldgh-user-projects__desc">${escapeText(p.description)}</p>` : ""}
+              <div class="oldgh-user-projects__meta">
+                <span class="oldgh-user-projects__status oldgh-user-projects__status--${p.status}">${p.status === "open" ? "Open" : "Closed"}</span>
+                ${p.itemCount !== null ? `<span>${p.itemCount} items</span>` : ""}
+              </div>
+            </div>
+          </li>
+        `).join("")}
+      </ul>
+    </section>
   `;
 }
 

@@ -26,18 +26,133 @@ export async function mountRepoSecurity(owner: string, repo: string, subkind: "o
   root.innerHTML = renderShell(owner, repo, subkind);
   adoptBodyRoot(root, ".oldgh-repo-header");
 
-  if (subkind === "advisories") return; // handled by scraped fallback elsewhere if needed
-
   const main = root.querySelector<HTMLElement>(".oldgh-security__main");
   if (!main) return;
 
   try {
-    const view = await fetchSecurityView(owner, repo);
-    main.innerHTML = renderOverview(view);
+    if (subkind === "advisories") {
+      const advisories = await fetchAdvisories(owner, repo);
+      main.innerHTML = renderAdvisories(owner, repo, advisories);
+    } else {
+      const view = await fetchSecurityView(owner, repo);
+      main.innerHTML = renderOverview(view);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    main.innerHTML = `<div class="oldgh-security__empty">Couldn't load security overview: ${escapeText(msg)}</div>`;
+    main.innerHTML = `<div class="oldgh-security__empty">Couldn't load: ${escapeText(msg)}</div>`;
   }
+}
+
+type Advisory = {
+  ghsaId: string;
+  cveId: string | null;
+  summary: string;
+  description: string | null;
+  severity: "low" | "medium" | "high" | "critical" | "unknown";
+  state: "draft" | "triage" | "published" | "closed" | "withdrawn";
+  cvssScore: number | null;
+  publishedAt: string | null;
+  updatedAt: string | null;
+  url: string;
+  vulnerabilities: Array<{ ecosystem: string | null; packageName: string | null }>;
+};
+
+async function fetchAdvisories(owner: string, repo: string): Promise<Advisory[]> {
+  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/security-advisories?per_page=30`, {
+    credentials: "omit",
+    headers: { Accept: "application/vnd.github+json" },
+  });
+  if (!resp.ok) {
+    if (resp.status === 404) return [];
+    throw new Error(`responded ${resp.status}`);
+  }
+  const data = (await resp.json()) as unknown[];
+  if (!Array.isArray(data)) return [];
+  return data.map(parseAdvisory).filter((a): a is Advisory => a !== null);
+}
+
+function parseAdvisory(raw: unknown): Advisory | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const ghsaId = typeof r["ghsa_id"] === "string" ? (r["ghsa_id"] as string) : null;
+  if (!ghsaId) return null;
+  const cvss = r["cvss"] && typeof r["cvss"] === "object" ? (r["cvss"] as Record<string, unknown>) : null;
+  const vulns = Array.isArray(r["vulnerabilities"]) ? (r["vulnerabilities"] as unknown[]) : [];
+  return {
+    ghsaId,
+    cveId: typeof r["cve_id"] === "string" ? (r["cve_id"] as string) : null,
+    summary: (typeof r["summary"] === "string" ? (r["summary"] as string) : "") || "Untitled advisory",
+    description: typeof r["description"] === "string" ? (r["description"] as string) : null,
+    severity: ((typeof r["severity"] === "string" ? (r["severity"] as string) : "unknown") as Advisory["severity"]),
+    state: ((typeof r["state"] === "string" ? (r["state"] as string) : "published") as Advisory["state"]),
+    cvssScore: cvss && typeof cvss["score"] === "number" ? (cvss["score"] as number) : null,
+    publishedAt: typeof r["published_at"] === "string" ? (r["published_at"] as string) : null,
+    updatedAt: typeof r["updated_at"] === "string" ? (r["updated_at"] as string) : null,
+    url: (typeof r["html_url"] === "string" ? (r["html_url"] as string) : `https://github.com/advisories/${ghsaId}`),
+    vulnerabilities: vulns
+      .map((v) => {
+        if (!v || typeof v !== "object") return null;
+        const vo = v as Record<string, unknown>;
+        const pkg = vo["package"] && typeof vo["package"] === "object" ? (vo["package"] as Record<string, unknown>) : null;
+        return {
+          ecosystem: pkg && typeof pkg["ecosystem"] === "string" ? (pkg["ecosystem"] as string) : null,
+          packageName: pkg && typeof pkg["name"] === "string" ? (pkg["name"] as string) : null,
+        };
+      })
+      .filter((v): v is { ecosystem: string | null; packageName: string | null } => v !== null),
+  };
+}
+
+function renderAdvisories(owner: string, repo: string, items: Advisory[]): string {
+  if (items.length === 0) {
+    return `
+      <div class="oldgh-security__empty oldgh-security__advisory-empty">
+        ${octicon("megaphone", { size: 40 })}
+        <h2>No published security advisories.</h2>
+        <p>Security advisories let maintainers privately discuss and coordinate fixes for vulnerabilities, then publish them once a patch is ready.</p>
+        <p><a class="oldgh-btn oldgh-btn--primary" href="/${escapeAttr(owner)}/${escapeAttr(repo)}/security/advisories/new">${octicon("plus", { size: 12 })} <span>New draft advisory</span></a></p>
+      </div>
+    `;
+  }
+  return `
+    <div class="oldgh-advisories__bar">
+      <div><strong>${items.length}</strong> ${items.length === 1 ? "advisory" : "advisories"} published</div>
+      <a class="oldgh-btn oldgh-btn--primary" href="/${escapeAttr(owner)}/${escapeAttr(repo)}/security/advisories/new">${octicon("plus", { size: 12 })}<span>New draft</span></a>
+    </div>
+    <ul class="oldgh-advisories">
+      ${items.map(renderAdvisoryRow).join("")}
+    </ul>
+  `;
+}
+
+function renderAdvisoryRow(a: Advisory): string {
+  const sev = a.severity || "unknown";
+  return `
+    <li class="oldgh-advisories__item oldgh-advisories__item--${sev}">
+      <span class="oldgh-advisories__severity oldgh-advisories__severity--${sev}" title="Severity: ${escapeAttr(sev)}">${sev.charAt(0).toUpperCase()}${sev.slice(1)}</span>
+      <div class="oldgh-advisories__main">
+        <h3 class="oldgh-advisories__title">
+          <a href="${escapeAttr(a.url)}">${escapeText(a.summary)}</a>
+        </h3>
+        <div class="oldgh-advisories__meta">
+          <code class="oldgh-advisories__id">${escapeText(a.ghsaId)}</code>
+          ${a.cveId ? `<code class="oldgh-advisories__id">${escapeText(a.cveId)}</code>` : ""}
+          ${a.cvssScore !== null ? `<span class="oldgh-advisories__cvss">CVSS ${a.cvssScore.toFixed(1)}</span>` : ""}
+          ${a.state !== "published" ? `<span class="oldgh-advisories__state">${escapeText(a.state)}</span>` : ""}
+          ${a.publishedAt ? `<time datetime="${escapeAttr(a.publishedAt)}">${escapeText(formatDate(a.publishedAt))}</time>` : ""}
+        </div>
+        ${a.vulnerabilities.length > 0
+          ? `<ul class="oldgh-advisories__packages">${a.vulnerabilities.slice(0, 6).map((v) => `<li><code>${escapeText((v.ecosystem || "") + (v.packageName ? `: ${v.packageName}` : ""))}</code></li>`).join("")}</ul>`
+          : ""}
+      </div>
+    </li>
+  `;
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
 export function unmountRepoSecurity(): void {
