@@ -71,7 +71,7 @@ function parseTopics(data: Record<string, unknown>, isFeatured: boolean): Topic[
       shortDescription: typeof t["short_description"] === "string" ? t["short_description"] : null,
       featured: t["featured"] === true || isFeatured,
       curated: t["curated"] === true,
-      repoCount: null,
+      repoCount: null as number | null,
     };
   }).filter((t): t is Topic => t !== null);
 }
