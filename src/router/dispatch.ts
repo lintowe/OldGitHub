@@ -25,6 +25,8 @@ import { mountSearch, unmountSearch } from "@/views/search";
 import { mountStars, unmountStars } from "@/views/stars";
 import { mountTrending, unmountTrending } from "@/views/trending";
 import { mountExplore, unmountExplore } from "@/views/explore";
+import { mountTopic, unmountTopic } from "@/views/topic";
+import { mountRepoProjects, unmountRepoProjects } from "@/views/repo-projects";
 import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
@@ -442,8 +444,7 @@ async function applyBodyState(target: BodyState): Promise<void> {
     return;
   }
   if (target.kind === "projects") {
-    const subPath = `/projects${target.query ? "?" + target.query : ""}`;
-    await mountRepoSection(target.owner, target.repo, "projects", subPath, "Projects");
+    await mountRepoProjects(target.owner, target.repo, target.query);
     bodyState = target;
     return;
   }
@@ -501,6 +502,8 @@ async function applyBodyState(target: BodyState): Promise<void> {
       await mountTrending(target.pathname, target.search);
     } else if (target.subkind === "explore") {
       await mountExplore();
+    } else if (target.subkind === "topic") {
+      await mountTopic(target.pathname, target.search);
     } else if (target.subkind === "issues") {
       await mountMeIssues("issue", target.pathname, target.search);
     } else if (target.subkind === "pulls") {
@@ -603,6 +606,8 @@ function unmountBody(): void {
   unmountStars();
   unmountTrending();
   unmountExplore();
+  unmountTopic();
+  unmountRepoProjects();
   unmountMeIssues();
   unmountProfile();
 }
