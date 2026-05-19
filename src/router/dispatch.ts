@@ -343,7 +343,7 @@ function targetBodyForRoute(route: Route): BodyState {
 
 function matchRepoList(subPath: string): RepoListKind | null {
   const seg = subPath.replace(/^\//, "").split(/[\/?]/)[0];
-  if (seg === "tags" || seg === "branches" || seg === "forks" || seg === "stargazers" || seg === "labels" || seg === "milestones") {
+  if (seg === "tags" || seg === "branches" || seg === "forks" || seg === "stargazers" || seg === "watchers" || seg === "labels" || seg === "milestones") {
     return seg as RepoListKind;
   }
   return null;

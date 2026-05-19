@@ -5,7 +5,7 @@ import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-list";
 
-export type RepoListKind = "tags" | "branches" | "forks" | "stargazers" | "labels" | "milestones";
+export type RepoListKind = "tags" | "branches" | "forks" | "stargazers" | "watchers" | "labels" | "milestones";
 
 export async function mountRepoList(owner: string, repo: string, kind: RepoListKind, search: string): Promise<void> {
   const root = document.createElement("div");
@@ -26,6 +26,7 @@ export async function mountRepoList(owner: string, repo: string, kind: RepoListK
     else if (kind === "branches") html = await renderBranches(owner, repo, page);
     else if (kind === "forks") html = await renderForks(owner, repo, page);
     else if (kind === "stargazers") html = await renderStargazers(owner, repo, page);
+    else if (kind === "watchers") html = await renderWatchers(owner, repo, page);
     else if (kind === "labels") html = await renderLabels(owner, repo, page);
     else if (kind === "milestones") html = await renderMilestones(owner, repo, state, page);
     main.innerHTML = html;
@@ -44,6 +45,7 @@ function titleFor(kind: RepoListKind): string {
     case "branches": return "Branches";
     case "forks": return "Forks";
     case "stargazers": return "Stargazers";
+    case "watchers": return "Watchers";
     case "labels": return "Labels";
     case "milestones": return "Milestones";
   }
@@ -179,6 +181,26 @@ async function renderStargazers(owner: string, repo: string, page: number): Prom
     `;
   }).join("");
   return `<ul class="oldgh-repo-list__star-grid">${rows}</ul>${pagerHtml(owner, repo, "stargazers", page, arr.length === 60)}`;
+}
+
+async function renderWatchers(owner: string, repo: string, page: number): Promise<string> {
+  const data = await fetchPage(`https://api.github.com/repos/${owner}/${repo}/subscribers?per_page=60&page=${page}`);
+  if (data.length === 0) return emptyHtml("No watchers.");
+  const rows = data.map((raw) => {
+    if (!raw || typeof raw !== "object") return "";
+    const r = raw as Record<string, unknown>;
+    const login = readString(r, "login") ?? "";
+    const avatar = readString(r, "avatar_url") ?? "";
+    return `
+      <li class="oldgh-repo-list__star-cell">
+        <a class="oldgh-repo-list__star-link" href="/${escapeAttr(login)}">
+          <img src="${escapeAttr(avatar)}" width="48" height="48" alt="" />
+          <span class="oldgh-repo-list__star-name">${escapeText(login)}</span>
+        </a>
+      </li>
+    `;
+  }).join("");
+  return `<ul class="oldgh-repo-list__star-grid">${rows}</ul>${pagerHtml(owner, repo, "watchers", page, data.length === 60)}`;
 }
 
 async function renderLabels(owner: string, repo: string, page: number): Promise<string> {
