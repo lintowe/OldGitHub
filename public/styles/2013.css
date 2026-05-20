@@ -8360,6 +8360,9 @@ html[data-oldgh-theme="dark"] .oldgh-trending__momentum {
   padding: 16px 18px;
   margin: 16px 0;
 }
+html[data-oldgh-theme="dark"] .oldgh-actions-run__header {
+  background: var(--gh-bg-stripe);
+}
 .oldgh-actions-run__title-row {
   display: flex;
   align-items: center;
@@ -8652,8 +8655,14 @@ html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--action_required {
   color: var(--gh-fg);
   font-family: inherit;
 }
+html[data-oldgh-theme="dark"] .oldgh-actions-run__job-header {
+  background: var(--gh-bg-stripe);
+}
 .oldgh-actions-run__job-header:hover {
   background: linear-gradient(180deg, #f3f5f7 0%, #e7ebef 100%);
+}
+html[data-oldgh-theme="dark"] .oldgh-actions-run__job-header:hover {
+  background: var(--gh-bg-elev);
 }
 .oldgh-actions-run__job-name {
   flex: 1;
@@ -9128,6 +9137,9 @@ html[data-oldgh-theme="dark"] .oldgh-actions-run__state-pill--action_required {
   align-items: center;
   gap: 6px;
   color: var(--gh-fg);
+}
+html[data-oldgh-theme="dark"] .oldgh-profile__readme .oldgh-profile__section-title {
+  background: var(--gh-bg-stripe);
 }
 .oldgh-profile__readme-body {
   padding: 18px 24px;
