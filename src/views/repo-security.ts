@@ -88,7 +88,7 @@ function parseAdvisory(raw: unknown): Advisory | null {
     cvssScore: cvss && typeof cvss["score"] === "number" ? (cvss["score"] as number) : null,
     publishedAt: typeof r["published_at"] === "string" ? (r["published_at"] as string) : null,
     updatedAt: typeof r["updated_at"] === "string" ? (r["updated_at"] as string) : null,
-    url: (typeof r["html_url"] === "string" ? (r["html_url"] as string) : `https://github.com/advisories/${ghsaId}`),
+    url: (typeof r["html_url"] === "string" ? (r["html_url"] as string) : `/advisories/${ghsaId}`).replace(/^https:\/\/github\.com/, ""),
     vulnerabilities: vulns
       .map((v) => {
         if (!v || typeof v !== "object") return null;

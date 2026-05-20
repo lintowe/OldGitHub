@@ -183,7 +183,7 @@ function extractItems(scope: Element): MarketItem[] {
       category,
       verified,
       pricing,
-      url: `https://github.com${href}`,
+      url: href,
     });
     if (out.length >= 60) break;
   }
