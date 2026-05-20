@@ -182,7 +182,18 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
         clearMounted();
         return;
       }
-      // Everything else — wrap the native page in an iframe inside our shell
+      // JS-rendered pages (create forms, auth screens) can't be iframed because
+      // github.com responds with X-Frame-Options: deny. Show our themed header
+      // and let the native body hydrate underneath.
+      if (
+        /^\/(new|import|organizations\/new|login|signup|join|password_reset|account|sponsors)(\/|$)/.test(pathname)
+      ) {
+        await applyBodyState({ kind: "none" });
+        teardownRepoHeader();
+        clearMounted();
+        return;
+      }
+      // Fallback: wrap the native page in an iframe inside our themed shell
       document.documentElement.setAttribute(MOUNTED_ATTR, "native-iframe");
       teardownRepoHeader();
       bodyState = { kind: "none" };
