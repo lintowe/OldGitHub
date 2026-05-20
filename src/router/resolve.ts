@@ -43,9 +43,7 @@ const OUT_OF_SCOPE_PREFIXES = [
   "/import",
 ];
 
-const OUT_OF_SCOPE_REPO_SUFFIXES = [
-  "/settings",
-];
+const OUT_OF_SCOPE_REPO_SUFFIXES: string[] = [];
 
 const TOP_LEVEL_NON_REPO = new Set([
   "search",
@@ -159,7 +157,6 @@ export function resolveRoute(pathname: string, search: string): Route {
     (segs[2] === "releases" && segs[3] === "download") ||
     (segs[2] === "releases" && segs[3] === "new") ||
     (segs[2] === "releases" && segs[3] === "edit") ||
-    segs[2] === "settings" ||
     segs[2] === "fork" ||
     segs[2] === "subscription" ||
     segs[2] === "find" ||
