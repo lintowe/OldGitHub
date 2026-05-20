@@ -77,7 +77,8 @@ function parseItem(raw: unknown): MeIssueItem | null {
   const number = typeof r["number"] === "number" ? (r["number"] as number) : 0;
   if (!number) return null;
   const title = typeof r["title"] === "string" ? (r["title"] as string) : "";
-  const url = typeof r["html_url"] === "string" ? (r["html_url"] as string) : "";
+  const urlRaw = typeof r["html_url"] === "string" ? (r["html_url"] as string) : "";
+  const url = urlRaw.replace(/^https:\/\/github\.com/, "");
   const stateRaw = typeof r["state"] === "string" ? (r["state"] as string) : "open";
   const draft = r["draft"] === true;
   const isPull = !!r["pull_request"];
