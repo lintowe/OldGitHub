@@ -5234,29 +5234,30 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
   background: var(--gh-bg-elev);
 }
 .oldgh-repo-list__star-link {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  column-gap: 8px;
   padding: 8px 10px;
   color: var(--gh-fg);
 }
 .oldgh-repo-list__star-link img {
+  grid-row: 1 / span 2;
   border-radius: 3px;
   border: 1px solid var(--gh-border-faint);
 }
 .oldgh-repo-list__star-name {
   font-weight: bold;
   font-size: var(--gh-size-md);
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .oldgh-repo-list__star-when {
-  display: block;
   font-size: 10px;
   color: var(--gh-fg-muted);
+  line-height: 1.2;
 }
 
 /* Labels */

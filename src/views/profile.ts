@@ -709,8 +709,10 @@ function renderPeopleFromFrame(frame: Element): string {
       a.closest("[data-testid*='member']") ||
       a.parentElement;
 
-    let avatarImg = card?.querySelector<HTMLImageElement>("img.avatar, img.avatar-user, img[src*='avatars']") ?? null;
-    if (!avatarImg) avatarImg = a.querySelector<HTMLImageElement>("img[src*='avatars']") ?? null;
+    // Look for an avatar only inside the anchor itself — the scraped list often
+    // wraps cards in shared ancestors, so a broader query returns the same image
+    // for every member. Fall back to the login-based redirect URL.
+    let avatarImg = a.querySelector<HTMLImageElement>("img[src*='avatars']") ?? null;
     const avatarUrl = avatarImg?.getAttribute("src") || `https://github.com/${login}.png?size=64`;
 
     let name: string | null = null;
