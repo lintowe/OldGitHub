@@ -110,7 +110,7 @@ async function scrapeDiscussions(owner: string, repo: string, subPath: string, q
     items.push({
       number: num,
       title,
-      url: `https://github.com${href}`,
+      url: href,
       author,
       category,
       state,

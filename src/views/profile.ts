@@ -788,7 +788,7 @@ function renderPackagesFromFrame(frame: Element, login: string): string {
     seen.add(key);
     packages.push({
       name: cleanName,
-      href: `https://github.com${href}`,
+      href,
       registry,
       description,
       version,
@@ -943,7 +943,7 @@ function renderProjectsFromFrame(frame: Element, login: string): string {
     const itemCountText = card.querySelector<HTMLElement>(".Counter")?.textContent || "";
     const itemCount = parseInt(itemCountText.replace(/\D/g, ""), 10) || null;
     seen.add(num);
-    projects.push({ number: num, title, description, href: `https://github.com${href}`, status, itemCount });
+    projects.push({ number: num, title, description, href, status, itemCount });
   }
   if (projects.length === 0) {
     return `

@@ -68,7 +68,7 @@ async function scrapeProjects(owner: string, repo: string, search: string): Prom
       number: num,
       title,
       description: desc,
-      url: `https://github.com${href.replace(/[?#].*$/, "")}`,
+      url: href.replace(/[?#].*$/, ""),
       ownerLogin,
       ownerAvatar: `https://github.com/${ownerLogin}.png?size=40`,
       state,
