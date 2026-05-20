@@ -6027,9 +6027,9 @@ html[data-oldgh-theme="dark"] .oldgh-user-projects__status--closed { color: #d2a
   border-radius: var(--gh-radius);
   box-shadow: var(--gh-shadow-soft);
 }
-.oldgh-packages__empty .octicon,
-.oldgh-sponsoring__empty .octicon,
-.oldgh-user-projects__empty .octicon {
+.oldgh-packages__empty > .octicon,
+.oldgh-sponsoring__empty > .octicon,
+.oldgh-user-projects__empty > .octicon {
   color: var(--gh-fg-faint);
   margin-bottom: 8px;
 }
@@ -6610,7 +6610,7 @@ html[data-oldgh-theme="dark"] .oldgh-marketplace__kind--app {
   text-align: center;
   color: var(--gh-fg-muted);
 }
-.oldgh-discussions__empty .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
+.oldgh-discussions__empty > .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
 .oldgh-discussions__empty h2 {
   margin: 12px 0 8px;
   font-size: 20px;
@@ -6797,7 +6797,7 @@ html[data-oldgh-theme="dark"] .oldgh-discussions__state--answered { color: #d2a8
   text-align: center;
   color: var(--gh-fg-muted);
 }
-.oldgh-watching__empty .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
+.oldgh-watching__empty > .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
 .oldgh-watching__empty h2 {
   margin: 12px 0 8px;
   font-size: 20px;
@@ -7125,7 +7125,7 @@ html[data-oldgh-theme="dark"] .oldgh-sponsors__btn:hover {
   text-align: center;
   color: var(--gh-fg-muted);
 }
-.oldgh-topics-index__empty .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; display: block; }
+.oldgh-topics-index__empty > .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; display: block; }
 .oldgh-topics-index__section {
   margin-bottom: 28px;
 }
@@ -7232,7 +7232,7 @@ html[data-oldgh-theme="dark"] .oldgh-topics-index__badge--featured {
   padding: 48px 24px;
   text-align: center;
 }
-.oldgh-security__advisory-empty .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
+.oldgh-security__advisory-empty > .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
 .oldgh-security__advisory-empty h2 {
   margin: 12px 0 8px;
   font-size: 20px;
@@ -7552,7 +7552,7 @@ html[data-oldgh-theme="dark"] .oldgh-security__status--off {
   text-align: center;
   color: var(--gh-fg-muted);
 }
-.oldgh-projects__empty .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
+.oldgh-projects__empty > .octicon { color: var(--gh-fg-faint); margin-bottom: 8px; }
 .oldgh-projects__empty h2 {
   margin: 12px 0 8px;
   font-size: 20px;
