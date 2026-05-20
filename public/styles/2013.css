@@ -1885,7 +1885,10 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 }
 
 .oldgh-profile__pinned {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+}
+.oldgh-profile__contribs {
+  margin-bottom: 18px;
 }
 .oldgh-profile__pinned-list {
   margin: 0;
@@ -1973,14 +1976,13 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   background: var(--gh-bg-elev);
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
-  padding: 10px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  padding: 10px 12px;
+  overflow: hidden;
 }
 .oldgh-profile__contribs-graph table {
   border-collapse: separate;
   border-spacing: 2px;
-  margin: 0;
+  margin: 0 auto;
   width: auto;
   table-layout: fixed;
 }
@@ -1996,14 +1998,20 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 }
 .oldgh-profile__contribs-graph td.ContributionCalendar-day,
 .oldgh-profile__contribs-graph td.day {
-  width: 11px !important;
-  min-width: 11px;
-  max-width: 11px;
-  height: 11px;
+  width: 10px !important;
+  min-width: 10px;
+  max-width: 10px;
+  height: 10px;
   background: #eeeeee;
   border-radius: 2px;
   padding: 0;
   box-sizing: border-box;
+  cursor: pointer;
+}
+.oldgh-profile__contribs-graph td.ContributionCalendar-day:hover,
+.oldgh-profile__contribs-graph td.day:hover {
+  outline: 1px solid var(--gh-fg-muted);
+  outline-offset: -1px;
 }
 .oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="1"],
 .oldgh-profile__contribs-graph td.day[data-level="1"] { background: #d6e685; }
@@ -2069,6 +2077,32 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCale
 html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="3"] { background: #26a641; }
 html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCalendar-day[data-level="4"],
 html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="4"] { background: #39d353; }
+
+/* contribution day hover tooltip */
+.oldgh-contrib-tip {
+  position: absolute;
+  z-index: 100;
+  pointer-events: none;
+  padding: 6px 9px;
+  background: #1c1c1c;
+  color: #f1f1f1;
+  border: 1px solid #000;
+  border-radius: 3px;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.oldgh-contrib-tip[hidden] { display: none; }
+.oldgh-contrib-tip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-top-color: #1c1c1c;
+  border-bottom: 0;
+}
 
 .oldgh-profile__contribs-stats {
   display: grid;

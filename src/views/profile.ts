@@ -51,6 +51,56 @@ export async function mountProfile(login: string, tab: string, query: string): P
   setTimeout(() => decorateContributionCells(root), 100);
   setTimeout(() => decorateContributionCells(root), 500);
   renderContributionStreaks(root);
+  bindContributionTooltips(root);
+}
+
+function bindContributionTooltips(root: HTMLElement): void {
+  const graph = root.querySelector<HTMLElement>(".oldgh-profile__contribs-graph");
+  if (!graph) return;
+  if (graph.dataset["oldghTipBound"] === "1") return;
+  graph.dataset["oldghTipBound"] = "1";
+
+  let tip = document.querySelector<HTMLDivElement>(".oldgh-contrib-tip");
+  if (!tip) {
+    tip = document.createElement("div");
+    tip.className = "oldgh-contrib-tip";
+    tip.setAttribute("hidden", "");
+    document.body.appendChild(tip);
+  }
+
+  const show = (cell: HTMLElement): void => {
+    const text = cell.getAttribute("title") || cell.getAttribute("aria-label") || "";
+    if (!text) return;
+    cell.dataset["oldghTitle"] = text;
+    cell.removeAttribute("title");
+    if (!tip) return;
+    tip.textContent = text;
+    tip.removeAttribute("hidden");
+    const r = cell.getBoundingClientRect();
+    const tw = tip.offsetWidth;
+    const left = Math.max(8, Math.min(window.innerWidth - tw - 8, r.left + r.width / 2 - tw / 2));
+    const top = window.scrollY + r.top - tip.offsetHeight - 6;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  };
+  const hide = (cell: HTMLElement): void => {
+    if (cell.dataset["oldghTitle"]) {
+      cell.setAttribute("title", cell.dataset["oldghTitle"] || "");
+    }
+    if (tip) tip.setAttribute("hidden", "");
+  };
+  graph.addEventListener("mouseover", (e) => {
+    const t = e.target as HTMLElement | null;
+    if (!t) return;
+    const cell = t.closest<HTMLElement>(".ContributionCalendar-day, td.day");
+    if (cell) show(cell);
+  });
+  graph.addEventListener("mouseout", (e) => {
+    const t = e.target as HTMLElement | null;
+    if (!t) return;
+    const cell = t.closest<HTMLElement>(".ContributionCalendar-day, td.day");
+    if (cell) hide(cell);
+  });
 }
 
 function renderContributionStreaks(root: HTMLElement): void {
