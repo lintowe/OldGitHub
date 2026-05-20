@@ -67,22 +67,23 @@ async function run(): Promise<void> {
 }
 
 function forceGitHubColorModeNeutral(): void {
-  // We render everything ourselves, but a few scraped fragments (achievements,
-  // wiki, scraped sections) still pick up GitHub's color-mode tokens. Pin them
-  // to "light" so scraped HTML always uses light tokens; our own dark theme is
-  // independent and reads data-oldgh-theme instead.
+  // we render everything ourselves, but a few scraped fragments (achievements,
+  // wiki, scraped sections) still pick up github's color-mode tokens.
+  // pin them to follow our resolved theme so scraped HTML matches the user
+  // theme, and so native pass-through pages (create forms, settings) have
+  // readable labels.
   const html = document.documentElement;
-  html.setAttribute("data-color-mode", "light");
-  html.setAttribute("data-light-theme", "light");
-  html.setAttribute("data-dark-theme", "light");
-  const obs = new MutationObserver(() => {
-    if (html.getAttribute("data-color-mode") !== "light") {
-      html.setAttribute("data-color-mode", "light");
-      html.setAttribute("data-light-theme", "light");
-      html.setAttribute("data-dark-theme", "light");
+  const sync = (): void => {
+    const ourTheme = html.getAttribute("data-oldgh-theme") === "dark" ? "dark" : "light";
+    if (html.getAttribute("data-color-mode") !== ourTheme) {
+      html.setAttribute("data-color-mode", ourTheme);
     }
-  });
-  obs.observe(html, { attributes: true, attributeFilter: ["data-color-mode", "data-light-theme", "data-dark-theme"] });
+    if (html.getAttribute("data-light-theme") !== "light") html.setAttribute("data-light-theme", "light");
+    if (html.getAttribute("data-dark-theme") !== "dark") html.setAttribute("data-dark-theme", "dark");
+  };
+  sync();
+  const obs = new MutationObserver(() => sync());
+  obs.observe(html, { attributes: true, attributeFilter: ["data-color-mode", "data-light-theme", "data-dark-theme", "data-oldgh-theme"] });
 }
 
 function injectThemeStylesheet(): void {
