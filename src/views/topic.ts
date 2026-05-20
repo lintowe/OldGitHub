@@ -1,5 +1,6 @@
 import { octicon } from "@/icons";
 import { fetchApi } from "@/adapters/rate-limit";
+import { relativeTime } from "@/util/time";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-topic";
@@ -227,7 +228,7 @@ function renderRepoRow(r: TopicRepo): string {
         ${r.language ? `<li><span class="oldgh-search__lang-dot" style="background:${languageColor(r.language)}"></span>${escapeText(r.language)}</li>` : ""}
         <li>${octicon("star", { size: 12 })} ${formatCount(r.stars)}</li>
         <li>${octicon("repo-forked", { size: 12 })} ${formatCount(r.forks)}</li>
-        ${r.updatedAt ? `<li>Updated ${escapeText(formatDate(r.updatedAt))}</li>` : ""}
+        ${r.updatedAt ? `<li>Updated <time datetime="${escapeAttr(r.updatedAt)}" title="${escapeAttr(absoluteFromIso(r.updatedAt))}">${escapeText(relativeTime(r.updatedAt))}</time></li>` : ""}
       </ul>
     </li>
   `;
@@ -258,7 +259,7 @@ function formatCount(n: number): string {
   return `${(n / 1_000_000).toFixed(1)}M`;
 }
 
-function formatDate(iso: string): string {
+function absoluteFromIso(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
