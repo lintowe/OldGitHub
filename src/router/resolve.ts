@@ -37,7 +37,6 @@ const OUT_OF_SCOPE_PREFIXES = [
   "/codespaces",
   "/sponsors",
   "/enterprises",
-  "/settings",
   "/account",
   "/organizations/new",
   "/new",
