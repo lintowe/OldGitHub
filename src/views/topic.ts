@@ -165,7 +165,7 @@ function renderHero(slug: string, meta: TopicMeta | null): string {
         </h1>
         ${badges.length > 0 ? `<div class="oldgh-topic__badges">${badges.join("")}</div>` : ""}
         ${meta?.shortDescription ? `<p class="oldgh-topic__short">${escapeText(meta.shortDescription)}</p>` : ""}
-        ${meta?.description && meta?.description !== meta?.shortDescription ? `<p class="oldgh-topic__desc">${escapeText(meta.description.slice(0, 400))}</p>` : ""}
+        ${meta?.description && meta?.description !== meta?.shortDescription ? `<p class="oldgh-topic__desc">${escapeText(stripMarkup(meta.description).slice(0, 400))}</p>` : ""}
         ${renderMeta(meta)}
       </div>
     </header>
@@ -276,6 +276,10 @@ function languageColor(lang: string): string {
 
 function escapeText(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function stripMarkup(s: string): string {
+  return s.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 }
 
 function escapeAttr(s: string): string {
