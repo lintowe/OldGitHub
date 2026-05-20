@@ -157,6 +157,7 @@ function cleanScrapedContent(el: Element): void {
     // native sidebars / nav we replace with our own
     ".js-repo-settings-sidebar",
     ".SideNav",
+    ".Layout-sidebar",
     "nav[aria-label='Settings sidebar']",
     "nav[aria-label='Repo settings sidebar']",
     "nav[aria-label*='settings' i]",

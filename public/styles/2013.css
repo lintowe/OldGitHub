@@ -9579,6 +9579,31 @@ html[data-oldgh-theme="dark"] .oldgh-settings__native .Button {
 .oldgh-settings__native include-fragment[loading="lazy"]:empty {
   display: none;
 }
+/* force Layout-main full width since we strip Layout-sidebar */
+.oldgh-settings__native .Layout {
+  display: block !important;
+  grid-template-columns: none !important;
+  width: 100% !important;
+}
+.oldgh-settings__native .Layout-main,
+.oldgh-settings__native .Layout-main-centered-md,
+.oldgh-settings__native .Layout-main-centered-lg,
+.oldgh-settings__native .Layout-main-centered-xl {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+  flex: 1 1 100% !important;
+}
+/* the Primer Box flex layouts compact inside our narrow container; let
+   inline 'd-flex' that GitHub uses for split-button rows stay row, but
+   wrap to two lines instead of squeezing the description column */
+.oldgh-settings__native .d-flex.flex-justify-between {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.oldgh-settings__native .d-flex.flex-justify-between > * {
+  min-width: 0;
+}
 /* danger zone */
 .oldgh-settings__native .danger-zone,
 .oldgh-settings__native .border-red {
