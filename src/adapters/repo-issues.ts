@@ -69,7 +69,13 @@ export async function getIssueList(
   const sort = sortClause.sort ?? "updated";
   const direction = sortClause.direction ?? "desc";
 
-  const needsSearch = (kind === "pulls" && !!author) || /\b(involves|mentions|review|review-requested|reviewed-by|commenter|head|base):/i.test(qStr);
+  // REST /repos/.../issues returns issues AND pull-requests; for "issues" mode we
+  // filter PRs out client-side, but on PR-heavy repos this leaves an almost-empty
+  // page. Default to the search API for issues so the filter happens server-side.
+  const needsSearch =
+    kind === "issues" ||
+    (kind === "pulls" && !!author) ||
+    /\b(involves|mentions|review|review-requested|reviewed-by|commenter|head|base):/i.test(qStr);
 
   if (isApiRateLimited()) {
     return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
