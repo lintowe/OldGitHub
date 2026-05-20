@@ -125,7 +125,7 @@ function parseRun(raw: unknown, owner: string, repo: string): WorkflowRun | null
   const r = raw as Record<string, unknown>;
   const id = typeof r["id"] === "number" ? String(r["id"] as number) : "";
   if (!id) return null;
-  const url = typeof r["html_url"] === "string" ? (r["html_url"] as string) : "";
+  const url = (typeof r["html_url"] === "string" ? (r["html_url"] as string) : "").replace(/^https:\/\/github\.com/, "");
   const workflowName = typeof r["name"] === "string" ? (r["name"] as string) : "Workflow";
   const displayTitle = typeof r["display_title"] === "string" ? (r["display_title"] as string) : workflowName;
   const runNumber = typeof r["run_number"] === "number" ? (r["run_number"] as number) : null;

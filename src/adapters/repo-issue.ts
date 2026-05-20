@@ -607,7 +607,7 @@ function restMilestone(raw: unknown): Milestone | null {
   if (!title) return null;
   return {
     title,
-    url: readString(m, "html_url") ?? "",
+    url: (readString(m, "html_url") ?? "").replace(/^https:\/\/github\.com/, ""),
   };
 }
 

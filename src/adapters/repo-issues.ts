@@ -352,7 +352,7 @@ function parseRow(raw: unknown, kind: "issues" | "pulls"): IssueRow | null {
     const t = typeof m["title"] === "string" ? (m["title"] as string) : null;
     if (t) {
       const htmlUrl = typeof m["html_url"] === "string" ? (m["html_url"] as string) : "";
-      milestone = { title: t, url: htmlUrl };
+      milestone = { title: t, url: htmlUrl.replace(/^https:\/\/github\.com/, "") };
     }
   }
 
