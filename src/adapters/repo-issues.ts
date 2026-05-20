@@ -92,11 +92,11 @@ export async function getIssueList(
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
-    if (resp.status === 403 || resp.status === 429 || resp.status === 401 || resp.status === 404) {
-      return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
-    }
     if (!resp.ok) {
-      throw new AdapterFailure("getIssueList", `search responded ${resp.status}`);
+      // 401/403/404 — auth required (often private repo)
+      // 422 — search API rejects the query (private repo without token, etc.)
+      // 429 — rate-limited
+      return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
     }
     const data = (await resp.json()) as { items?: unknown[] };
     rows = [];
@@ -123,11 +123,9 @@ export async function getIssueList(
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
-    if (resp.status === 403 || resp.status === 429 || resp.status === 401 || resp.status === 404) {
-      return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
-    }
     if (!resp.ok) {
-      throw new AdapterFailure("getIssueList", `${apiUrl.pathname} responded ${resp.status}`);
+      // any non-ok — fall back to the cookie-authed HTML scrape
+      return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
     }
     const data = (await resp.json()) as unknown[];
     rows = [];
