@@ -104,11 +104,11 @@ html[data-oldgh="active"] body {
   background: var(--gh-bg);
 }
 
-html[data-oldgh="active"] a {
+html[data-oldgh="active"] a:not(.oldgh-btn) {
   color: var(--gh-link);
   text-decoration: none;
 }
-html[data-oldgh="active"] a:hover {
+html[data-oldgh="active"] a:not(.oldgh-btn):hover {
   text-decoration: underline;
 }
 
