@@ -66,7 +66,8 @@ function renderAuthor(a: PersonRef | undefined): string {
 function sanitizeBodyHtml(html: string): string {
   return html
     .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/href=(["'])https?:\/\/github\.com(\/[^"']*)\1/gi, 'href=$1$2$1');
 }
 
 function escapeText(s: string): string {
