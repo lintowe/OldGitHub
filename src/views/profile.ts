@@ -549,18 +549,35 @@ function renderStarItem(raw: unknown): string {
   const forks = typeof r["forks_count"] === "number" ? (r["forks_count"] as number) : 0;
   const lang = typeof r["language"] === "string" ? (r["language"] as string) : null;
   const updated = typeof r["pushed_at"] === "string" ? (r["pushed_at"] as string) : "";
+  const langDot = lang
+    ? `<span class="oldgh-profile__lang-swatch" style="background:${escapeAttr(languageColor(lang))}"></span>`
+    : "";
   return `
     <li class="oldgh-profile__repo">
       <h3 class="oldgh-profile__repo-name"><a href="/${escapeAttr(full)}">${escapeText(full)}</a></h3>
       ${desc ? `<p class="oldgh-profile__repo-desc">${escapeText(desc)}</p>` : ""}
       <p class="oldgh-profile__repo-meta">
-        ${lang ? `<span>${escapeText(lang)}</span>` : ""}
+        ${lang ? `<span>${langDot}${escapeText(lang)}</span>` : ""}
         <span>${octicon("star", { size: 12 })}${formatNum(stars)}</span>
         <span>${octicon("repo-forked", { size: 12 })}${formatNum(forks)}</span>
         ${updated ? `<span>updated <span title="${escapeAttr(updated)}">${escapeText(relativeTime(updated))}</span></span>` : ""}
       </p>
     </li>
   `;
+}
+
+function languageColor(lang: string): string {
+  const map: Record<string, string> = {
+    "TypeScript": "#2b7489", "JavaScript": "#f1e05a", "Python": "#3572A5", "Rust": "#dea584",
+    "Go": "#00ADD8", "Java": "#b07219", "C": "#555555", "C++": "#f34b7d", "C#": "#178600",
+    "Ruby": "#701516", "PHP": "#4F5D95", "Swift": "#ffac45", "Kotlin": "#A97BFF", "Shell": "#89e051",
+    "HTML": "#e34c26", "CSS": "#563d7c", "Vue": "#41b883", "OCaml": "#3be133", "Elixir": "#6e4a7e",
+    "Haskell": "#5e5086", "Lua": "#000080", "Dart": "#00B4AB", "Scala": "#c22d40", "Perl": "#0298c3",
+    "Objective-C": "#438eff", "Clojure": "#db5855", "Erlang": "#B83998", "R": "#198ce7",
+    "Julia": "#a270ba", "PowerShell": "#012456", "Solidity": "#AA6746", "Zig": "#ec915c",
+    "Nim": "#37775b", "Crystal": "#000100", "F#": "#b845fc",
+  };
+  return map[lang] ?? "#ccc";
 }
 
 function formatNum(n: number): string {
