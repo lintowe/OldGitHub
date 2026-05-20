@@ -26,20 +26,13 @@ export type Route =
 export type ProfileTab = "overview" | "repositories" | "stars" | "followers" | "following" | "achievements" | "projects" | "packages" | "sponsoring" | "people";
 
 const OUT_OF_SCOPE_PREFIXES = [
-  // auth flows — must be native
-  "/login",
+  // POST-only / instant-redirect endpoints that never render a body
   "/logout",
-  "/join",
-  "/signup",
   "/session",
-  "/password_reset",
-  // app flows
+  // sponsor hub is intercepted to /sponsors/explore further down
   "/sponsors",
-  "/enterprises",
+  // /account server-redirects to /settings/profile (themed)
   "/account",
-  "/organizations/new",
-  "/new",
-  "/import",
 ];
 
 const OUT_OF_SCOPE_REPO_SUFFIXES: string[] = [];
@@ -145,27 +138,9 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-home", owner, repo };
   }
 
-  // Pass-through routes: forms, creation flows, and file downloads that GitHub handles natively.
-  if (
-    (segs[2] === "issues" && segs[3] === "new") ||
-    (segs[2] === "issues" && segs[3] === "templates") ||
-    (segs[2] === "issues" && segs[3] === "choose") ||
-    (segs[2] === "discussions" && segs[3] === "new") ||
-    (segs[2] === "compare" && segs[3] === "new") ||
-    (segs[2] === "compare" && segs.length === 3) ||
-    (segs[2] === "releases" && segs[3] === "download") ||
-    (segs[2] === "releases" && segs[3] === "new") ||
-    (segs[2] === "releases" && segs[3] === "edit") ||
-    segs[2] === "fork" ||
-    segs[2] === "subscription" ||
-    segs[2] === "find" ||
-    segs[2] === "edit" ||
-    segs[2] === "new" ||
-    segs[2] === "delete" ||
-    segs[2] === "merge_queue" ||
-    segs[2] === "deployments" ||
-    segs[2] === "archive"
-  ) {
+  // The only true pass-through case is /<owner>/<repo>/releases/download/*
+  // which is a file download URL that 302s to a binary blob.
+  if (segs[2] === "releases" && segs[3] === "download") {
     return { kind: "out-of-scope" };
   }
 
