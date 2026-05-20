@@ -2,6 +2,7 @@ import { octicon } from "@/icons";
 import { getMeIssues, type MeIssueFilter, type MeIssueItem, type MeIssueKind, type MeIssuesPage } from "@/adapters/me-issues";
 import { currentUserLogin } from "@/auth/session";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { emojify } from "@/util/emoji";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-me-issues";
@@ -116,7 +117,7 @@ function renderError(kind: MeIssueKind, filter: MeIssueFilter, _login: string | 
 
 function renderItem(it: MeIssueItem): string {
   const icon = stateIcon(it);
-  const labels = it.labels.slice(0, 6).map((l) => `<span class="oldgh-me-issues__label" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)}">${escapeText(l.name)}</span>`).join("");
+  const labels = it.labels.slice(0, 6).map((l) => `<span class="oldgh-me-issues__label" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)}">${escapeText(emojify(l.name))}</span>`).join("");
   return `
     <li class="oldgh-me-issues__item">
       <span class="oldgh-me-issues__icon oldgh-me-issues__icon--${itemStateClass(it)}">${icon}</span>

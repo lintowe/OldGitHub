@@ -17,6 +17,7 @@ import {
 } from "@/adapters/repo-issue";
 import { AdapterFailure } from "@/adapters";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { emojify } from "@/util/emoji";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-issue";
@@ -754,7 +755,7 @@ function renderSidebarSection(title: string, body: string): string {
 }
 
 function renderLabelInline(l: Label): string {
-  return `<span class="oldgh-issue__label" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};" title="${escapeAttr(l.description || "")}">${escapeText(l.name)}</span>`;
+  return `<span class="oldgh-issue__label" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};" title="${escapeAttr(l.description || "")}">${escapeText(emojify(l.name))}</span>`;
 }
 
 function relativeTimeLink(iso: string): string {

@@ -1,6 +1,7 @@
 import { octicon } from "@/icons";
 import { getIssueList, type IssueListView, type IssueRow } from "@/adapters/repo-issues";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { emojify } from "@/util/emoji";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-issues";
@@ -83,7 +84,7 @@ function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): str
         : octicon("issue-closed", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--closed" })));
 
   const labels = r.labels.length > 0
-    ? `<span class="oldgh-issues__labels">${r.labels.map((l) => `<a class="oldgh-issues__label" href="/${v.owner}/${v.repo}/${kind}?q=is:open+label:${encodeURIComponent('"' + l.name + '"')}" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(l.name)}</a>`).join("")}</span>`
+    ? `<span class="oldgh-issues__labels">${r.labels.map((l) => `<a class="oldgh-issues__label" href="/${v.owner}/${v.repo}/${kind}?q=is:open+label:${encodeURIComponent('"' + l.name + '"')}" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(emojify(l.name))}</a>`).join("")}</span>`
     : "";
 
   const author = r.author

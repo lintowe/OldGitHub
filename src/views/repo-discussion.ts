@@ -1,6 +1,7 @@
 import { octicon } from "@/icons";
 import { AdapterFailure } from "@/adapters";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { emojify } from "@/util/emoji";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-discussion";
@@ -204,14 +205,14 @@ function renderBody(d: DiscussionDetail, comments: DiscussionComment[]): string 
         </h1>
         <div class="oldgh-discussion__meta">
           ${stateBadge}
-          ${d.categoryName ? `<span class="oldgh-discussion__category">${d.categoryEmoji ? `<span class="oldgh-discussion__category-emoji">${escapeText(d.categoryEmoji)}</span>` : octicon("comment-discussion", { size: 14 })}<span>${escapeText(d.categoryName)}</span></span>` : ""}
+          ${d.categoryName ? `<span class="oldgh-discussion__category">${d.categoryEmoji ? `<span class="oldgh-discussion__category-emoji">${escapeText(emojify(d.categoryEmoji))}</span>` : octicon("comment-discussion", { size: 14 })}<span>${escapeText(d.categoryName)}</span></span>` : ""}
           <span class="oldgh-discussion__byline">
             ${d.author ? `<a href="/${escapeAttr(d.author.login)}">${escapeText(d.author.login)}</a>` : "ghost"}
             asked ${relativeTimeLink(d.createdAt)}
             · ${d.commentsCount} ${d.commentsCount === 1 ? "comment" : "comments"}
           </span>
         </div>
-        ${d.labels.length > 0 ? `<div class="oldgh-discussion__labels">${d.labels.map((l) => `<span class="oldgh-issue__label" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(l.name)}</span>`).join(" ")}</div>` : ""}
+        ${d.labels.length > 0 ? `<div class="oldgh-discussion__labels">${d.labels.map((l) => `<span class="oldgh-issue__label" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(emojify(l.name))}</span>`).join(" ")}</div>` : ""}
       </header>
 
       <div class="oldgh-discussion__main">

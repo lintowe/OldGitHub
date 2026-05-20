@@ -17,6 +17,7 @@ import {
   type SearchOrder,
 } from "@/adapters/search";
 import { relativeTime, absoluteTime } from "@/util/time";
+import { emojify } from "@/util/emoji";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-search";
@@ -220,7 +221,7 @@ function renderIssueRow(it: IssueResult): string {
     stateClass = "oldgh-search__state--closed";
   }
   const labels = it.labels
-    .map((l) => `<span class="oldgh-search__label" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(l.name)}</span>`)
+    .map((l) => `<span class="oldgh-search__label" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(emojify(l.name))}</span>`)
     .join(" ");
   return `
     <li class="oldgh-search__row oldgh-search__row--issue">
