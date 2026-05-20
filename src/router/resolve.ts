@@ -34,7 +34,6 @@ const OUT_OF_SCOPE_PREFIXES = [
   "/session",
   "/password_reset",
   // app flows
-  "/codespaces",
   "/sponsors",
   "/enterprises",
   "/account",
