@@ -216,7 +216,8 @@ html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"] {
 [data-oldgh-theme="dark"] .oldgh-btn {
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
-.oldgh-btn--primary {
+.oldgh-btn--primary,
+[data-oldgh-theme="dark"] .oldgh-btn--primary {
   color: var(--gh-btn-primary-fg);
   background: linear-gradient(
     to bottom,
@@ -224,10 +225,11 @@ html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"] {
     var(--gh-btn-primary-bg-bottom)
   );
   border-color: var(--gh-btn-primary-border);
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
-.oldgh-btn--primary:hover {
+.oldgh-btn--primary:hover,
+[data-oldgh-theme="dark"] .oldgh-btn--primary:hover {
   background: linear-gradient(to bottom, #74d474, #5cb85c);
   border-color: #418f42;
   color: var(--gh-btn-primary-fg);
@@ -7412,21 +7414,23 @@ html[data-oldgh-theme="dark"] .oldgh-topics-index__badge--featured {
 }
 .oldgh-security__hero {
   display: flex;
-  gap: 16px;
-  padding: 16px 18px;
-  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--gh-bg-stripe);
   border: 1px solid var(--gh-border);
+  border-left: 3px solid #6cc644;
   border-radius: var(--gh-radius);
-  box-shadow: var(--gh-shadow-soft);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 .oldgh-security__hero-icon {
-  flex: 0 0 40px;
+  flex: 0 0 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #6cc644;
 }
+html[data-oldgh-theme="dark"] .oldgh-security__hero-icon { color: #7ee787; }
 .oldgh-security__hero-text h2 {
   margin: 0 0 4px;
   font-size: 18px;
@@ -7508,7 +7512,12 @@ html[data-oldgh-theme="dark"] .oldgh-security__status--on {
 .oldgh-security__status--off {
   background: var(--gh-bg-stripe);
   color: var(--gh-fg-muted);
-  border: 1px solid var(--gh-border-faint);
+  border: 1px solid var(--gh-border);
+}
+html[data-oldgh-theme="dark"] .oldgh-security__status--off {
+  background: rgba(255, 255, 255, 0.04);
+  color: #d4d8dc;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Repo Projects */

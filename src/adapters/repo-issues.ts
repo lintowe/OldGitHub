@@ -86,7 +86,7 @@ export async function getIssueList(
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
-    if (resp.status === 403 || resp.status === 429) {
+    if (resp.status === 403 || resp.status === 429 || resp.status === 401 || resp.status === 404) {
       return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
     }
     if (!resp.ok) {
@@ -117,7 +117,7 @@ export async function getIssueList(
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
-    if (resp.status === 403 || resp.status === 429) {
+    if (resp.status === 403 || resp.status === 429 || resp.status === 401 || resp.status === 404) {
       return scrapeIssueList(owner, repo, rawQuery, kind, qStr, state, page);
     }
     if (!resp.ok) {
