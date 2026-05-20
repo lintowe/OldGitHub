@@ -28,6 +28,7 @@ import { mountExplore, unmountExplore } from "@/views/explore";
 import { mountTopic, unmountTopic } from "@/views/topic";
 import { mountRepoProjects, unmountRepoProjects } from "@/views/repo-projects";
 import { mountRepoSecurity, unmountRepoSecurity } from "@/views/repo-security";
+import { mountRepoSettings, unmountRepoSettings } from "@/views/repo-settings";
 import { mountRepoDiscussions, unmountRepoDiscussions } from "@/views/repo-discussions";
 import { mountMarketplace, unmountMarketplace } from "@/views/marketplace";
 import { mountCollections, unmountCollections } from "@/views/collections";
@@ -62,6 +63,7 @@ type BodyState =
   | { kind: "security"; owner: string; repo: string; subkind: "overview" | "advisories" }
   | { kind: "discussions"; owner: string; repo: string; subPath: string; query: string }
   | { kind: "discussion"; owner: string; repo: string; number: number }
+  | { kind: "settings"; owner: string; repo: string; subPath: string }
   | { kind: "repo-other"; owner: string; repo: string; pathname: string; search: string; title: string }
   | { kind: "top-level"; subkind: TopLevelKind; pathname: string; search: string; title: string }
   | { kind: "profile"; login: string; tab: string; query: string };
@@ -193,6 +195,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       route.kind === "repo-graphs" ||
       route.kind === "repo-projects" ||
       route.kind === "repo-security" ||
+      route.kind === "repo-settings" ||
       route.kind === "repo-discussions" ||
       route.kind === "repo-discussion" ||
       route.kind === "repo-other"
@@ -334,6 +337,7 @@ function targetBodyForRoute(route: Route): BodyState {
   if (route.kind === "repo-security") return { kind: "security", owner: route.owner, repo: route.repo, subkind: route.subkind };
   if (route.kind === "repo-discussions") return { kind: "discussions", owner: route.owner, repo: route.repo, subPath: route.subPath, query: route.query };
   if (route.kind === "repo-discussion") return { kind: "discussion", owner: route.owner, repo: route.repo, number: route.number };
+  if (route.kind === "repo-settings") return { kind: "settings", owner: route.owner, repo: route.repo, subPath: route.subPath };
   if (route.kind === "repo-other") {
     const path = repoOtherPath(route.owner, route.repo);
     return { kind: "repo-other", owner: route.owner, repo: route.repo, pathname: path.pathname, search: path.search, title: path.title };
@@ -470,6 +474,11 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = target;
     return;
   }
+  if (target.kind === "settings") {
+    await mountRepoSettings(target.owner, target.repo, target.subPath);
+    bodyState = target;
+    return;
+  }
   if (target.kind === "repo-other") {
     const prefix = `/${target.owner}/${target.repo}`;
     const subPath = target.pathname.startsWith(prefix) ? target.pathname.slice(prefix.length) : target.pathname;
@@ -597,6 +606,9 @@ function sameBody(a: BodyState, b: BodyState): boolean {
   if (a.kind === "discussion" && b.kind === "discussion") {
     return a.owner === b.owner && a.repo === b.repo && a.number === b.number;
   }
+  if (a.kind === "settings" && b.kind === "settings") {
+    return a.owner === b.owner && a.repo === b.repo && a.subPath === b.subPath;
+  }
   if (a.kind === "repo-other" && b.kind === "repo-other") {
     return a.owner === b.owner && a.repo === b.repo && a.pathname === b.pathname && a.search === b.search;
   }
@@ -637,6 +649,7 @@ function unmountBody(): void {
   unmountTopic();
   unmountRepoProjects();
   unmountRepoSecurity();
+  unmountRepoSettings();
   unmountRepoDiscussions();
   unmountMarketplace();
   unmountCollections();
