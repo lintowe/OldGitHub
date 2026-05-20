@@ -97,18 +97,17 @@ export async function getRepoBlob(owner: string, repo: string, refAndPath: strin
   const { branch, path } = await resolveBranchAndPath(owner, repo, refAndPath);
 
   if (isApiRateLimited()) {
-    return loadBlobViaRaw(owner, repo, branch, path);
+    return loadBlobViaScrape(owner, repo, branch, path);
   }
   const contentsUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(branch)}`;
   const resp = await fetchApi(contentsUrl, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
-  if (resp.status === 403 || resp.status === 429) {
-    return loadBlobViaRaw(owner, repo, branch, path);
-  }
   if (!resp.ok) {
-    throw new AdapterFailure("getRepoBlob", `contents ${owner}/${repo}/${path}@${branch} responded ${resp.status}`);
+    // 404 on private repos (anon API hides them), 401/403 on auth issues,
+    // 429 on rate limit — fall back to scraping the github.com blob page.
+    return loadBlobViaScrape(owner, repo, branch, path);
   }
   const meta = (await resp.json()) as Record<string, unknown>;
   if (Array.isArray(meta)) {
@@ -164,14 +163,21 @@ export async function getRepoBlob(owner: string, repo: string, refAndPath: strin
   };
 }
 
-async function loadBlobViaRaw(owner: string, repo: string, branch: string, path: string): Promise<RepoBlobView> {
-  const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path.split("/").map(encodeURIComponent).join("/")}`;
-  const r = await fetch(rawUrl, { credentials: "omit" });
-  if (!r.ok) {
-    throw new AdapterFailure("getRepoBlob", `raw ${owner}/${repo}/${path}@${branch} responded ${r.status}`);
+async function loadBlobViaScrape(owner: string, repo: string, branch: string, path: string): Promise<RepoBlobView> {
+  // public repos: raw.githubusercontent.com works anonymously
+  // private repos: github.com/raw redirects to a signed url and needs the session cookie
+  // both go through the background service worker to bypass cross-origin cors
+  const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+  const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${encodedPath}`;
+  let proxy = await proxyFetchViaBackground(rawUrl, "omit");
+  if (!proxy.ok) {
+    const ghRawUrl = `https://github.com/${owner}/${repo}/raw/refs/heads/${encodeURIComponent(branch)}/${encodedPath}`;
+    proxy = await proxyFetchViaBackground(ghRawUrl, "include");
+    if (!proxy.ok) {
+      throw new AdapterFailure("getRepoBlob", `raw ${owner}/${repo}/${path}@${branch} responded ${proxy.status || "network error"}`);
+    }
   }
-  const contentType = r.headers.get("content-type") || "";
-  const isText = /^text\b|^application\/(json|xml|x-yaml|javascript|sh|toml)|json|yaml|markdown|html|svg/i.test(contentType);
+  const isText = /^text\b|^application\/(json|xml|x-yaml|javascript|sh|toml)|json|yaml|markdown|html|svg/i.test(proxy.contentType);
   if (!isText) {
     return {
       owner, repo, branch, path,
@@ -183,16 +189,29 @@ async function loadBlobViaRaw(owner: string, repo: string, branch: string, path:
       isBinary: true,
     };
   }
-  const text = await r.text();
   return {
     owner, repo, branch, path,
     displayName: pathBasename(path),
     language: guessLanguage(path),
-    rawLines: text.split("\n"),
+    rawLines: proxy.text.split("\n"),
     rawBlobUrl: rawUrl,
     truncated: false,
     isBinary: false,
   };
+}
+
+type ProxyFetchOk = { ok: true; status: number; contentType: string; text: string };
+type ProxyFetchErr = { ok: false; status: number; error?: string };
+type ProxyFetchResult = ProxyFetchOk | ProxyFetchErr;
+
+async function proxyFetchViaBackground(url: string, credentials: "include" | "omit"): Promise<ProxyFetchResult> {
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "oldgh:fetch", url, credentials });
+    if (res && typeof res === "object" && "ok" in res) return res as ProxyFetchResult;
+    return { ok: false, status: 0, error: "bad response" };
+  } catch (e) {
+    return { ok: false, status: 0, error: String(e) };
+  }
 }
 
 async function resolveBranchAndPath(owner: string, repo: string, refAndPath: string): Promise<{ branch: string; path: string }> {

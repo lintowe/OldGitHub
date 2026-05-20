@@ -186,5 +186,29 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  if (m.type === "oldgh:fetch") {
+    const url = typeof (m as { url?: unknown }).url === "string" ? (m as { url: string }).url : null;
+    if (!url) return undefined;
+    const credentials = (m as { credentials?: unknown }).credentials === "include" ? "include" : "omit";
+    proxyFetch(url, credentials).then((res) => sendResponse(res));
+    return true;
+  }
+
   return undefined;
 });
+
+type ProxyFetchResult =
+  | { ok: true; status: number; contentType: string; text: string }
+  | { ok: false; status: number; error?: string };
+
+async function proxyFetch(url: string, credentials: "include" | "omit"): Promise<ProxyFetchResult> {
+  try {
+    const r = await fetch(url, { credentials, redirect: "follow" });
+    if (!r.ok) return { ok: false, status: r.status };
+    const contentType = r.headers.get("content-type") || "";
+    const text = await r.text();
+    return { ok: true, status: r.status, contentType, text };
+  } catch (e) {
+    return { ok: false, status: 0, error: String(e) };
+  }
+}
