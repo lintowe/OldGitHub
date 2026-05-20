@@ -30,6 +30,7 @@ import { mountRepoProjects, unmountRepoProjects } from "@/views/repo-projects";
 import { mountRepoSecurity, unmountRepoSecurity } from "@/views/repo-security";
 import { mountRepoSettings, unmountRepoSettings } from "@/views/repo-settings";
 import { mountAccountSettings, unmountAccountSettings } from "@/views/account-settings";
+import { mountNativeIframe, unmountNativeIframe } from "@/views/native-iframe";
 import { mountRepoDiscussions, unmountRepoDiscussions } from "@/views/repo-discussions";
 import { mountMarketplace, unmountMarketplace } from "@/views/marketplace";
 import { mountCollections, unmountCollections } from "@/views/collections";
@@ -174,9 +175,22 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 
   try {
     if (route.kind === "out-of-scope") {
-      await applyBodyState({ kind: "none" });
+      // POST-only / instant-redirect endpoints don't render — let native through
+      if (/^\/(logout|session)(\/|$)/.test(pathname)) {
+        await applyBodyState({ kind: "none" });
+        teardownRepoHeader();
+        clearMounted();
+        return;
+      }
+      // Everything else — wrap the native page in an iframe inside our shell
+      document.documentElement.setAttribute(MOUNTED_ATTR, "native-iframe");
       teardownRepoHeader();
-      clearMounted();
+      bodyState = { kind: "none" };
+      removeAllBodyRoots();
+      insertBodyPlaceholder();
+      const firstSeg = pathname.split("/").filter(Boolean)[0] ?? "GitHub";
+      const niceTitle = firstSeg.charAt(0).toUpperCase() + firstSeg.slice(1).replace(/_/g, " ");
+      await mountNativeIframe(pathname, search, niceTitle);
       return;
     }
 
@@ -654,6 +668,7 @@ function unmountBody(): void {
   unmountRepoSecurity();
   unmountRepoSettings();
   unmountAccountSettings();
+  unmountNativeIframe();
   unmountRepoDiscussions();
   unmountMarketplace();
   unmountCollections();

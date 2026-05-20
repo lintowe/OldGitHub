@@ -9373,6 +9373,43 @@ html[data-oldgh="active"] .markdown-body kbd {
   vertical-align: middle;
 }
 
+/* Native iframe wrapper — used for JS-rendered create forms / auth pages */
+.oldgh-native-iframe { padding-top: 14px; padding-bottom: 60px; }
+.oldgh-native-iframe__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.oldgh-native-iframe__header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--gh-fg);
+}
+.oldgh-native-iframe__open {
+  font-size: var(--gh-size-sm);
+  color: var(--gh-link);
+}
+.oldgh-native-iframe__frame-wrap {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  overflow: hidden;
+  /* fill the rest of the viewport with the iframe */
+  height: calc(100vh - 140px);
+  min-height: 600px;
+}
+.oldgh-native-iframe__frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
 /* Account Settings — share layout with repo settings */
 .oldgh-account-settings { padding-top: 14px; padding-bottom: 60px; }
 .oldgh-account-settings__header {
