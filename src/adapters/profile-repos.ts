@@ -37,9 +37,10 @@ export async function getProfileRepos(login: string, query: string): Promise<Pro
   const html = await resp.text();
   const doc = new DOMParser().parseFromString(html, "text/html");
 
-  const list = doc.querySelector<HTMLElement>("#user-repositories-list ul");
+  // user profile uses #user-repositories-list, org profile uses #org-repositories
+  const list = doc.querySelector<HTMLElement>("#user-repositories-list, #org-repositories");
   if (!list) {
-    throw new AdapterFailure("getProfileRepos", "missing #user-repositories-list");
+    throw new AdapterFailure("getProfileRepos", "missing repositories container");
   }
 
   const items: RepoListItem[] = [];
@@ -67,16 +68,25 @@ function ensureRepositoriesTab(query: string): string {
 }
 
 function parseRow(li: HTMLElement): RepoListItem | null {
-  const anchor = li.querySelector<HTMLAnchorElement>('h3 a[itemprop="name codeRepository"], h3 a[href]');
+  // user repos use <h3><a itemprop="name codeRepository">; org repos use
+  // <a class="Link f4 d-inline-block text-bold"> as the title link.
+  const anchor =
+    li.querySelector<HTMLAnchorElement>('h3 a[itemprop="name codeRepository"], h3 a[href]') ||
+    li.querySelector<HTMLAnchorElement>('a.Link.text-bold[href^="/"], a.f4.text-bold[href^="/"]');
   if (!anchor) return null;
   const href = anchor.getAttribute("href") || "";
   const name = anchor.textContent?.trim() || "";
   if (!name || !href) return null;
 
-  const descEl = li.querySelector<HTMLElement>('p[itemprop="description"]');
+  const descEl =
+    li.querySelector<HTMLElement>('p[itemprop="description"]') ||
+    li.querySelector<HTMLElement>('p.tmp-mb-3.color-fg-muted, p.color-fg-muted.wb-break-word');
   const descText = descEl?.textContent?.trim() || "";
   const description = descText && !/There was an error/i.test(descText) ? descText : null;
-  const language = li.querySelector('[itemprop="programmingLanguage"]')?.textContent?.trim() || null;
+  const language =
+    li.querySelector('[itemprop="programmingLanguage"]')?.textContent?.trim() ||
+    li.querySelector('span[aria-label*="language" i], [data-ga-click*="language"]')?.textContent?.trim() ||
+    null;
   const langSwatch = li.querySelector<HTMLElement>('.repo-language-color');
   const languageColor = readBackgroundColor(langSwatch);
 
