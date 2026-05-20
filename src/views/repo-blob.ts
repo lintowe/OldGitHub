@@ -74,6 +74,10 @@ function renderFileHeader(v: RepoBlobView): string {
   const raw = v.rawBlobUrl
     ? `<a class="oldgh-btn" href="${escapeAttr(v.rawBlobUrl)}">${octicon("file-binary", { size: 14 })}<span>Raw</span></a>`
     : "";
+  const fileName = v.path.split("/").pop() || v.path;
+  const download = v.rawBlobUrl
+    ? `<a class="oldgh-btn oldgh-repo-blob__download" href="${escapeAttr(v.rawBlobUrl)}" download="${escapeAttr(fileName)}" title="Download ${escapeAttr(fileName)}">${octicon("cloud-download", { size: 14 })}<span class="oldgh-repo-blob__download-label">Download</span></a>`
+    : "";
   const blame = `<a class="oldgh-btn" href="/${v.owner}/${v.repo}/blame/${encodeURIComponent(v.branch)}/${pathSegments(v.path)}">${octicon("versions", { size: 14 })}<span>Blame</span></a>`;
   const history = `<a class="oldgh-btn" href="/${v.owner}/${v.repo}/commits/${encodeURIComponent(v.branch)}/${pathSegments(v.path)}">${octicon("history", { size: 14 })}<span>History</span></a>`;
 
@@ -84,7 +88,7 @@ function renderFileHeader(v: RepoBlobView): string {
         <span>${byteSize}</span>
         ${lang ? `<span class="oldgh-repo-blob__sep">·</span>${lang}` : ""}
       </div>
-      <div class="oldgh-repo-blob__actions">${raw}${blame}${history}</div>
+      <div class="oldgh-repo-blob__actions">${raw}${download}${blame}${history}</div>
     </div>
   `;
 }
