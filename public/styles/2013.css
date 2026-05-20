@@ -1728,7 +1728,7 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
   min-width: 0;
 }
 .oldgh-profile__tabnav {
-  margin: 0 0 18px;
+  margin: 0;
 }
 .oldgh-profile__tabnav .oldgh-tabs {
   margin: 0;
