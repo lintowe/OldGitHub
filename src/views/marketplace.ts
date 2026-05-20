@@ -250,7 +250,12 @@ function renderShell(type: "all" | "actions" | "apps", category: string): string
 
 function renderMain(v: MarketView): string {
   if (v.sections.length === 0) {
-    return `<div class="oldgh-marketplace__empty">Nothing to show right now.</div>`;
+    return `
+      <div class="oldgh-marketplace__empty">
+        <p>This filter is rendered client-side by GitHub and couldn't be scraped.</p>
+        <p><a href="javascript:void(0)" data-oldgh-show-native>Show GitHub's native Marketplace page instead</a>.</p>
+      </div>
+    `;
   }
   return v.sections.map(renderSection).join("");
 }
