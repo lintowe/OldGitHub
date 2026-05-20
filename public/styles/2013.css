@@ -9822,3 +9822,66 @@ html[data-oldgh-theme="dark"] .oldgh-settings__native .Button {
 .oldgh-settings__native .border-red {
   border-color: rgba(215, 81, 71, 0.4) !important;
 }
+
+/* ====================================================================== */
+/* GitHub-flavored markdown alert blocks                                  */
+/* > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION] in markdown */
+/* ====================================================================== */
+.markdown-alert {
+  padding: 10px 14px;
+  margin: 12px 0;
+  border-left: 4px solid var(--gh-border-strong, var(--gh-border));
+  border-radius: 0 var(--gh-radius) var(--gh-radius) 0;
+  background: var(--gh-bg-stripe);
+}
+.markdown-alert > :first-child { margin-top: 0; }
+.markdown-alert > :last-child { margin-bottom: 0; }
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-weight: bold;
+  font-size: var(--gh-size-md);
+  line-height: 1.25;
+}
+.markdown-alert .markdown-alert-title .octicon { vertical-align: middle; }
+.markdown-alert p { margin-top: 4px; margin-bottom: 4px; }
+
+.markdown-alert-note {
+  border-left-color: #0969da;
+  background: rgba(9, 105, 218, 0.08);
+}
+.markdown-alert-note .markdown-alert-title { color: #0969da; }
+.markdown-alert-tip {
+  border-left-color: #1a7f37;
+  background: rgba(26, 127, 55, 0.08);
+}
+.markdown-alert-tip .markdown-alert-title { color: #1a7f37; }
+.markdown-alert-important {
+  border-left-color: #8250df;
+  background: rgba(130, 80, 223, 0.08);
+}
+.markdown-alert-important .markdown-alert-title { color: #8250df; }
+.markdown-alert-warning {
+  border-left-color: #9a6700;
+  background: rgba(154, 103, 0, 0.08);
+}
+.markdown-alert-warning .markdown-alert-title { color: #9a6700; }
+.markdown-alert-caution {
+  border-left-color: #cf222e;
+  background: rgba(207, 34, 46, 0.08);
+}
+.markdown-alert-caution .markdown-alert-title { color: #cf222e; }
+
+/* slightly brighter accents on dark theme for the title text */
+html[data-oldgh-theme="dark"] .markdown-alert-note .markdown-alert-title { color: #58a6ff; }
+html[data-oldgh-theme="dark"] .markdown-alert-tip .markdown-alert-title { color: #3fb950; }
+html[data-oldgh-theme="dark"] .markdown-alert-important .markdown-alert-title { color: #a371f7; }
+html[data-oldgh-theme="dark"] .markdown-alert-warning .markdown-alert-title { color: #d29922; }
+html[data-oldgh-theme="dark"] .markdown-alert-caution .markdown-alert-title { color: #f85149; }
+html[data-oldgh-theme="dark"] .markdown-alert-note { background: rgba(56, 139, 253, 0.1); border-left-color: #1f6feb; }
+html[data-oldgh-theme="dark"] .markdown-alert-tip { background: rgba(46, 160, 67, 0.1); border-left-color: #238636; }
+html[data-oldgh-theme="dark"] .markdown-alert-important { background: rgba(163, 113, 247, 0.1); border-left-color: #6e40c9; }
+html[data-oldgh-theme="dark"] .markdown-alert-warning { background: rgba(187, 128, 9, 0.1); border-left-color: #9e6a03; }
+html[data-oldgh-theme="dark"] .markdown-alert-caution { background: rgba(248, 81, 73, 0.1); border-left-color: #da3633; }
