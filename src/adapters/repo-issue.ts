@@ -483,7 +483,7 @@ function restTimelineItem(ev: string, n: Record<string, unknown>): TimelineNode 
       const cid = readString(n, "commit_id");
       if (cid) base.commitOid = cid.slice(0, 7);
       const repoUrl = readString(n, "commit_url");
-      if (repoUrl) base.refUrl = repoUrl;
+      if (repoUrl) base.refUrl = repoUrl.replace(/^https?:\/\/github\.com/, "");
       return base;
     }
     case "cross-referenced": {
@@ -494,7 +494,7 @@ function restTimelineItem(ev: string, n: Record<string, unknown>): TimelineNode 
           const t = readString(issueObj, "title");
           const u = readString(issueObj, "html_url");
           if (t) base.refTitle = t;
-          if (u) base.refUrl = u;
+          if (u) base.refUrl = u.replace(/^https?:\/\/github\.com/, "");
           const num = readNumber(issueObj, "number");
           if (num != null) base.ref = `#${num}`;
         }

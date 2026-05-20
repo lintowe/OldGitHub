@@ -774,7 +774,10 @@ function sanitizeTitleHtml(html: string): string {
 function sanitizeBodyHtml(html: string): string {
   return html
     .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, "")
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    // rewrite absolute https://github.com/... links to relative so clicks
+    // stay inside the SPA router instead of triggering a full page reload
+    .replace(/href=(["'])https?:\/\/github\.com(\/[^"']*)\1/gi, 'href=$1$2$1');
 }
 
 function labelTextColor(hex: string): string {
