@@ -142,7 +142,7 @@ type HoverTarget =
 
 function resolveTarget(a: HTMLAnchorElement): HoverTarget | null {
   if (!a.href || a.dataset["oldghNoHover"] === "1") return null;
-  if (a.closest(".oldgh-header, .oldgh-repo-header, .oldgh-repo-tabs, .oldgh-tabs, .oldgh-progress-bar, .oldgh-hovercard, .oldgh-breadcrumb, .oldgh-profile__tabnav")) return null;
+  if (a.closest(".oldgh-header, .oldgh-repo-tabs, .oldgh-tabs, .oldgh-progress-bar, .oldgh-hovercard, .oldgh-breadcrumb, .oldgh-profile__tabnav, .oldgh-repo-header__actions")) return null;
   let url: URL;
   try {
     url = new URL(a.href, location.href);
