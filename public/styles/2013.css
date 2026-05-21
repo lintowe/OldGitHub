@@ -1743,12 +1743,10 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
 .oldgh-profile__tabnav .oldgh-tabs {
   margin: 0;
 }
-/* the panel below the tabnav overlaps the tabs' bottom border so the active
-   tab visually connects into it instead of leaving a 1px gap. */
+/* the panel directly below the profile tabnav merges flush with the tabs'
+   bottom border so the active tab's -1px overlap covers the join. */
 .oldgh-profile__repos,
-.oldgh-profile__scraped,
-.oldgh-profile__tabnav + ul.oldgh-repo-list,
-.oldgh-profile__tabnav + ul.oldgh-profile__repos-list {
+.oldgh-profile__scraped {
   margin-top: -1px;
 }
 .oldgh-profile__repos > .oldgh-repo-list,
@@ -5214,7 +5212,6 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
 }
 
 /* Repo list pages: tags, branches, forks, stargazers, labels, milestones */
-.oldgh-repo-list { padding-top: 14px; }
 .oldgh-repo-list__header {
   padding-bottom: 10px;
   border-bottom: 1px solid var(--gh-border-faint);
