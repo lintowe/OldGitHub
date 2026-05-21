@@ -11,3 +11,10 @@ Thumbs.db
 # generated
 src/icons/generated.ts
 oldgithub-v*.zip
+
+# stray agent config dropped by other CLIs
+.antigravitycli/
+.gemini/
+.aider*/
+.cursor/
+.windsurf/
