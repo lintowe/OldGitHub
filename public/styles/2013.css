@@ -3180,6 +3180,17 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
   padding: 16px;
   min-height: 100px;
 }
+/* when the scraped panel directly contains its own bordered list (Stars,
+   scraped Repositories fallback), the panel's chrome is redundant — collapse
+   it so the inner list IS the panel. */
+.oldgh-profile__scraped:has(> .oldgh-repo-list),
+.oldgh-profile__scraped:has(> .oldgh-profile__repos-list) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  min-height: 0;
+}
 .oldgh-profile__scraped .Box,
 .oldgh-profile__scraped .Box-row {
   background: var(--gh-bg-elev);
