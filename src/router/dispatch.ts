@@ -30,7 +30,6 @@ import { mountRepoProjects, unmountRepoProjects } from "@/views/repo-projects";
 import { mountRepoSecurity, unmountRepoSecurity } from "@/views/repo-security";
 import { mountRepoSettings, unmountRepoSettings } from "@/views/repo-settings";
 import { mountAccountSettings, unmountAccountSettings } from "@/views/account-settings";
-import { mountNativeIframe, unmountNativeIframe } from "@/views/native-iframe";
 import { mountRepoDiscussions, unmountRepoDiscussions } from "@/views/repo-discussions";
 import { mountMarketplace, unmountMarketplace } from "@/views/marketplace";
 import { mountCollections, unmountCollections } from "@/views/collections";
@@ -175,33 +174,13 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
 
   try {
     if (route.kind === "out-of-scope") {
-      // POST-only / instant-redirect endpoints don't render — let native through
-      if (/^\/(logout|session)(\/|$)/.test(pathname)) {
-        await applyBodyState({ kind: "none" });
-        teardownRepoHeader();
-        clearMounted();
-        return;
-      }
-      // JS-rendered pages (create forms, auth screens) can't be iframed because
-      // github.com responds with X-Frame-Options: deny. Show our themed header
-      // and let the native body hydrate underneath.
-      if (
-        /^\/(new|import|organizations\/new|login|signup|join|password_reset|account|sponsors)(\/|$)/.test(pathname)
-      ) {
-        await applyBodyState({ kind: "none" });
-        teardownRepoHeader();
-        clearMounted();
-        return;
-      }
-      // Fallback: wrap the native page in an iframe inside our themed shell
-      document.documentElement.setAttribute(MOUNTED_ATTR, "native-iframe");
+      // github.com responds with X-Frame-Options: deny, so iframe-wrapping the
+      // native page never works. Drop our themed body and let the native page
+      // render below our themed header. POST-only endpoints (logout/session)
+      // never render a body, so this is also a no-op there.
+      await applyBodyState({ kind: "none" });
       teardownRepoHeader();
-      bodyState = { kind: "none" };
-      removeAllBodyRoots();
-      insertBodyPlaceholder();
-      const firstSeg = pathname.split("/").filter(Boolean)[0] ?? "GitHub";
-      const niceTitle = firstSeg.charAt(0).toUpperCase() + firstSeg.slice(1).replace(/_/g, " ");
-      await mountNativeIframe(pathname, search, niceTitle);
+      clearMounted();
       return;
     }
 
@@ -679,7 +658,6 @@ function unmountBody(): void {
   unmountRepoSecurity();
   unmountRepoSettings();
   unmountAccountSettings();
-  unmountNativeIframe();
   unmountRepoDiscussions();
   unmountMarketplace();
   unmountCollections();
