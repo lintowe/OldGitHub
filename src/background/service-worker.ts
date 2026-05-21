@@ -118,10 +118,32 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 if (import.meta.env.DEV) {
   const DEV_URL = "http://localhost:7878/build-id";
   const QUIESCE_MS = 4_000;
+  // chrome auto-disables an extension that calls runtime.reload() too rapidly
+  // (~3 times in 10s). Track our reload timestamps across SW restarts via
+  // chrome.storage.session and refuse to reload if we'd trip the safety.
+  const RELOAD_BACKOFF_MS = 15_000;
   let lastStamp: string | null = null;
   let pendingStamp: string | null = null;
   let pendingSince = 0;
   let consecutiveErrors = 0;
+  const triggerReloadIfSafe = async (): Promise<void> => {
+    let recent: number[] = [];
+    try {
+      const stored = await chrome.storage.session.get("oldgh:devReloadTimes");
+      const arr = stored["oldgh:devReloadTimes"];
+      if (Array.isArray(arr)) recent = arr.filter((n): n is number => typeof n === "number");
+    } catch {}
+    const now = Date.now();
+    const within = recent.filter((t) => now - t < RELOAD_BACKOFF_MS);
+    if (within.length >= 2) {
+      console.warn("[oldgh] dev reload skipped: 2 reloads already within 15s window — manual reload required");
+      return;
+    }
+    within.push(now);
+    try { await chrome.storage.session.set({ "oldgh:devReloadTimes": within }); } catch {}
+    console.info("[oldgh] dev rebuild settled, reloading extension");
+    chrome.runtime.reload();
+  };
   const tick = async (): Promise<void> => {
     try {
       const resp = await fetch(DEV_URL, { cache: "no-store" });
@@ -146,8 +168,7 @@ if (import.meta.env.DEV) {
         return;
       }
       if (Date.now() - pendingSince >= QUIESCE_MS) {
-        console.info("[oldgh] dev rebuild settled, reloading extension");
-        chrome.runtime.reload();
+        await triggerReloadIfSafe();
       }
     } catch {
       consecutiveErrors++;
