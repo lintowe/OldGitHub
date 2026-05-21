@@ -2971,8 +2971,14 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 .oldgh-wiki__clone {
   margin-top: 18px;
 }
-.oldgh-wiki__clone .oldgh-input {
-  width: 100%;
+.oldgh-wiki__clone-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.oldgh-wiki__clone-input {
+  flex: 1;
+  min-width: 0;
   border: 1px solid var(--gh-border);
   background: var(--gh-bg);
   color: var(--gh-fg);
@@ -2980,6 +2986,10 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   font-size: 11px;
   padding: 4px 6px;
   border-radius: var(--gh-radius);
+}
+.oldgh-wiki__clone-copy {
+  padding: 4px 8px;
+  flex: 0 0 auto;
 }
 
 /* ===== actions ===== */

@@ -11,6 +11,21 @@ export async function mountRepoWiki(owner: string, repo: string, page: string): 
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view);
   adoptBodyRoot(root, ".oldgh-repo-header");
+  bindCloneCopy(root);
+}
+
+function bindCloneCopy(root: HTMLElement): void {
+  const btn = root.querySelector<HTMLButtonElement>(".oldgh-wiki__clone-copy");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const text = btn.dataset["copy"];
+    if (!text) return;
+    void navigator.clipboard.writeText(text).then(() => {
+      const prev = btn.innerHTML;
+      btn.innerHTML = octicon("check", { size: 14 });
+      window.setTimeout(() => { btn.innerHTML = prev; }, 1200);
+    });
+  });
 }
 
 export function unmountRepoWiki(): void {
@@ -38,7 +53,10 @@ function renderShell(v: WikiView): string {
           </div>
           <div class="oldgh-wiki__clone">
             <h3>${octicon("repo-clone", { size: 12 })} Clone this wiki</h3>
-            <input type="text" class="oldgh-input" readonly value="${escapeAttr(v.cloneUrl)}" />
+            <div class="oldgh-wiki__clone-row">
+              <input type="text" class="oldgh-input oldgh-wiki__clone-input" readonly value="${escapeAttr(v.cloneUrl)}" />
+              <button type="button" class="oldgh-btn oldgh-wiki__clone-copy" data-copy="${escapeAttr(v.cloneUrl)}" title="Copy clone URL" aria-label="Copy clone URL">${octicon("clippy", { size: 14 })}</button>
+            </div>
           </div>
         </aside>
       </div>
