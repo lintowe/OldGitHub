@@ -62,9 +62,9 @@
           <h2>How it works</h2>
         </header>
         <div class="card__body">
-          <p>OldGitHub rewrites the GitHub web UI in your browser to match the 2012-2013 layout. It does this only on github.com tabs — no data leaves your machine, no token is required.</p>
-          <p>Some pages (such as Marketplace or Settings) keep the modern UI because there isn't a faithful 2013 equivalent.</p>
-          <p>You can also flip the theme from any GitHub page using the sun/moon icon in the header bar.</p>
+          <p>OldGitHub rewrites the GitHub web UI in your browser to match the 2012-2013 layout. Authentication is your existing github.com session cookie.</p>
+          <p>A few pages are JS-only React forms that can't be re-rendered without their runtime (create-repo, create-issue, login, signup, account-settings sub-pages, gist.github.com). On those the themed top bar stays in place but GitHub's native body renders below it.</p>
+          <p>Flip the theme from any GitHub page using the sun/moon icon in the header bar.</p>
         </div>
       </section>
 

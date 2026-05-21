@@ -7,6 +7,29 @@
   --link: #4183c4;
   --card-bg: #fff;
   --shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  --header-bg-from: #fafafa;
+  --header-bg-to: #eaeaea;
+  --header-border: #cacaca;
+  --card-head-bg: #fbfbfb;
+  --mark-fg: #fff;
+  --mark-bg: #333;
+}
+
+:root[data-theme="dark"] {
+  --bg: #1c1c1c;
+  --fg: #e6e6e6;
+  --fg-muted: #8b949e;
+  --border: #30363d;
+  --border-faint: #21262d;
+  --link: #58a6ff;
+  --card-bg: #161616;
+  --shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  --header-bg-from: #22272e;
+  --header-bg-to: #1c2128;
+  --header-border: #2d333b;
+  --card-head-bg: #1a1a1a;
+  --mark-fg: #1c1c1c;
+  --mark-bg: #e6e6e6;
 }
 
 * {
@@ -30,8 +53,8 @@ body {
 }
 
 .page-header {
-  background: linear-gradient(#fafafa, #eaeaea);
-  border-bottom: 1px solid #cacaca;
+  background: linear-gradient(var(--header-bg-from), var(--header-bg-to));
+  border-bottom: 1px solid var(--header-border);
   padding: 20px 32px;
 }
 .page-header__inner {
@@ -52,9 +75,9 @@ body {
   height: 26px;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 40% 40%, #fff 0 4px, transparent 5px),
-    radial-gradient(circle at 60% 40%, #fff 0 4px, transparent 5px),
-    #333;
+    radial-gradient(circle at 40% 40%, var(--mark-fg) 0 4px, transparent 5px),
+    radial-gradient(circle at 60% 40%, var(--mark-fg) 0 4px, transparent 5px),
+    var(--mark-bg);
   position: relative;
 }
 .brand__mark::after {
@@ -65,17 +88,17 @@ body {
   transform: translateX(-50%);
   width: 8px;
   height: 3px;
-  background: #fff;
+  background: var(--mark-fg);
   border-radius: 0 0 4px 4px;
 }
 .brand h1 {
   font-size: 18px;
   font-weight: bold;
-  color: #333;
+  color: var(--fg);
   margin: 0;
 }
 .page-header__tagline {
-  color: #666;
+  color: var(--fg-muted);
   margin: 0;
   font-size: 12px;
   font-style: italic;
@@ -100,7 +123,7 @@ body {
 .card__head {
   padding: 14px 20px;
   border-bottom: 1px solid var(--border-faint);
-  background: #fbfbfb;
+  background: var(--card-head-bg);
 }
 .card__head h2 {
   margin: 0;
@@ -144,7 +167,7 @@ body {
   gap: 10px;
 }
 .theme-choice:hover {
-  border-color: #b8b8b8;
+  border-color: var(--fg-muted);
 }
 .theme-choice input {
   position: absolute;
