@@ -108,14 +108,15 @@ export async function getIssueList(
     hasNext = /<[^>]+>;\s*rel="next"/i.test(linkHeader);
     hasPrev = /<[^>]+>;\s*rel="prev"/i.test(linkHeader);
   } else {
-    const apiUrl = new URL(`${API}/repos/${owner}/${repo}/${kind === "pulls" ? "pulls" : "issues"}`);
+    // needsSearch implies kind === "issues" OR has special filters, so reaching
+    // this branch means kind === "pulls" without an author filter
+    const apiUrl = new URL(`${API}/repos/${owner}/${repo}/pulls`);
     apiUrl.searchParams.set("state", state);
     apiUrl.searchParams.set("per_page", "30");
     apiUrl.searchParams.set("page", String(page));
     apiUrl.searchParams.set("sort", sort);
     apiUrl.searchParams.set("direction", direction);
     if (labels) apiUrl.searchParams.set("labels", labels);
-    if (author && kind === "issues") apiUrl.searchParams.set("creator", author);
     if (assignee) apiUrl.searchParams.set("assignee", assignee);
     if (milestone) apiUrl.searchParams.set("milestone", milestone);
 
@@ -131,10 +132,7 @@ export async function getIssueList(
     rows = [];
     for (const raw of data) {
       const parsed = parseRow(raw, kind);
-      if (parsed) {
-        if (kind === "issues" && parsed.isPullRequest) continue;
-        rows.push(parsed);
-      }
+      if (parsed) rows.push(parsed);
     }
     const linkHeader = resp.headers.get("link") || "";
     hasNext = /<[^>]+>;\s*rel="next"/i.test(linkHeader);
