@@ -95,8 +95,8 @@
   --gh-header-logo: #e6e6e6;
 }
 
-html[data-oldgh="active"],
-html[data-oldgh="active"] body {
+html[data-oldgh="active"]:not([data-oldgh-host="gist"]),
+html[data-oldgh="active"]:not([data-oldgh-host="gist"]) body {
   font-family: var(--gh-font-sans);
   font-size: var(--gh-size-md);
   line-height: var(--gh-line);
@@ -104,17 +104,25 @@ html[data-oldgh="active"] body {
   background: var(--gh-bg);
 }
 
-html[data-oldgh="active"] a:not(.oldgh-btn) {
+/* on gist subdomain we only theme our own header; the gist body keeps its
+   native typography */
+html[data-oldgh-host="gist"] .oldgh-header {
+  font-family: var(--gh-font-sans);
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg);
+}
+
+html[data-oldgh="active"]:not([data-oldgh-host="gist"]) a:not(.oldgh-btn) {
   color: var(--gh-link);
   text-decoration: none;
 }
-html[data-oldgh="active"] a:not(.oldgh-btn):hover {
+html[data-oldgh="active"]:not([data-oldgh-host="gist"]) a:not(.oldgh-btn):hover {
   text-decoration: underline;
 }
 
-html[data-oldgh="active"] code,
-html[data-oldgh="active"] pre,
-html[data-oldgh="active"] tt {
+html[data-oldgh="active"]:not([data-oldgh-host="gist"]) code,
+html[data-oldgh="active"]:not([data-oldgh-host="gist"]) pre,
+html[data-oldgh="active"]:not([data-oldgh-host="gist"]) tt {
   font-family: var(--gh-font-mono);
   font-size: var(--gh-size-sm);
 }
