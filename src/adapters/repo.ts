@@ -171,20 +171,58 @@ async function scrapeRepoSummary(owner: string, repo: string): Promise<RepoSumma
 }
 
 export async function getRepoLanguages(owner: string, repo: string): Promise<Array<{ name: string; bytes: number; percent: number }>> {
+  // try the anonymous API first — fastest path for public repos
   const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
-  if (!resp.ok) return [];
-  const data = (await resp.json()) as Record<string, unknown>;
-  const entries: Array<[string, number]> = [];
-  for (const [k, v] of Object.entries(data)) {
-    if (typeof v === "number") entries.push([k, v]);
+  if (resp.ok) {
+    const data = (await resp.json()) as Record<string, unknown>;
+    const entries: Array<[string, number]> = [];
+    for (const [k, v] of Object.entries(data)) {
+      if (typeof v === "number") entries.push([k, v]);
+    }
+    const total = entries.reduce((s, e) => s + e[1], 0);
+    if (total > 0) {
+      entries.sort((a, b) => b[1] - a[1]);
+      return entries.map(([name, bytes]) => ({ name, bytes, percent: (bytes / total) * 100 }));
+    }
   }
-  const total = entries.reduce((s, e) => s + e[1], 0);
-  if (total === 0) return [];
-  entries.sort((a, b) => b[1] - a[1]);
-  return entries.map(([name, bytes]) => ({ name, bytes, percent: (bytes / total) * 100 }));
+  // fall back to scraping the cookie-authed repo page (covers private repos)
+  return scrapeRepoLanguages(owner, repo);
+}
+
+async function scrapeRepoLanguages(owner: string, repo: string): Promise<Array<{ name: string; bytes: number; percent: number }>> {
+  let html: string;
+  try {
+    const r = await fetch(`https://github.com/${owner}/${repo}`, {
+      credentials: "include",
+      headers: { Accept: "text/html" },
+    });
+    if (!r.ok) return [];
+    html = await r.text();
+  } catch {
+    return [];
+  }
+  // language section is anchored on links to /owner/repo/search?l=Lang. Each
+  // language anchor contains a <span>Name</span> and a <span>NN.N%</span>.
+  const out: Array<{ name: string; percent: number }> = [];
+  const linkRe = /<a[^>]+href="\/[^/]+\/[^/]+\/search\?l=[^"]+"[^>]*>([\s\S]*?)<\/a>/g;
+  let m: RegExpExecArray | null;
+  while ((m = linkRe.exec(html))) {
+    const inner = m[1] ?? "";
+    const nameMatch = inner.match(/<span>([^<]+)<\/span>/);
+    const pctMatch = inner.match(/<span>([\d.]+)%<\/span>/);
+    if (!nameMatch || !pctMatch) continue;
+    const name = nameMatch[1]!.trim();
+    const percent = parseFloat(pctMatch[1]!);
+    if (!name || !Number.isFinite(percent)) continue;
+    if (out.some((e) => e.name === name)) continue;
+    out.push({ name, percent });
+    if (out.length >= 12) break;
+  }
+  if (out.length === 0) return [];
+  return out.map((e) => ({ name: e.name, bytes: Math.round(e.percent * 100), percent: e.percent }));
 }
 
 export function formatCount(n: number | null): string {
