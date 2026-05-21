@@ -3177,14 +3177,16 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
   background: var(--gh-bg-elev);
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
-  padding: 16px;
+  padding: 4px 16px 16px;
   min-height: 100px;
 }
 /* when the scraped panel directly contains its own bordered list (Stars,
-   scraped Repositories fallback), the panel's chrome is redundant — collapse
-   it so the inner list IS the panel. */
+   scraped Repositories fallback) or its own bordered section (Achievements),
+   the panel's chrome is redundant — collapse it so the inner element IS the
+   panel. */
 .oldgh-profile__scraped:has(> .oldgh-repo-list),
-.oldgh-profile__scraped:has(> .oldgh-profile__repos-list) {
+.oldgh-profile__scraped:has(> .oldgh-profile__repos-list),
+.oldgh-profile__scraped:has(> .oldgh-achievements) {
   background: transparent;
   border: 0;
   border-radius: 0;
