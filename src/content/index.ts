@@ -4,8 +4,11 @@ import { applyTheme, watchThemeChanges } from "@/theme";
 import { mountHeader } from "@/views/header";
 import { mountHovercards } from "@/views/hovercards";
 
+const IS_GIST = window.location.hostname === "gist.github.com";
+
 function eagerStyle(): void {
   document.documentElement.setAttribute("data-oldgh", "active");
+  if (IS_GIST) document.documentElement.setAttribute("data-oldgh-host", "gist");
   document.documentElement.setAttribute("data-oldgh-mounted", "pending");
   // Read the cached theme from localStorage (sync) to avoid a light→dark flash
   // before chrome.storage.sync resolves. applyTheme() reconciles to the true
@@ -50,11 +53,20 @@ async function run(): Promise<void> {
   console.debug("[oldgh] boot", {
     url: window.location.href,
     loggedIn,
+    host: IS_GIST ? "gist" : "github",
     hasUserLoginMeta: !!document.querySelector('meta[name="user-login"]'),
   });
   if (!loggedIn) {
     document.documentElement.removeAttribute("data-oldgh");
     document.documentElement.removeAttribute("data-oldgh-mounted");
+    return;
+  }
+  if (IS_GIST) {
+    // gist.github.com: keep the native body, just put our themed header on top
+    await applyTheme();
+    watchThemeChanges();
+    await mountHeader();
+    document.documentElement.setAttribute("data-oldgh-mounted", "gist-passthrough");
     return;
   }
   killTurbo();

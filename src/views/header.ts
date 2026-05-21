@@ -7,6 +7,8 @@ import { getCurrentTheme, setTheme, type Theme } from "@/theme";
 
 const POLL_INTERVAL_MS = 60_000;
 
+const IS_GIST_SUBDOMAIN = typeof window !== "undefined" && window.location.hostname === "gist.github.com";
+
 export async function mountHeader(): Promise<void> {
   hideModernHeader();
 
@@ -29,11 +31,23 @@ export async function mountHeader(): Promise<void> {
   }
 
   root.innerHTML = renderHeaderHtml(me);
+  if (IS_GIST_SUBDOMAIN) absolutizeGithubHrefs(root);
   bindSearchForm(root);
   bindAvatarMenu(root);
   bindThemeMenu(root);
   void startNotificationPolling(root);
   void syncThemeMenuState(root);
+}
+
+// on gist.github.com, our header's relative hrefs would resolve to
+// gist.github.com/... (404). Rewrite them to absolute github.com so nav works.
+function absolutizeGithubHrefs(root: HTMLElement): void {
+  root.querySelectorAll<HTMLAnchorElement>('a[href^="/"]').forEach((a) => {
+    a.href = "https://github.com" + a.getAttribute("href")!;
+  });
+  root.querySelectorAll<HTMLFormElement>('form[action^="/"]').forEach((f) => {
+    f.action = "https://github.com" + f.getAttribute("action")!;
+  });
 }
 
 function renderHeaderHtml(me: Me): string {
@@ -114,6 +128,8 @@ function renderHeaderHtml(me: Me): string {
 }
 
 function bindSearchForm(root: HTMLElement): void {
+  // on gist.github.com let the browser submit to the absolutized github.com URL
+  if (IS_GIST_SUBDOMAIN) return;
   const form = root.querySelector<HTMLFormElement>("form.oldgh-header__search");
   if (!form) return;
   form.addEventListener("submit", (e) => {

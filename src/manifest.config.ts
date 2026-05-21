@@ -4,6 +4,7 @@ export function buildManifest(mode: "development" | "production"): chrome.runtim
   const isDev = mode === "development";
   const hostPermissions = [
     "https://github.com/*",
+    "https://gist.github.com/*",
     "https://*.githubusercontent.com/*",
   ];
   if (isDev) hostPermissions.push("http://localhost:7878/*");
@@ -37,7 +38,7 @@ export function buildManifest(mode: "development" | "production"): chrome.runtim
 
     content_scripts: [
       {
-        matches: ["https://github.com/*"],
+        matches: ["https://github.com/*", "https://gist.github.com/*"],
         js: ["src/content/index.ts"],
         run_at: "document_start",
         all_frames: false,
@@ -55,7 +56,7 @@ export function buildManifest(mode: "development" | "production"): chrome.runtim
     web_accessible_resources: [
       {
         resources: ["styles/2013.css", "assets/*"],
-        matches: ["https://github.com/*"],
+        matches: ["https://github.com/*", "https://gist.github.com/*"],
       },
     ],
   };
