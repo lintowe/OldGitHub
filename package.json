@@ -23,6 +23,7 @@
     "octicons": "8.5.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@samrum/vite-plugin-web-extension": "5.1.1",
     "@types/chrome": "^0.0.270",
     "typescript": "5.4.5",
