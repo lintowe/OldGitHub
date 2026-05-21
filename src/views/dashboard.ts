@@ -94,9 +94,7 @@ function renderFeedItem(item: FeedItem): string {
     ? `<div class="oldgh-dash__feed-title"><a href="${escapeAttr(item.bodyTextLink.href)}">${escapeText(item.bodyTextLink.text)}</a></div>`
     : "";
 
-  const body = item.bodyExcerpt
-    ? `<div class="oldgh-dash__feed-body">${escapeText(item.bodyExcerpt)}</div>`
-    : "";
+  const body = item.bodyExcerpt ? renderFeedBody(item.bodyExcerpt) : "";
 
   const repoCards = item.repoCards.length > 0
     ? `<ul class="oldgh-dash__repo-cards">${item.repoCards.map(renderRepoCard).join("")}</ul>`
@@ -117,6 +115,17 @@ function renderFeedItem(item: FeedItem): string {
       </div>
     </li>
   `;
+}
+
+// AI-generated commit summaries arrive with a leading "Summary " token that
+// reads weirdly inline ("Summary npm run sync now passes..."). Break it out
+// into its own pill so the body text reads as prose.
+function renderFeedBody(excerpt: string): string {
+  const m = /^Summary[\s ]+(.+)$/s.exec(excerpt);
+  if (m) {
+    return `<div class="oldgh-dash__feed-body"><span class="oldgh-dash__feed-body-label">Summary</span>${escapeText(m[1]!)}</div>`;
+  }
+  return `<div class="oldgh-dash__feed-body">${escapeText(excerpt)}</div>`;
 }
 
 function formatHeadline(actorLogin: string, headline: string): string {

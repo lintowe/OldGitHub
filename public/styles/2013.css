@@ -3701,6 +3701,21 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
+.oldgh-dash__feed-body-label {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--gh-border);
+  border-radius: 3px;
+  background: var(--gh-bg-subtle);
+  font-size: var(--gh-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gh-fg-muted);
+  line-height: 16px;
+  vertical-align: 1px;
+}
 
 .oldgh-dash__repo-cards {
   list-style: none;
