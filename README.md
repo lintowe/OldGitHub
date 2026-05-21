@@ -14,6 +14,8 @@ Restore the 2012–2013 GitHub layout as a Chrome extension. Renders signed-in `
 
 A few pages are JS-only React forms that can't be scraped without their runtime (`/new`, `/import`, `/login`, `/signup`, `/account/...`, issue / discussion / release / PR create forms, fork dialog, etc.). For those the extension keeps the themed header at the top of the page and lets GitHub's native body render below, so submit flows still work normally.
 
+The same pattern applies to **gist.github.com**: the themed top bar appears on every gist page (links rewrite to absolute github.com so navigation works), and the native gist body renders below with its own typography preserved.
+
 ## Architecture
 
 - **TypeScript** sources, **Vite** + `@samrum/vite-plugin-web-extension`, **vanilla** rendering (template strings + DOM, no framework)
