@@ -46,7 +46,7 @@ function renderHeader(c: CommitView): string {
     <div class="oldgh-repo-commit__header">
       <div class="oldgh-repo-commit__title-row">
         <h1 class="oldgh-repo-commit__title">${escapeText(c.shortMessage)}</h1>
-        <a class="oldgh-btn oldgh-repo-commit__sha" href="${escapeAttr(c.url)}" title="${escapeAttr(c.oid)}"><code>${escapeText(shortOid)}</code></a>
+        <a class="oldgh-btn oldgh-repo-commit__sha" href="/${escapeAttr(c.owner)}/${escapeAttr(c.repo)}/tree/${escapeAttr(c.oid)}" title="Browse files at ${escapeAttr(c.oid)}"><code>${escapeText(shortOid)}</code></a>
       </div>
       ${c.bodyMessageHtml ? `<div class="oldgh-repo-commit__body markdown-body">${sanitizeBodyHtml(c.bodyMessageHtml)}</div>` : ""}
       <div class="oldgh-repo-commit__meta">
