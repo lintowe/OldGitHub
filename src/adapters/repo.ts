@@ -204,21 +204,21 @@ async function scrapeRepoLanguages(owner: string, repo: string): Promise<Array<{
   } catch {
     return [];
   }
-  // language section is anchored on links to /owner/repo/search?l=Lang. Each
-  // language anchor contains a <span>Name</span> and a <span>NN.N%</span>.
+  // language section is anchored on links to /owner/repo/search?l=Lang. The
+  // language name comes from the l= query param (more reliable than inner
+  // spans, whose order varies); the percent is the inner span ending in %.
   const out: Array<{ name: string; percent: number }> = [];
-  const linkRe = /<a[^>]+href="\/[^/]+\/[^/]+\/search\?l=[^"]+"[^>]*>([\s\S]*?)<\/a>/g;
+  const linkRe = /<a[^>]+href="\/[^/]+\/[^/]+\/search\?l=([^"&]+)[^"]*"[^>]*>([\s\S]*?)<\/a>/g;
   let m: RegExpExecArray | null;
   while ((m = linkRe.exec(html))) {
-    const inner = m[1] ?? "";
-    const nameMatch = inner.match(/<span>([^<]+)<\/span>/);
-    const pctMatch = inner.match(/<span>([\d.]+)%<\/span>/);
-    if (!nameMatch || !pctMatch) continue;
-    const name = nameMatch[1]!.trim();
+    const rawName = decodeURIComponent(m[1]!.replace(/\+/g, " "));
+    const inner = m[2] ?? "";
+    const pctMatch = inner.match(/(\d+(?:\.\d+)?)\s*%/);
+    if (!pctMatch) continue;
     const percent = parseFloat(pctMatch[1]!);
-    if (!name || !Number.isFinite(percent)) continue;
-    if (out.some((e) => e.name === name)) continue;
-    out.push({ name, percent });
+    if (!rawName || !Number.isFinite(percent)) continue;
+    if (out.some((e) => e.name === rawName)) continue;
+    out.push({ name: rawName, percent });
     if (out.length >= 12) break;
   }
   if (out.length === 0) return [];
