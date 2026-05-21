@@ -7,8 +7,9 @@
   "type": "module",
   "scripts": {
     "build:icons": "node scripts/build-icons.mjs",
-    "prebuild": "npm run build:icons",
-    "predev": "npm run build:icons",
+    "build:ext-icons": "node scripts/build-extension-icons.mjs",
+    "prebuild": "npm run build:icons && npm run build:ext-icons",
+    "predev": "npm run build:icons && npm run build:ext-icons",
     "pretypecheck": "npm run build:icons",
     "dev": "node scripts/run-dev.mjs",
     "dev:build": "vite build --watch --mode development",
