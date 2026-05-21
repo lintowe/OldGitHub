@@ -1755,6 +1755,9 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
 .oldgh-profile__scraped > .oldgh-profile__repos-list {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+  /* match the panel fill so the 1px overlap with the tabs' bottom border is
+     invisible at any sub-pixel rounding */
+  border-top-color: var(--gh-bg-elev);
 }
 .oldgh-profile__muted {
   color: var(--gh-fg-muted);
