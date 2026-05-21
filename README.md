@@ -1,6 +1,8 @@
 # OldGitHub
 
-Restore the 2012–2013 GitHub layout as a Chrome extension. Renders signed-in `github.com` pages in the classic 2013 interface in both light and dark themes. authentication is your existing `github.com` session cookie and all data comes from GitHub's own REST/GraphQL and HTML.
+Restore the 2012–2013 GitHub layout as a Chrome extension.
+
+Renders signed-in `github.com` pages in the classic 2013 interface in both light and dark themes. Authentication is your existing `github.com` session cookie; all data comes from GitHub's own REST/GraphQL and HTML.
 
 ## What's themed
 
