@@ -3,6 +3,7 @@ import { AdapterFailure } from "@/adapters";
 import { getProfile, type PinnedRepo, type ProfileView } from "@/adapters/profile";
 import { getProfileRepos, type ProfileReposView, type RepoListItem } from "@/adapters/profile-repos";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { languageColor } from "@/util/language-color";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-profile";
@@ -564,20 +565,6 @@ function renderStarItem(raw: unknown): string {
       </p>
     </li>
   `;
-}
-
-function languageColor(lang: string): string {
-  const map: Record<string, string> = {
-    "TypeScript": "#2b7489", "JavaScript": "#f1e05a", "Python": "#3572A5", "Rust": "#dea584",
-    "Go": "#00ADD8", "Java": "#b07219", "C": "#555555", "C++": "#f34b7d", "C#": "#178600",
-    "Ruby": "#701516", "PHP": "#4F5D95", "Swift": "#ffac45", "Kotlin": "#A97BFF", "Shell": "#89e051",
-    "HTML": "#e34c26", "CSS": "#563d7c", "Vue": "#41b883", "OCaml": "#3be133", "Elixir": "#6e4a7e",
-    "Haskell": "#5e5086", "Lua": "#000080", "Dart": "#00B4AB", "Scala": "#c22d40", "Perl": "#0298c3",
-    "Objective-C": "#438eff", "Clojure": "#db5855", "Erlang": "#B83998", "R": "#198ce7",
-    "Julia": "#a270ba", "PowerShell": "#012456", "Solidity": "#AA6746", "Zig": "#ec915c",
-    "Nim": "#37775b", "Crystal": "#000100", "F#": "#b845fc",
-  };
-  return map[lang] ?? "#ccc";
 }
 
 function formatNum(n: number): string {

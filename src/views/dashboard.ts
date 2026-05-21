@@ -8,6 +8,7 @@ import {
   type ChangelogItem,
 } from "@/adapters/dashboard";
 import { absoluteTime, relativeTime } from "@/util/time";
+import { languageColor } from "@/util/language-color";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-dashboard";
@@ -67,7 +68,7 @@ function renderTrendingBox(title: string, icon: string, seeMoreHref: string, rep
             <a class="oldgh-dash__trending-slug" href="${escapeAttr(r.href)}">${escapeText(r.slug)}</a>
             ${r.description ? `<p class="oldgh-dash__trending-desc">${escapeText(r.description)}</p>` : ""}
             <div class="oldgh-dash__trending-meta">
-              ${r.language ? `<span>${escapeText(r.language)}</span>` : ""}
+              ${r.language ? `<span><span class="oldgh-lang-dot" style="background:${languageColor(r.language)}"></span>${escapeText(r.language)}</span>` : ""}
               ${r.starCount ? `<span>${octicon("star", { size: 12 })} ${escapeText(r.starCount)}</span>` : ""}
             </div>
           </li>

@@ -1981,6 +1981,15 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   border-radius: 50%;
   background: #ccc;
 }
+.oldgh-lang-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ccc;
+  margin-right: 4px;
+  vertical-align: middle;
+}
 
 .oldgh-profile__contribs-empty {
   background: var(--gh-bg-elev);

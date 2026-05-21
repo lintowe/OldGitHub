@@ -1,4 +1,5 @@
 import { octicon } from "@/icons";
+import { languageColor } from "@/util/language-color";
 
 const SHOW_DELAY = 350;
 const HIDE_DELAY = 200;
@@ -484,16 +485,6 @@ function formatRelative(iso: string): string {
   if (mo < 12) return `${mo}mo ago`;
   const y = Math.round(mo / 12);
   return `${y}y ago`;
-}
-
-function languageColor(lang: string): string {
-  const map: Record<string, string> = {
-    "TypeScript": "#2b7489", "JavaScript": "#f1e05a", "Python": "#3572A5", "Rust": "#dea584",
-    "Go": "#00ADD8", "Java": "#b07219", "C": "#555555", "C++": "#f34b7d", "C#": "#178600",
-    "Ruby": "#701516", "PHP": "#4F5D95", "Swift": "#ffac45", "Kotlin": "#A97BFF", "Shell": "#89e051",
-    "HTML": "#e34c26", "CSS": "#563d7c", "SCSS": "#c6538c", "Vue": "#41b883",
-  };
-  return map[lang] ?? "#ccc";
 }
 
 function formatCount(n: number): string {

@@ -1,6 +1,7 @@
 import { octicon } from "@/icons";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 import { currentUserLogin } from "@/auth/session";
+import { languageColor } from "@/util/language-color";
 
 const ROOT_CLASS = "oldgh-stars";
 
@@ -234,16 +235,6 @@ function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
-
-function languageColor(lang: string): string {
-  const map: Record<string, string> = {
-    "TypeScript": "#2b7489", "JavaScript": "#f1e05a", "Python": "#3572A5", "Rust": "#dea584",
-    "Go": "#00ADD8", "Java": "#b07219", "C": "#555555", "C++": "#f34b7d", "C#": "#178600",
-    "Ruby": "#701516", "PHP": "#4F5D95", "Swift": "#ffac45", "Kotlin": "#A97BFF", "Shell": "#89e051",
-    "HTML": "#e34c26", "CSS": "#563d7c", "Vue": "#41b883",
-  };
-  return map[lang] ?? "#ccc";
 }
 
 function escapeText(s: string): string {

@@ -18,6 +18,7 @@ import {
 } from "@/adapters/search";
 import { relativeTime, absoluteTime } from "@/util/time";
 import { emojify } from "@/util/emoji";
+import { languageColor } from "@/util/language-color";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-search";
@@ -430,38 +431,6 @@ function labelTextColor(hex: string): string {
   const b = n & 0xff;
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.6 ? "#333" : "#fff";
-}
-
-function languageColor(lang: string | null): string {
-  if (!lang) return "#ccc";
-  const map: Record<string, string> = {
-    "TypeScript": "#2b7489",
-    "JavaScript": "#f1e05a",
-    "Python": "#3572A5",
-    "Rust": "#dea584",
-    "Go": "#00ADD8",
-    "Java": "#b07219",
-    "C": "#555555",
-    "C++": "#f34b7d",
-    "C#": "#178600",
-    "Ruby": "#701516",
-    "PHP": "#4F5D95",
-    "Swift": "#ffac45",
-    "Kotlin": "#A97BFF",
-    "Shell": "#89e051",
-    "HTML": "#e34c26",
-    "CSS": "#563d7c",
-    "SCSS": "#c6538c",
-    "Vue": "#41b883",
-    "Dart": "#00B4AB",
-    "Elixir": "#6e4a7e",
-    "Lua": "#000080",
-    "Scala": "#c22d40",
-    "Haskell": "#5e5086",
-    "R": "#198CE7",
-    "Perl": "#0298c3",
-  };
-  return map[lang] ?? "#ccc";
 }
 
 function escapeText(s: string): string {

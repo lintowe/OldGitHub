@@ -1,6 +1,7 @@
 import { octicon } from "@/icons";
 import { getRepoOverview, type RepoOverview } from "@/adapters/repo-overview";
 import { getRepoLanguages } from "@/adapters/repo";
+import { languageColor } from "@/util/language-color";
 import { hydrateTreeTable, renderTreeTable } from "./_tree-table";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
@@ -51,21 +52,6 @@ function renderLanguageBar(langs: Array<{ name: string; bytes: number; percent: 
       <div class="oldgh-repo-home__lang-labels">${labels}${restPercent > 0.1 ? ` <span class="oldgh-repo-home__lang-label"><span class="oldgh-repo-home__lang-dot" style="background:#ccc"></span>Other <strong>${restPercent.toFixed(1)}%</strong></span>` : ""}</div>
     </div>
   `;
-}
-
-function languageColor(lang: string): string {
-  const map: Record<string, string> = {
-    "TypeScript": "#2b7489", "JavaScript": "#f1e05a", "Python": "#3572A5", "Rust": "#dea584",
-    "Go": "#00ADD8", "Java": "#b07219", "C": "#555555", "C++": "#f34b7d", "C#": "#178600",
-    "Ruby": "#701516", "PHP": "#4F5D95", "Swift": "#ffac45", "Kotlin": "#A97BFF", "Shell": "#89e051",
-    "HTML": "#e34c26", "CSS": "#563d7c", "SCSS": "#c6538c", "Vue": "#41b883", "Dart": "#00B4AB",
-    "Elixir": "#6e4a7e", "Lua": "#000080", "Scala": "#c22d40", "Haskell": "#5e5086",
-    "R": "#198CE7", "Perl": "#0298c3", "Objective-C": "#438eff", "Makefile": "#427819",
-    "Dockerfile": "#384d54", "Vim Script": "#199f4b", "Jupyter Notebook": "#DA5B0B",
-    "MDX": "#fcb32c", "Markdown": "#083fa1", "TeX": "#3D6117", "Nix": "#7e7eff",
-    "Zig": "#ec915c", "Astro": "#ff5a03",
-  };
-  return map[lang] ?? "#ccc";
 }
 
 export function unmountRepoHome(): void {
