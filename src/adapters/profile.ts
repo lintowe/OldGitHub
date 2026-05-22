@@ -225,15 +225,18 @@ function readHighlights(doc: Document): ProfileHighlights {
 }
 
 function extractDisplayName(doc: Document, ogTitle: string, login: string): string {
-  const rawTitle = doc.querySelector("title")?.textContent?.trim() ?? "";
-  // strip the trailing tab name ("Repositories", "Stars", "Followers", ...) and
-  // " · GitHub" so visiting /:user?tab=stars doesn't surface "<name> - Stars"
-  // as the display name in our sidebar.
+  const TAB_NAMES = "Overview|Repositories|Stars|Followers|Following|Achievements|Projects|Packages|Sponsoring|People";
+  // when viewing your own profile, GitHub flips the title to "Your <Tab>" —
+  // that's a navigation breadcrumb, not the user's display name. discard it
+  // entirely so we fall through to og:title / login.
+  const isOwnerTitle = (s: string): boolean => new RegExp(`^Your (${TAB_NAMES})\\b`, "i").test(s.replace(/\s*·\s*GitHub\s*$/, "").trim());
   const stripTabSuffix = (s: string): string => s
     .replace(/\s*·\s*GitHub\s*$/, "")
-    .replace(/\s*-\s*(Overview|Repositories|Stars|Followers|Following|Achievements|Projects|Packages|Sponsoring|People)\s*$/, "")
+    .replace(new RegExp(`\\s*[-–—]\\s*(${TAB_NAMES})\\s*$`), "")
     .trim();
-  const title = stripTabSuffix(rawTitle);
+
+  const rawTitle = doc.querySelector("title")?.textContent?.trim() ?? "";
+  const title = isOwnerTitle(rawTitle) ? "" : stripTabSuffix(rawTitle);
 
   const parenMatch = /^(.+?)\s*\((.+?)\)\s*$/.exec(title);
   if (parenMatch && parenMatch[1] && parenMatch[2]) {
@@ -245,7 +248,19 @@ function extractDisplayName(doc: Document, ogTitle: string, login: string): stri
     return b;
   }
 
-  const ogTrim = stripTabSuffix(ogTitle);
+  const ogTrim = isOwnerTitle(ogTitle) ? "" : stripTabSuffix(ogTitle);
+  // og:title for a profile is typically "<displayName> (<login>) · GitHub" or
+  // "<login>". prefer it over the scraped <title> because GitHub mutates the
+  // <title> per-tab while og:title stays stable on the profile root metadata.
+  const ogParen = /^(.+?)\s*\((.+?)\)\s*$/.exec(ogTrim);
+  if (ogParen && ogParen[1] && ogParen[2]) {
+    const a = ogParen[1].trim();
+    const b = ogParen[2].trim();
+    if (a === login && b !== login) return b;
+    if (b === login && a !== login) return a;
+    if (a !== login) return a;
+    return b;
+  }
   if (ogTrim && ogTrim !== login) return ogTrim;
   if (title && title !== login) return title;
   return login;
@@ -302,7 +317,14 @@ function readPinned(doc: Document): PinnedRepo[] {
     const stars = starsEl?.textContent?.trim() || null;
     const forksEl = el.querySelector<HTMLAnchorElement>('a[href*="/forks"], a[href*="/network/members"]');
     const forks = forksEl?.textContent?.trim() || null;
-    const isPrivate = !!el.querySelector('.Label[title="Private" i], .Label--secondary');
+    // .Label--secondary alone is too permissive (also matches Forked / Mirror /
+    // Template). check title attr first, then read label text.
+    const labels = Array.from(el.querySelectorAll<HTMLElement>(".Label, .Label--secondary"));
+    const isPrivate = labels.some((l) => {
+      const title = (l.getAttribute("title") || "").trim().toLowerCase();
+      const text = (l.textContent || "").trim().toLowerCase();
+      return title === "private" || text === "private";
+    });
     out.push({ nwo, href, description: desc, language, languageColor, stars, forks, isPrivate });
   }
   return out;

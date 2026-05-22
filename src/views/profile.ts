@@ -25,6 +25,13 @@ const ORG_TABS: { key: string; label: string }[] = [
   { key: "people", label: "People" },
 ];
 
+function isViewingPastYear(query: string): boolean {
+  const m = /(?:^|[?&])from=(\d{4})-/.exec(query);
+  if (!m || !m[1]) return false;
+  const year = parseInt(m[1], 10);
+  return Number.isFinite(year) && year !== new Date().getUTCFullYear();
+}
+
 export async function mountProfile(login: string, tab: string, query: string): Promise<void> {
   const view = await getProfile(login, query);
 
@@ -42,7 +49,11 @@ export async function mountProfile(login: string, tab: string, query: string): P
   }
   if (tab === "overview" && view.kind === "user") {
     void hydrateProfileReadme(root, login);
-    void hydrateActivity(root, login);
+    // public events API only goes back ~90 days; if the viewer is looking at
+    // a prior year, the current activity list is misleading — hide it.
+    if (!isViewingPastYear(query)) {
+      void hydrateActivity(root, login);
+    }
   }
   if (tab === "overview" && view.kind === "org") {
     void hydrateOrgReadme(root, login);
@@ -510,26 +521,48 @@ async function scrapeStarsPage(login: string): Promise<string | null> {
     const doc = new DOMParser().parseFromString(html, "text/html");
     const items: string[] = [];
     const seen = new Set<string>();
-    for (const a of Array.from(doc.querySelectorAll<HTMLAnchorElement>('div.col-12.d-block a[itemprop="name codeRepository"], h3 a[href^="/"]'))) {
+    // modern GH wraps each starred entry in a div with a repo title <h3> and a
+    // description <p>. itemprop attributes are gone from current markup, so
+    // walk every h3 with a /:owner/:repo anchor instead and read its siblings.
+    const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>("h3 a[href^='/']"));
+    for (const a of anchors) {
       const href = a.getAttribute("href") || "";
       const m = /^\/([\w.-]+)\/([\w.-]+)\/?$/.exec(href);
       if (!m || !m[1] || !m[2]) continue;
       const full = `${m[1]}/${m[2]}`;
       if (seen.has(full)) continue;
       seen.add(full);
-      const card = a.closest("div");
-      const desc = card?.querySelector('p[itemprop="description"]')?.textContent?.trim() || "";
-      const lang = card?.querySelector('[itemprop="programmingLanguage"]')?.textContent?.trim() || null;
-      const starsEl = card?.querySelector<HTMLAnchorElement>('a[href*="/stargazers"]');
-      const starsTxt = starsEl?.textContent?.trim() || "";
+      // walk up to a card-like container — turbo-frame items, divs, articles, list rows
+      const card: Element = a.closest("article, li, .Box-row, [class*='border-bottom'], div.py-3, div.py-4") || a.parentElement?.parentElement || a.parentElement || a;
+      // description: pinned-item-desc OR a generic <p> after the h3
+      const descEl =
+        card.querySelector<HTMLElement>(".pinned-item-desc, p[itemprop='description'], p.color-fg-muted") ||
+        card.querySelector<HTMLElement>("h3 + p, h3 + div p");
+      const desc = descEl?.textContent?.replace(/\s+/g, " ").trim() || "";
+      // language: span next to a color swatch, or repo-language-color sibling
+      const langSwatch = card.querySelector<HTMLElement>(".repo-language-color, [style*='background-color'][class*='language']");
+      const langColor = langSwatch ? langSwatch.style.backgroundColor || null : null;
+      const langText =
+        card.querySelector<HTMLElement>("[itemprop='programmingLanguage'], span.color-fg-default + span, span.f6.color-fg-muted span")?.textContent?.replace(/\s+/g, " ").trim() ||
+        (langSwatch ? (langSwatch.nextElementSibling?.textContent?.trim() || langSwatch.parentElement?.textContent?.trim() || null) : null);
+      // stars count
+      const starsEl = card.querySelector<HTMLAnchorElement>('a[href*="/stargazers"]');
+      const starsTxt = starsEl?.textContent?.replace(/\s+/g, " ").trim() || "";
+      // updated time
+      const timeEl = card.querySelector<HTMLElement>("relative-time, time-ago, time");
+      const updatedIso = timeEl?.getAttribute("datetime") || "";
+      const langDot = langText
+        ? `<span class="oldgh-profile__lang-swatch" style="background:${escapeAttr(langColor || languageColor(langText))}"></span>`
+        : "";
+      const meta: string[] = [];
+      if (langText) meta.push(`<span>${langDot}${escapeText(langText)}</span>`);
+      if (starsTxt) meta.push(`<span>${octicon("star", { size: 12 })}${escapeText(starsTxt)}</span>`);
+      if (updatedIso) meta.push(`<span title="${escapeAttr(absoluteTime(updatedIso))}">updated ${escapeText(relativeTime(updatedIso))}</span>`);
       items.push(`
         <li class="oldgh-profile__repo">
           <h3 class="oldgh-profile__repo-name"><a href="/${escapeAttr(full)}">${escapeText(full)}</a></h3>
           ${desc ? `<p class="oldgh-profile__repo-desc">${escapeText(desc)}</p>` : ""}
-          <p class="oldgh-profile__repo-meta">
-            ${lang ? `<span>${escapeText(lang)}</span>` : ""}
-            ${starsTxt ? `<span>${octicon("star", { size: 12 })}${escapeText(starsTxt)}</span>` : ""}
-          </p>
+          ${meta.length > 0 ? `<p class="oldgh-profile__repo-meta">${meta.join("")}</p>` : ""}
         </li>
       `);
     }
@@ -605,7 +638,7 @@ function renderTabBody(v: ProfileView, tab: string): string {
     return `<div class="oldgh-profile__repos" data-state="loading">${renderReposLoading()}</div>`;
   }
   if (tab !== "overview") {
-    return `<div class="oldgh-profile__scraped" data-state="loading"><p class="oldgh-profile__muted">Loading&hellip;</p></div>`;
+    return `<div class="oldgh-profile__scraped" data-state="loading"><div class="oldgh-profile__empty"><p class="oldgh-profile__muted">Loading&hellip;</p></div></div>`;
   }
   if (v.kind === "org") {
     return `
@@ -690,7 +723,7 @@ async function hydrateProfileReadme(root: HTMLElement, login: string): Promise<v
 }
 
 function renderReposLoading(): string {
-  return `<p class="oldgh-profile__muted">Loading repositories&hellip;</p>`;
+  return `<div class="oldgh-profile__empty"><p class="oldgh-profile__muted">Loading repositories&hellip;</p></div>`;
 }
 
 async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, query: string): Promise<void> {
@@ -1064,7 +1097,7 @@ function renderAchievementsFromFrame(frame: Element): string {
     return `
       <section class="oldgh-achievements">
         <div class="oldgh-achievements__empty">
-          ${octicon("trophy", { size: 36 })}
+          ${octicon("star", { size: 36 })}
           <h3>No achievements earned yet.</h3>
           <p>Achievements highlight specific events on GitHub. Open pull requests, ship releases, sponsor maintainers — they accumulate over time.</p>
         </div>
@@ -1074,7 +1107,7 @@ function renderAchievementsFromFrame(frame: Element): string {
   return `
     <section class="oldgh-achievements">
       <header class="oldgh-achievements__intro">
-        <h3>${octicon("trophy", { size: 18 })} Achievements <span class="oldgh-achievements__count">${earned.length}</span></h3>
+        <h3>${octicon("star", { size: 18 })} Achievements <span class="oldgh-achievements__count">${earned.length}</span></h3>
         <p>Highlights and milestones earned across GitHub activity.</p>
       </header>
       <ul class="oldgh-achievements__grid">
