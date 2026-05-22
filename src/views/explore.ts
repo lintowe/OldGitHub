@@ -200,7 +200,19 @@ async function fetchTrendingDevs(): Promise<TrendingDev[]> {
     let popRepo: TrendingDev["popRepo"] = null;
     if (popRepoAnchor) {
       const repoName = popRepoAnchor.textContent?.trim() || "";
-      const desc = row.querySelector<HTMLElement>(".f6.color-fg-muted, p.color-fg-muted")?.textContent?.trim() || null;
+      // walk every muted text element under the row and accept the first one
+      // that's actually a sentence — earlier we accepted star counts ("1") as
+      // the description since they share the .f6.color-fg-muted class.
+      let desc: string | null = null;
+      for (const el of Array.from(row.querySelectorAll<HTMLElement>(".f6.color-fg-muted, p.color-fg-muted, p.text-gray, p.col-9"))) {
+        const t = el.textContent?.replace(/\s+/g, " ").trim() || "";
+        if (!t) continue;
+        if (/^\d[\d.,kKmM ]*$/.test(t)) continue;
+        if (t.length < 6) continue;
+        if (/There was an error while loading/i.test(t)) continue;
+        desc = t;
+        break;
+      }
       if (repoName) popRepo = { name: repoName, description: desc };
     }
     out.push({ login, name: nameText && nameText !== login ? nameText : null, avatarUrl, popRepo });

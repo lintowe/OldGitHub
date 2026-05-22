@@ -175,6 +175,22 @@ function cleanScrapedContent(el: Element): void {
   for (const sel of remove) {
     el.querySelectorAll(sel).forEach((n) => n.remove());
   }
+  // strip elements GitHub keeps in the DOM but hides via JS — without their
+  // bundle running, every conditional warning shows at once. avatar upload
+  // errors, .js-* hide-until-error stubs, [hidden] attribute holdouts.
+  const hiddenSelectors = [
+    "[hidden]",
+    ".js-avatar-upload-error",
+    ".js-upload-error",
+    ".js-upload-image-error",
+    ".js-flash-error",
+    ".js-conditional-error",
+    ".error-message:not(.is-shown)",
+    "[data-test-selector*='error']:empty",
+  ];
+  for (const sel of hiddenSelectors) {
+    el.querySelectorAll(sel).forEach((n) => n.remove());
+  }
   for (const node of Array.from(el.querySelectorAll<HTMLElement>("div, section"))) {
     const text = (node.textContent || "").trim();
     if (text.startsWith("Uh oh!") && text.includes("error") && node.children.length < 10) {

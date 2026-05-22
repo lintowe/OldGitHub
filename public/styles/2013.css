@@ -2075,16 +2075,12 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 }
 .oldgh-profile__contribs-graph table {
   border-collapse: separate;
-  /* 1px instead of 2px shaves ~54px off the table width — enough margin to
-     fit 53 weeks + a label column in the main area even at narrow viewports. */
   border-spacing: 1px;
   margin: 0;
-  /* don't force the table to be 100% — let it size to its natural width
-     (sum of cell min-widths). 100% combined with table-layout: auto and cell
-     min-widths can still overflow when content can't be shrunk below min. */
-  width: auto;
-  max-width: 100%;
-  table-layout: auto;
+  /* fixed layout + 100% width = columns split proportionally and never
+     overflow the container. cells size from CSS, not content. */
+  width: 100%;
+  table-layout: fixed;
 }
 .oldgh-profile__contribs-graph thead th,
 .oldgh-profile__contribs-graph tbody th {
@@ -2098,9 +2094,12 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 }
 .oldgh-profile__contribs-graph td.ContributionCalendar-day,
 .oldgh-profile__contribs-graph td.day {
-  width: 10px !important;
-  min-width: 10px;
-  max-width: 10px;
+  /* fixed table-layout + width: 100% distributes the 53 day columns evenly
+     across the available container width. height stays ~10px to match
+     2013 GitHub's square cells; width follows table flex. */
+  width: auto !important;
+  min-width: 0;
+  max-width: none;
   height: 10px;
   background: #eeeeee;
   border-radius: 2px;
@@ -9735,8 +9734,20 @@ html[data-oldgh-theme="dark"] .oldgh-account-settings__native .Button {
 .oldgh-account-settings__native [aria-label*="Save changes is disabled"],
 .oldgh-account-settings__native tool-tip,
 .oldgh-account-settings__native template-shadowroot,
-.oldgh-account-settings__native include-fragment[loading="lazy"]:empty {
-  display: none;
+.oldgh-account-settings__native include-fragment[loading="lazy"]:empty,
+.oldgh-account-settings__native [class*="js-avatar-upload-error"],
+.oldgh-account-settings__native [class*="js-upload-error"],
+.oldgh-account-settings__native .error-message:empty,
+.oldgh-account-settings__native [data-error-text],
+.oldgh-account-settings__native .js-avatar-image,
+.oldgh-account-settings__native .js-empty-avatar-error,
+.oldgh-account-settings__native .js-large-avatar-error,
+.oldgh-account-settings__native .js-large-pixel-avatar-error,
+.oldgh-account-settings__native .js-invalid-extension-avatar-error,
+.oldgh-account-settings__native .js-unprocessable-avatar-error,
+.oldgh-account-settings__native .js-mismatch-extension-avatar-error,
+.oldgh-account-settings__settings__native [class*="error"]:not(.flash):not(.btn-danger):not(.btn-link):not(:has(input)):not(:has(textarea)):not(:has(select)) {
+  display: none !important;
 }
 .oldgh-account-settings__native .danger-zone,
 .oldgh-account-settings__native .border-red {
