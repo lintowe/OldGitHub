@@ -128,7 +128,7 @@ function parseFeedArticle(art: Element): FeedItem | null {
   const time = art.querySelector("relative-time, time-ago, time");
   const occurredAt = time?.getAttribute("datetime") ?? null;
 
-  const titleLink = findPrimaryTitleLink(art);
+  const titleLink = findPrimaryTitleLink(art, actor?.login || null);
   const bodyExcerpt = findBodyExcerpt(art);
 
   const repoCards = isRepoListCard(cardType) ? parseRepoCards(art) : [];
@@ -181,15 +181,45 @@ function parseActor(art: Element, avatarImg: HTMLImageElement | null): FeedActor
   return { login, avatarUrl: avatarImg?.getAttribute("src") || null };
 }
 
-function findPrimaryTitleLink(art: Element): { text: string; href: string } | null {
-  const candidate = art.querySelector<HTMLAnchorElement>(
-    "a.Link--primary, h3 a[href*='/pull/'], h3 a[href*='/issues/'], h3 a[href*='/commit/'], h3 a[href*='/releases/'], h1 a, h2 a",
+function findPrimaryTitleLink(art: Element, actorLogin: string | null): { text: string; href: string } | null {
+  // first preference: an h1/h2/h3 anchor pointing at a specific thing — PR,
+  // issue, commit, release. these are unambiguous title links.
+  const direct = art.querySelector<HTMLAnchorElement>(
+    "h3 a[href*='/pull/'], h3 a[href*='/issues/'], h3 a[href*='/commit/'], h3 a[href*='/releases/'], h1 a, h2 a",
   );
-  if (!candidate) return null;
-  const href = candidate.getAttribute("href") || "";
-  const text = cleanText(candidate.textContent || "");
-  if (!text || !href) return null;
-  return { text, href };
+  if (direct) {
+    const href = direct.getAttribute("href") || "";
+    const text = cleanText(direct.textContent || "");
+    if (text && href) return { text, href };
+  }
+  // fallback: pick the first anchor whose href looks like /:owner/:repo
+  // (exactly two non-empty segments, no further path). this catches FORK,
+  // CREATED_REPO, STAR, FOLLOW-target-repo, etc. — events whose title link is
+  // the target repository itself.
+  for (const a of Array.from(art.querySelectorAll<HTMLAnchorElement>("h3 a[href^='/'], h2 a[href^='/'], a.Link--primary[href^='/']"))) {
+    const href = a.getAttribute("href") || "";
+    const segs = href.split("?")[0]!.split("#")[0]!.split("/").filter(Boolean);
+    if (segs.length !== 2) continue;
+    // skip the actor's own profile link — that's the "X did Y" header pattern,
+    // not the title of the card.
+    if (actorLogin && segs[0]!.toLowerCase() === actorLogin.toLowerCase() && segs.length === 1) continue;
+    const text = cleanText(a.textContent || "");
+    if (!text || !href) continue;
+    // skip when the link text is just the actor name (some templates put a
+    // bare actor mention in the body).
+    if (actorLogin && text.toLowerCase() === actorLogin.toLowerCase()) continue;
+    return { text, href };
+  }
+  // final fallback: any Link--primary anchor, even if not a repo nwo
+  const fallback = art.querySelector<HTMLAnchorElement>("a.Link--primary");
+  if (fallback) {
+    const href = fallback.getAttribute("href") || "";
+    const text = cleanText(fallback.textContent || "");
+    if (text && href && !(actorLogin && text.toLowerCase() === actorLogin.toLowerCase())) {
+      return { text, href };
+    }
+  }
+  return null;
 }
 
 function findBodyExcerpt(art: Element): string | null {
