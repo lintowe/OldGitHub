@@ -2077,10 +2077,12 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   border-collapse: separate;
   border-spacing: 1px;
   margin: 0;
-  /* fixed layout + 100% width = columns split proportionally and never
-     overflow the container. cells size from CSS, not content. */
-  width: 100%;
-  table-layout: fixed;
+  /* table-layout: auto sizes cells to their content + explicit widths. cells
+     are pinned to 9px (below); label column to 28px. total = 53*10 + 28 + 54
+     spacing = 612 — comfortable fit inside the ~620px main column. */
+  width: auto;
+  max-width: 100%;
+  table-layout: auto;
 }
 .oldgh-profile__contribs-graph thead th,
 .oldgh-profile__contribs-graph tbody th {
@@ -2094,16 +2096,15 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 }
 .oldgh-profile__contribs-graph td.ContributionCalendar-day,
 .oldgh-profile__contribs-graph td.day {
-  /* fixed table-layout + width: 100% distributes the 53 day columns evenly
-     across the available container width. height stays ~10px to match
-     2013 GitHub's square cells; width follows table flex. */
-  width: auto !important;
-  min-width: 0;
-  max-width: none;
-  height: 10px;
+  /* authentic 2013 GH cells. trimContributionGraph() in views/profile.ts
+     drops leftmost (older) weeks until the table fits the main column. */
+  width: 11px !important;
+  min-width: 11px;
+  max-width: 11px;
+  height: 11px !important;
   background: #eeeeee;
   border-radius: 2px;
-  padding: 0;
+  padding: 0 !important;
   box-sizing: border-box;
   cursor: pointer;
 }
