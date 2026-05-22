@@ -144,44 +144,40 @@ export async function getProfile(login: string, query: string = ""): Promise<Pro
 }
 
 function extractContributionYears(doc: Document, login: string, activeFrom: string | null): ContributionYear[] {
-  // modern GH renders the year list as <a data-year="YYYY"> inside a profile
-  // timeline filter. fall back to <a href="?from=YYYY-12-01..."> in case the
-  // data-year attribute moves.
+  // modern GH hydrates the year list lazily — the SSR'd profile no longer
+  // contains <a data-year> anchors. try to read them anyway (Wayback / older
+  // GH versions still have them), and fall back to a synthesized window.
   const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>(
     ".js-profile-timeline-year-list a, [data-tab-item][data-year], a[data-year]",
   ));
-  const seen = new Set<number>();
-  const out: ContributionYear[] = [];
+  const fromScrape = new Set<number>();
   for (const a of anchors) {
     const yearAttr = a.getAttribute("data-year");
     const year = yearAttr ? parseInt(yearAttr, 10) : NaN;
     if (!Number.isFinite(year) || year < 2007 || year > 2100) continue;
-    if (seen.has(year)) continue;
-    seen.add(year);
-    const fromMatch = /from=(\d{4})-/.exec(a.getAttribute("href") || "");
-    const isActive = activeFrom
-      ? activeFrom.startsWith(`${year}-`)
-      : a.classList.contains("selected") || a.getAttribute("aria-current") === "true";
-    const href = isCurrentYear(year) ? `/${login}` : `/${login}?from=${year}-12-01&to=${year}-12-31&tab=overview`;
-    out.push({ year, href, isActive });
-    void fromMatch;
+    fromScrape.add(year);
   }
-  if (out.length === 0) return [];
-  // GitHub renders newest year first; preserve that.
-  out.sort((a, b) => b.year - a.year);
-  if (!out.some((y) => y.isActive)) {
-    const target = activeFrom ? parseInt(activeFrom.slice(0, 4), 10) : new Date().getUTCFullYear();
-    for (const y of out) {
-      if (y.year === target) { y.isActive = true; break; }
-    }
-    if (!out.some((y) => y.isActive) && out[0]) out[0].isActive = true;
+
+  const currentYear = new Date().getUTCFullYear();
+  const yearsDesc: number[] = fromScrape.size > 0
+    ? Array.from(fromScrape).sort((a, b) => b - a)
+    : Array.from({ length: 7 }, (_, i) => currentYear - i);
+
+  // include the year the user is currently viewing even if it's outside the
+  // synthesized window, so the active marker has somewhere to land.
+  const viewing = activeFrom ? parseInt(activeFrom.slice(0, 4), 10) : currentYear;
+  if (Number.isFinite(viewing) && !yearsDesc.includes(viewing)) {
+    yearsDesc.push(viewing);
+    yearsDesc.sort((a, b) => b - a);
   }
-  return out;
+
+  return yearsDesc.map((year) => ({
+    year,
+    href: year === currentYear ? `/${login}` : `/${login}?from=${year}-12-01&to=${year}-12-31&tab=overview`,
+    isActive: year === viewing,
+  }));
 }
 
-function isCurrentYear(year: number): boolean {
-  return year === new Date().getUTCFullYear();
-}
 
 async function fetchContributionFragment(login: string, from?: string | null, to?: string | null): Promise<{ tableHtml: string; heading: string | null } | null> {
   try {
