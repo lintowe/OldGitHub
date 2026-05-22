@@ -1776,6 +1776,19 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
   font-size: var(--gh-size-md);
 }
 
+/* empty state — used by Stars/Followers/Following/Repositories tabs when
+   the result list comes back with zero items. matches the panel chrome of
+   the populated states so the box doesn't change height as you switch tabs. */
+.oldgh-profile__empty {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-top-color: var(--gh-bg-elev);
+  border-radius: 0 0 var(--gh-radius) var(--gh-radius);
+  padding: 28px 24px;
+  text-align: center;
+}
+.oldgh-profile__empty p { margin: 0; }
+
 /* user-repositories tab list */
 .oldgh-repo-list {
   margin: 0;
@@ -2019,40 +2032,43 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 
 /* contribution graph (scraped from modern GH, restyled to 2013 palette) */
 .oldgh-profile__contribs-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: start;
+  display: block;
 }
 .oldgh-profile__contribs-main {
   min-width: 0;
 }
+/* year selector — horizontal pill row under the graph. keeps the graph at
+   full main-column width so all 53 weeks fit at 1280px viewport without an
+   overflow scroll bar. */
 .oldgh-profile__contribs-years {
   list-style: none;
-  margin: 0;
+  margin: 8px 0 0;
   padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   font-size: var(--gh-size-sm);
-  min-width: 56px;
 }
 .oldgh-profile__contribs-years li {
   margin: 0;
 }
 .oldgh-profile__contribs-years li a {
-  display: block;
-  padding: 4px 10px;
-  color: var(--gh-fg);
+  display: inline-block;
+  padding: 2px 10px;
+  color: var(--gh-fg-muted);
+  border: 1px solid transparent;
   border-radius: 3px;
-  border-left: 3px solid transparent;
-  margin-left: -3px;
   line-height: 1.4;
 }
 .oldgh-profile__contribs-years li a:hover {
   background: var(--gh-bg-stripe);
+  border-color: var(--gh-border-faint);
   text-decoration: none;
 }
 .oldgh-profile__contribs-years li.is-active a {
   background: var(--gh-bg-stripe);
-  border-left-color: var(--gh-link);
+  border-color: var(--gh-border);
+  color: var(--gh-fg);
   font-weight: bold;
 }
 .oldgh-profile__contribs-graph {
@@ -2060,14 +2076,13 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
   padding: 10px 12px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
 }
 .oldgh-profile__contribs-graph table {
   border-collapse: separate;
   border-spacing: 2px;
-  margin: 0 auto;
-  width: auto;
+  margin: 0;
+  width: 100%;
   table-layout: fixed;
 }
 .oldgh-profile__contribs-graph thead th,
@@ -2082,9 +2097,9 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 }
 .oldgh-profile__contribs-graph td.ContributionCalendar-day,
 .oldgh-profile__contribs-graph td.day {
-  width: 10px !important;
-  min-width: 10px;
-  max-width: 10px;
+  width: auto !important;
+  min-width: 9px;
+  max-width: 14px;
   height: 10px;
   background: #eeeeee;
   border-radius: 2px;
@@ -9215,7 +9230,7 @@ html[data-oldgh-theme="dark"] .oldgh-actions-run__job-header:hover {
 /* ======================= */
 .oldgh-people {
   list-style: none;
-  margin: 0;
+  margin: 14px 0 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
