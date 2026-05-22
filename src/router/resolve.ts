@@ -44,6 +44,10 @@ const OUT_OF_SCOPE_PREFIXES = [
   "/signup",
   "/join",
   "/password_reset",
+  // codespaces/copilot are embedded app surfaces (Monaco editor, vendor chat).
+  // theming the chrome around them is worse than dormant — let native render.
+  "/codespaces",
+  "/copilot",
 ];
 
 const OUT_OF_SCOPE_REPO_SUFFIXES: string[] = [];
