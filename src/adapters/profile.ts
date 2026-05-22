@@ -334,13 +334,40 @@ function readPinned(doc: Document): PinnedRepo[] {
 }
 
 function readOrgs(doc: Document): ProfileOrg[] {
-  const anchors = doc.querySelectorAll<HTMLAnchorElement>('a[data-hovercard-type="organization"]');
+  // walking every a[data-hovercard-type=organization] was too greedy — it
+  // picked up the 'github' org from Developer Program / PRO badges and any
+  // commit/repo links that hover-card-resolved to an org. only count anchors
+  // that live under the explicit Organizations section: a heading containing
+  // "Organizations" with the avatar list immediately following.
+  const candidateContainers: Element[] = [];
+  // 1) heading-based: <h2|h3|h4> with text "Organizations" then a sibling list
+  for (const h of Array.from(doc.querySelectorAll<HTMLElement>("h2, h3, h4"))) {
+    const t = (h.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+    if (t !== "organizations") continue;
+    let sib: Element | null = h.nextElementSibling;
+    while (sib && !sib.querySelector?.('a[data-hovercard-type="organization"]')) {
+      sib = sib.nextElementSibling;
+    }
+    if (sib) candidateContainers.push(sib);
+  }
+  // 2) explicit selectors used over time: vCard "h-card" details, aria labels.
+  for (const el of Array.from(doc.querySelectorAll<HTMLElement>('[aria-label="Organizations" i], [itemprop="follows"], .h-card .ml-3'))) {
+    candidateContainers.push(el);
+  }
+  const anchors = new Set<HTMLAnchorElement>();
+  for (const c of candidateContainers) {
+    for (const a of Array.from(c.querySelectorAll<HTMLAnchorElement>('a[data-hovercard-type="organization"]'))) {
+      anchors.add(a);
+    }
+  }
   const seen = new Set<string>();
   const out: ProfileOrg[] = [];
-  for (const a of Array.from(anchors)) {
+  for (const a of anchors) {
     const href = a.getAttribute("href") || "";
-    const login = href.replace(/^\//, "").split("/")[0];
-    if (!login || seen.has(login)) continue;
+    const m = /^\/([\w.-]+)\/?$/.exec(href);
+    if (!m || !m[1]) continue;
+    const login = m[1];
+    if (seen.has(login)) continue;
     seen.add(login);
     const img = a.querySelector<HTMLImageElement>("img");
     const avatarUrl = img?.getAttribute("src") || `https://github.com/${login}.png?size=64`;

@@ -212,9 +212,11 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     ) {
       const target = targetBodyForRoute(route);
       if (!sameBody(bodyState, target)) {
+        // keep the old body root visible while we fetch the new one — the
+        // orange progress bar at top is the loading affordance. mountX's
+        // adoptBodyRoot() at the end will atomically swap the DOM. failure
+        // path in the catch below still wipes via removeAllBodyRoots.
         bodyState = { kind: "none" };
-        removeAllBodyRoots();
-        insertBodyPlaceholder();
       }
       await ensureRepoHeader(route.owner, route.repo, pathname);
       await applyBodyState(target);
@@ -225,8 +227,6 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       const target: BodyState = { kind: "profile", login: route.login, tab: route.tab, query: route.query };
       if (!sameBody(bodyState, target)) {
         bodyState = { kind: "none" };
-        removeAllBodyRoots();
-        insertBodyPlaceholder();
       }
       teardownRepoHeader();
       await applyBodyState(target);
@@ -237,8 +237,6 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       const target: BodyState = { kind: "top-level", subkind: route.subkind, pathname: route.pathname, search: route.search, title: route.title };
       if (!sameBody(bodyState, target)) {
         bodyState = { kind: "none" };
-        removeAllBodyRoots();
-        insertBodyPlaceholder();
       }
       teardownRepoHeader();
       await applyBodyState(target);
@@ -396,9 +394,10 @@ async function applyBodyState(target: BodyState): Promise<void> {
     bodyState = { kind: "none" };
     return;
   }
+  // don't wipe the old root here either — mountX will adopt the new root
+  // when ready, swapping atomically. on failure, the catch in dispatchRoute
+  // calls removeAllBodyRoots so we don't end up with stale content.
   bodyState = { kind: "none" };
-  removeAllBodyRoots();
-  insertBodyPlaceholder();
   if (target.kind === "home") {
     await mountRepoHome(target.owner, target.repo);
     bodyState = target;
