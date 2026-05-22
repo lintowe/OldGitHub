@@ -9746,7 +9746,7 @@ html[data-oldgh-theme="dark"] .oldgh-account-settings__native .Button {
 .oldgh-account-settings__native .js-invalid-extension-avatar-error,
 .oldgh-account-settings__native .js-unprocessable-avatar-error,
 .oldgh-account-settings__native .js-mismatch-extension-avatar-error,
-.oldgh-account-settings__settings__native [class*="error"]:not(.flash):not(.btn-danger):not(.btn-link):not(:has(input)):not(:has(textarea)):not(:has(select)) {
+.oldgh-account-settings__native [class*="error"]:not(.flash):not(.btn-danger):not(.btn-link):not(:has(input)):not(:has(textarea)):not(:has(select)) {
   display: none !important;
 }
 .oldgh-account-settings__native .danger-zone,
