@@ -10,6 +10,7 @@ const TABS = [
   { key: "actions", label: "Actions", path: "/actions", icon: "play" },
   { key: "projects", label: "Projects", path: "/projects", icon: "project" },
   { key: "wiki", label: "Wiki", path: "/wiki", icon: "book" },
+  { key: "releases", label: "Releases", path: "/releases", icon: "tag" },
   { key: "security", label: "Security", path: "/security", icon: "shield" },
   { key: "insights", label: "Insights", path: "/pulse", icon: "graph" },
   { key: "settings", label: "Settings", path: "/settings", icon: "gear" },
@@ -220,7 +221,8 @@ function currentTabKey(owner: string, repo: string, pathname: string): TabKey {
   const prefix = `/${owner}/${repo}`;
   if (pathname === prefix || pathname === `${prefix}/`) return "code";
   const rest = pathname.slice(prefix.length);
-  if (rest.startsWith("/tree/") || rest.startsWith("/blob/") || rest.startsWith("/commits") || rest.startsWith("/commit/") || rest.startsWith("/releases") || rest.startsWith("/tags") || rest.startsWith("/branches")) {
+  if (rest.startsWith("/releases")) return "releases";
+  if (rest.startsWith("/tree/") || rest.startsWith("/blob/") || rest.startsWith("/commits") || rest.startsWith("/commit/") || rest.startsWith("/tags") || rest.startsWith("/branches")) {
     return "code";
   }
   if (rest.startsWith("/issues") || rest.startsWith("/labels") || rest.startsWith("/milestones") || rest.startsWith("/milestone/")) return "issues";
