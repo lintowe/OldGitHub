@@ -2083,7 +2083,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   border-spacing: 2px;
   margin: 0;
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
 }
 .oldgh-profile__contribs-graph thead th,
 .oldgh-profile__contribs-graph tbody th {
