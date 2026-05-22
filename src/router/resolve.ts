@@ -106,6 +106,11 @@ export function resolveRoute(pathname: string, search: string): Route {
   if (pathname.startsWith("/sponsors/") && !pathname.startsWith("/sponsors/explore")) {
     return { kind: "top-level", subkind: "other", pathname, search, title: "Sponsors" };
   }
+  // GitHub's /sponsors hub redirects to /open-source/sponsors which our /:owner/:repo
+  // resolver otherwise treats as a missing repo. Keep it native — there's nothing to scrape.
+  if (pathname === "/open-source/sponsors" || pathname.startsWith("/open-source/sponsors/")) {
+    return { kind: "out-of-scope" };
+  }
   for (const prefix of OUT_OF_SCOPE_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
       return { kind: "out-of-scope" };

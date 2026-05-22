@@ -56,8 +56,19 @@ async function scrapeProjects(owner: string, repo: string, search: string): Prom
     const titleEl = card.querySelector<HTMLElement>("h3, h4, .h4, .markdown-title, [data-target*='title']") || a;
     const title = (titleEl.textContent || "").trim();
     if (!title || title.length > 200) continue;
-    const descEl = card.querySelector<HTMLElement>("p.color-fg-muted, p.color-fg-subtle, .text-small.color-fg-muted");
-    const desc = descEl?.textContent?.trim() || null;
+    // skip GitHub's lazy-hydration placeholder text — projects render
+    // "There was an error while loading" inside a <p> while the real
+    // description loads via JS we can't run.
+    const descEls = Array.from(card.querySelectorAll<HTMLElement>("p.color-fg-muted, p.color-fg-subtle, .text-small.color-fg-muted"));
+    let desc: string | null = null;
+    for (const el of descEls) {
+      const t = (el.textContent || "").trim();
+      if (!t) continue;
+      if (/There was an error while loading/i.test(t)) continue;
+      if (/^Loading\.?\.?\.?$/i.test(t)) continue;
+      desc = t;
+      break;
+    }
     const stateEl = card.querySelector<HTMLElement>("[data-state], .State");
     const stateText = stateEl?.textContent?.trim().toLowerCase() || "";
     const state: "open" | "closed" = stateText.includes("closed") ? "closed" : "open";
