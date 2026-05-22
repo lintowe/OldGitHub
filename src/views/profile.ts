@@ -534,11 +534,21 @@ async function scrapeStarsPage(login: string): Promise<string | null> {
       seen.add(full);
       // walk up to a card-like container — turbo-frame items, divs, articles, list rows
       const card: Element = a.closest("article, li, .Box-row, [class*='border-bottom'], div.py-3, div.py-4") || a.parentElement?.parentElement || a.parentElement || a;
-      // description: pinned-item-desc OR a generic <p> after the h3
-      const descEl =
-        card.querySelector<HTMLElement>(".pinned-item-desc, p[itemprop='description'], p.color-fg-muted") ||
-        card.querySelector<HTMLElement>("h3 + p, h3 + div p");
-      const desc = descEl?.textContent?.replace(/\s+/g, " ").trim() || "";
+      // description: pinned-item-desc OR a generic <p> after the h3. skip any
+      // <p> whose text matches GitHub's hydration-error placeholder.
+      const descCandidates = [
+        ...Array.from(card.querySelectorAll<HTMLElement>(".pinned-item-desc, p[itemprop='description'], p.color-fg-muted")),
+        ...Array.from(card.querySelectorAll<HTMLElement>("h3 + p, h3 + div p")),
+      ];
+      let desc = "";
+      for (const el of descCandidates) {
+        const t = el.textContent?.replace(/\s+/g, " ").trim() || "";
+        if (!t) continue;
+        if (/There was an error while loading/i.test(t)) continue;
+        if (/^Loading\.?\.?\.?$/i.test(t)) continue;
+        desc = t;
+        break;
+      }
       // language: span next to a color swatch, or repo-language-color sibling
       const langSwatch = card.querySelector<HTMLElement>(".repo-language-color, [style*='background-color'][class*='language']");
       const langColor = langSwatch ? langSwatch.style.backgroundColor || null : null;

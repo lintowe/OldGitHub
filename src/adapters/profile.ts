@@ -225,6 +225,12 @@ function readHighlights(doc: Document): ProfileHighlights {
 }
 
 function extractDisplayName(doc: Document, ogTitle: string, login: string): string {
+  // first source of truth: vcard-fullname element on the page sidebar. it's
+  // rendered identically across every profile tab, so /:user?tab=stars and
+  // /:user both surface the same display name from this element.
+  const vcardName = doc.querySelector<HTMLElement>(".vcard-fullname, .p-name.vcard-fullname, [itemprop='name']")?.textContent?.replace(/\s+/g, " ").trim();
+  if (vcardName && vcardName !== login) return vcardName;
+
   const TAB_NAMES = "Overview|Repositories|Stars|Followers|Following|Achievements|Projects|Packages|Sponsoring|People";
   // when viewing your own profile, GitHub flips the title to "Your <Tab>" —
   // that's a navigation breadcrumb, not the user's display name. discard it
@@ -249,9 +255,6 @@ function extractDisplayName(doc: Document, ogTitle: string, login: string): stri
   }
 
   const ogTrim = isOwnerTitle(ogTitle) ? "" : stripTabSuffix(ogTitle);
-  // og:title for a profile is typically "<displayName> (<login>) · GitHub" or
-  // "<login>". prefer it over the scraped <title> because GitHub mutates the
-  // <title> per-tab while og:title stays stable on the profile root metadata.
   const ogParen = /^(.+?)\s*\((.+?)\)\s*$/.exec(ogTrim);
   if (ogParen && ogParen[1] && ogParen[2]) {
     const a = ogParen[1].trim();
