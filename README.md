@@ -6,15 +6,16 @@ Renders signed-in `github.com` pages in the classic 2013 interface in both light
 
 ## What's themed
 
-- **Top-level** — dashboard, notifications, search, your issues / pulls / stars / watching, explore, trending, marketplace, topics index + detail, collections, sponsors, account settings
-- **Profile** — overview with pinned repos + contribution calendar + activity, followers, following, achievements, projects, packages, sponsoring, people, repositories, stars
-- **Repo** — home (branch picker, clone box with HTTPS / SSH / GitHub CLI tabs + ZIP download, sorted file tree with last-commit info, README), tree browser, blob view with syntax highlighting (~32 languages) and Raw / Blame / History buttons, commits list with day grouping and pagination, single commit + diff, compare view, issues list and detail (with reactions and labels), pull request list and detail (conversation / files / commits / checks), wiki, actions runs + workflow detail, pulse, graphs (contributors / commit activity / code frequency / traffic / community / network), projects, security (overview + advisories), repo settings, repo discussions list and detail
+- **Top-level** — dashboard, notifications, search, your issues / pulls / stars / watching, explore, trending, marketplace, topics index + detail, collections, sponsors, all settings sub-pages
+- **Settings** — every user settings page (profile, account, appearance, accessibility, notifications, billing, emails, security, sessions, SSH/GPG keys, organizations, enterprises, moderation, repositories, packages, pages, saved replies, applications, developer settings, archives) and every repo settings page (general, collaborators, branches, tags, rules, actions, webhooks, environments, pages, code security, deploy keys, secrets, GitHub Apps, autolink)
+- **Profile** — overview with pinned repos + contribution calendar (with year selector) + activity, followers, following, achievements, projects, packages, sponsoring, people, repositories, stars
+- **Repo** — home (branch picker, clone box with HTTPS / SSH / GitHub CLI tabs + ZIP download, sorted file tree with last-commit info, README), tree browser, blob view with syntax highlighting (~32 languages) and Raw / Blame / History buttons, commits list with day grouping and pagination, single commit + diff, compare view, issues list and detail (with reactions and labels), pull request list and detail (conversation / files / commits / checks), wiki, releases, actions runs + workflow detail, pulse, graphs (contributors / commit activity / code frequency / traffic / community / network), projects, security (overview + advisories), repo discussions list and detail
 - **Hovercards** — user and repo previews on links throughout the site
 - **Header** — 2013 Octocat-era top bar with primary nav, search, notifications poll, create-new + avatar dropdowns
 
 ## What stays native (with the themed header on top)
 
-A few pages are JS-only React forms that can't be scraped without their runtime (`/new`, `/import`, `/login`, `/signup`, `/account/...`, issue / discussion / release / PR create forms, fork dialog, etc.). For those the extension keeps the themed header at the top of the page and lets GitHub's native body render below, so submit flows still work normally.
+A few pages are JS-only React forms that can't be scraped without their runtime (`/new`, `/import`, `/login`, `/signup`, issue / discussion / release / PR create forms, fork dialog, etc.). Codespaces (`/codespaces`) and Copilot (`/copilot`) are embedded vendor surfaces — the Monaco editor and streamed chat panes don't re-skin cleanly, so they stay native too. For all of these the extension keeps the themed header at the top of the page and lets GitHub's native body render below, so submit flows and IDE interactions still work normally.
 
 The same pattern applies to **gist.github.com**: the themed top bar appears on every gist page (links rewrite to absolute github.com so navigation works), and the native gist body renders below with its own typography preserved.
 
