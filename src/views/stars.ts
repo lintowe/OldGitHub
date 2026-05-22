@@ -61,9 +61,19 @@ export async function mountStars(pathname: string, search: string): Promise<void
       credentials: "omit",
       headers: { Accept: "application/vnd.github.star+json" },
     });
-    if (!resp.ok) throw new Error(`${resp.status}`);
-    const data = (await resp.json()) as unknown[];
-    const items = data.map(parseStarred).filter((s): s is StarredRepo => s !== null);
+    let items: StarredRepo[] = [];
+    if (resp.ok) {
+      const data = (await resp.json()) as unknown[];
+      items = data.map(parseStarred).filter((s): s is StarredRepo => s !== null);
+    }
+    // anonymous api can't see PRIVATE starred repos. when the api returns 0
+    // (or fails outright), fall back to scraping the cookie-authed page —
+    // exactly what /:user?tab=stars does. private starred entries surface
+    // from this path so users see what they actually starred.
+    if (items.length === 0) {
+      const scraped = await scrapeStarredPage(login);
+      if (scraped) items = scraped;
+    }
     const loading = root.querySelector(".oldgh-stars__loading");
     if (loading) loading.remove();
     const page = root.querySelector(".oldgh-page");
@@ -77,6 +87,67 @@ export async function mountStars(pathname: string, search: string): Promise<void
   } catch (err) {
     const loading = root.querySelector(".oldgh-stars__loading");
     if (loading) loading.textContent = `Couldn't load stars: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+async function scrapeStarredPage(login: string): Promise<StarredRepo[] | null> {
+  try {
+    const resp = await fetch(`https://github.com/${encodeURIComponent(login)}?tab=stars`, {
+      credentials: "include",
+      headers: { Accept: "text/html" },
+    });
+    if (!resp.ok) return null;
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const out: StarredRepo[] = [];
+    const seen = new Set<string>();
+    for (const a of Array.from(doc.querySelectorAll<HTMLAnchorElement>("h3 a[href^='/']"))) {
+      const href = a.getAttribute("href") || "";
+      const m = /^\/([\w.-]+)\/([\w.-]+)\/?$/.exec(href);
+      if (!m || !m[1] || !m[2]) continue;
+      const ownerLogin = m[1];
+      const repoName = m[2];
+      const fullName = `${ownerLogin}/${repoName}`;
+      if (seen.has(fullName)) continue;
+      seen.add(fullName);
+      const card: Element = a.closest("article, li, .Box-row, [class*='border-bottom'], div.py-3, div.py-4") || a.parentElement?.parentElement || a.parentElement || a;
+      const descEls = Array.from(card.querySelectorAll<HTMLElement>(".pinned-item-desc, p[itemprop='description'], p.color-fg-muted, h3 + p, h3 + div p"));
+      let description: string | null = null;
+      for (const el of descEls) {
+        const t = (el.textContent || "").replace(/\s+/g, " ").trim();
+        if (!t) continue;
+        if (/There was an error while loading/i.test(t)) continue;
+        if (/^Loading\.?\.?\.?$/i.test(t)) continue;
+        description = t;
+        break;
+      }
+      const langText =
+        card.querySelector<HTMLElement>("[itemprop='programmingLanguage']")?.textContent?.replace(/\s+/g, " ").trim() ||
+        null;
+      const isPrivate = !!card.querySelector(".Label[title='Private' i], svg.octicon-lock");
+      const timeEl = card.querySelector<HTMLElement>("relative-time, time-ago, time");
+      const updatedAt = timeEl?.getAttribute("datetime") || "";
+      out.push({
+        fullName,
+        ownerLogin,
+        ownerAvatar: `https://github.com/${ownerLogin}.png?size=40`,
+        repoName,
+        description,
+        language: langText,
+        stars: 0,
+        forks: 0,
+        isPrivate,
+        isFork: false,
+        isArchived: false,
+        htmlUrl: `https://github.com${href}`,
+        updatedAt,
+        starredAt: "",
+        topics: [],
+      });
+    }
+    return out.length > 0 ? out : null;
+  } catch {
+    return null;
   }
 }
 
