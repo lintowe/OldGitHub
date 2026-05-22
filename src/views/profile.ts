@@ -493,9 +493,9 @@ async function hydrateStars(root: HTMLElement, login: string): Promise<void> {
       container.innerHTML = html;
       return;
     }
-    container.innerHTML = `<p class="oldgh-profile__muted">No starred repositories.</p>`;
+    container.innerHTML = `<div class="oldgh-profile__empty"><p class="oldgh-profile__muted">No starred repositories.</p></div>`;
   } catch {
-    container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load stars.</p>`;
+    container.innerHTML = `<div class="oldgh-profile__empty"><p class="oldgh-profile__muted">Couldn't load stars.</p></div>`;
   }
 }
 
@@ -736,7 +736,7 @@ async function hydrateScrapedTab(root: HTMLElement, login: string, tab: string, 
     }
     container.innerHTML = frame.innerHTML;
   } catch {
-    container.innerHTML = `<p class="oldgh-profile__muted">Couldn't load this tab.</p>`;
+    container.innerHTML = `<div class="oldgh-profile__empty"><p class="oldgh-profile__muted">Couldn't load this tab.</p></div>`;
   }
 }
 
@@ -787,7 +787,7 @@ function renderPeopleFromFrame(frame: Element): string {
     people.push({ login, name, avatarUrl, bio, location });
   }
   if (people.length === 0) {
-    return `<p class="oldgh-profile__muted">No users to show.</p>`;
+    return `<div class="oldgh-profile__empty"><p class="oldgh-profile__muted">No users to show.</p></div>`;
   }
   return `
     <ul class="oldgh-people">
@@ -1110,7 +1110,7 @@ async function hydrateRepos(root: HTMLElement, login: string, query: string): Pr
 
 function renderRepos(d: ProfileReposView): string {
   if (d.items.length === 0) {
-    return `<p class="oldgh-profile__muted">No repositories.</p>`;
+    return `<div class="oldgh-profile__empty"><p class="oldgh-profile__muted">No repositories.</p></div>`;
   }
   return `
     <ul class="oldgh-repo-list">

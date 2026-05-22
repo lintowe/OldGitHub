@@ -226,7 +226,14 @@ function readHighlights(doc: Document): ProfileHighlights {
 
 function extractDisplayName(doc: Document, ogTitle: string, login: string): string {
   const rawTitle = doc.querySelector("title")?.textContent?.trim() ?? "";
-  const title = rawTitle.replace(/\s*·\s*GitHub\s*$/, "").trim();
+  // strip the trailing tab name ("Repositories", "Stars", "Followers", ...) and
+  // " · GitHub" so visiting /:user?tab=stars doesn't surface "<name> - Stars"
+  // as the display name in our sidebar.
+  const stripTabSuffix = (s: string): string => s
+    .replace(/\s*·\s*GitHub\s*$/, "")
+    .replace(/\s*-\s*(Overview|Repositories|Stars|Followers|Following|Achievements|Projects|Packages|Sponsoring|People)\s*$/, "")
+    .trim();
+  const title = stripTabSuffix(rawTitle);
 
   const parenMatch = /^(.+?)\s*\((.+?)\)\s*$/.exec(title);
   if (parenMatch && parenMatch[1] && parenMatch[2]) {
@@ -238,7 +245,7 @@ function extractDisplayName(doc: Document, ogTitle: string, login: string): stri
     return b;
   }
 
-  const ogTrim = ogTitle.replace(/\s*-\s*Overview\s*$/, "").trim();
+  const ogTrim = stripTabSuffix(ogTitle);
   if (ogTrim && ogTrim !== login) return ogTrim;
   if (title && title !== login) return title;
   return login;
