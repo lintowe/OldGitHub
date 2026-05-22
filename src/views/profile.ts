@@ -26,7 +26,7 @@ const ORG_TABS: { key: string; label: string }[] = [
 ];
 
 export async function mountProfile(login: string, tab: string, query: string): Promise<void> {
-  const view = await getProfile(login);
+  const view = await getProfile(login, query);
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
@@ -1279,18 +1279,30 @@ function renderContributions(v: ProfileView): string {
       </section>
     `;
   }
+  const yearList = v.contributionYears.length > 1
+    ? `<ol class="oldgh-profile__contribs-years">${v.contributionYears.map((y) => `
+        <li${y.isActive ? ` class="is-active"` : ""}>
+          <a href="${escapeAttr(y.href)}"${y.isActive ? ` aria-current="page"` : ""}>${y.year}</a>
+        </li>
+      `).join("")}</ol>`
+    : "";
   return `
     <section class="oldgh-profile__contribs">
       ${v.contributionHeading ? `<h3 class="oldgh-profile__section-title">${escapeText(v.contributionHeading)}</h3>` : `<h3 class="oldgh-profile__section-title">Contributions</h3>`}
-      <div class="oldgh-profile__contribs-graph">${sanitizeBodyHtml(v.contributionGraphHtml)}</div>
-      <div class="oldgh-profile__contribs-legend">
-        <span>Less</span>
-        <span class="oldgh-profile__contribs-legend-cell" data-level="0"></span>
-        <span class="oldgh-profile__contribs-legend-cell" data-level="1"></span>
-        <span class="oldgh-profile__contribs-legend-cell" data-level="2"></span>
-        <span class="oldgh-profile__contribs-legend-cell" data-level="3"></span>
-        <span class="oldgh-profile__contribs-legend-cell" data-level="4"></span>
-        <span>More</span>
+      <div class="oldgh-profile__contribs-row">
+        <div class="oldgh-profile__contribs-main">
+          <div class="oldgh-profile__contribs-graph">${sanitizeBodyHtml(v.contributionGraphHtml)}</div>
+          <div class="oldgh-profile__contribs-legend">
+            <span>Less</span>
+            <span class="oldgh-profile__contribs-legend-cell" data-level="0"></span>
+            <span class="oldgh-profile__contribs-legend-cell" data-level="1"></span>
+            <span class="oldgh-profile__contribs-legend-cell" data-level="2"></span>
+            <span class="oldgh-profile__contribs-legend-cell" data-level="3"></span>
+            <span class="oldgh-profile__contribs-legend-cell" data-level="4"></span>
+            <span>More</span>
+          </div>
+        </div>
+        ${yearList}
       </div>
     </section>
   `;

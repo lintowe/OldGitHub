@@ -30,6 +30,12 @@ export type ProfileHighlights = {
   starWaveSpotted: boolean;
 };
 
+export type ContributionYear = {
+  year: number;
+  href: string;
+  isActive: boolean;
+};
+
 export type ProfileView = {
   login: string;
   kind: ProfileKind;
@@ -43,6 +49,7 @@ export type ProfileView = {
   repoCountHint: number | null;
   contributionHeading: string | null;
   contributionGraphHtml: string | null;
+  contributionYears: ContributionYear[];
   pinned: PinnedRepo[];
   orgs: ProfileOrg[];
   achievements: AchievementBadge[];
@@ -50,8 +57,18 @@ export type ProfileView = {
   isViewer: boolean;
 };
 
-export async function getProfile(login: string): Promise<ProfileView> {
-  const resp = await fetch(`https://github.com/${login}`, {
+export async function getProfile(login: string, query: string = ""): Promise<ProfileView> {
+  // pass through ?from=YYYY-12-01&to=YYYY-12-31 (and tab=overview) so the
+  // server returns the contribution graph for the requested year.
+  const params = new URLSearchParams(query);
+  const passthrough = new URLSearchParams();
+  for (const k of ["from", "to", "tab"]) {
+    const v = params.get(k);
+    if (v) passthrough.set(k, v);
+  }
+  const qs = passthrough.toString();
+  const url = `https://github.com/${login}${qs ? `?${qs}` : ""}`;
+  const resp = await fetch(url, {
     credentials: "include",
     headers: { Accept: "text/html" },
   });
@@ -96,12 +113,13 @@ export async function getProfile(login: string): Promise<ProfileView> {
   let contributionGraphHtml = extractContributionGraph(doc);
   let contributionHeading = normalizeWhitespace(doc.querySelector(".js-yearly-contributions h2")?.textContent || "") || null;
   if (!contributionGraphHtml && kind === "user") {
-    const fetched = await fetchContributionFragment(profileUsername);
+    const fetched = await fetchContributionFragment(profileUsername, passthrough.get("from"), passthrough.get("to"));
     if (fetched) {
       contributionGraphHtml = fetched.tableHtml;
       contributionHeading = fetched.heading ?? contributionHeading;
     }
   }
+  const contributionYears = extractContributionYears(doc, profileUsername, passthrough.get("from"));
 
   return {
     login: profileUsername,
@@ -116,6 +134,7 @@ export async function getProfile(login: string): Promise<ProfileView> {
     repoCountHint,
     contributionHeading,
     contributionGraphHtml,
+    contributionYears,
     pinned: readPinned(doc),
     orgs: readOrgs(doc),
     achievements: readAchievements(doc, profileUsername),
@@ -124,9 +143,53 @@ export async function getProfile(login: string): Promise<ProfileView> {
   };
 }
 
-async function fetchContributionFragment(login: string): Promise<{ tableHtml: string; heading: string | null } | null> {
+function extractContributionYears(doc: Document, login: string, activeFrom: string | null): ContributionYear[] {
+  // modern GH renders the year list as <a data-year="YYYY"> inside a profile
+  // timeline filter. fall back to <a href="?from=YYYY-12-01..."> in case the
+  // data-year attribute moves.
+  const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>(
+    ".js-profile-timeline-year-list a, [data-tab-item][data-year], a[data-year]",
+  ));
+  const seen = new Set<number>();
+  const out: ContributionYear[] = [];
+  for (const a of anchors) {
+    const yearAttr = a.getAttribute("data-year");
+    const year = yearAttr ? parseInt(yearAttr, 10) : NaN;
+    if (!Number.isFinite(year) || year < 2007 || year > 2100) continue;
+    if (seen.has(year)) continue;
+    seen.add(year);
+    const fromMatch = /from=(\d{4})-/.exec(a.getAttribute("href") || "");
+    const isActive = activeFrom
+      ? activeFrom.startsWith(`${year}-`)
+      : a.classList.contains("selected") || a.getAttribute("aria-current") === "true";
+    const href = isCurrentYear(year) ? `/${login}` : `/${login}?from=${year}-12-01&to=${year}-12-31&tab=overview`;
+    out.push({ year, href, isActive });
+    void fromMatch;
+  }
+  if (out.length === 0) return [];
+  // GitHub renders newest year first; preserve that.
+  out.sort((a, b) => b.year - a.year);
+  if (!out.some((y) => y.isActive)) {
+    const target = activeFrom ? parseInt(activeFrom.slice(0, 4), 10) : new Date().getUTCFullYear();
+    for (const y of out) {
+      if (y.year === target) { y.isActive = true; break; }
+    }
+    if (!out.some((y) => y.isActive) && out[0]) out[0].isActive = true;
+  }
+  return out;
+}
+
+function isCurrentYear(year: number): boolean {
+  return year === new Date().getUTCFullYear();
+}
+
+async function fetchContributionFragment(login: string, from?: string | null, to?: string | null): Promise<{ tableHtml: string; heading: string | null } | null> {
   try {
-    const resp = await fetch(`https://github.com/users/${login}/contributions`, {
+    const qs = new URLSearchParams();
+    if (from) qs.set("from", from);
+    if (to) qs.set("to", to);
+    const tail = qs.toString();
+    const resp = await fetch(`https://github.com/users/${login}/contributions${tail ? `?${tail}` : ""}`, {
       credentials: "include",
       headers: { Accept: "text/html" },
     });
