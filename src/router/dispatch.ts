@@ -163,7 +163,12 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
   const search = currentSearch(loc);
   const route = resolveRoute(pathname, search);
 
-  void chrome.runtime.sendMessage({ type: "oldgh:route-change", pathname, search });
+  // fire-and-forget: the message may throw synchronously when the SW has been
+  // replaced under us (auto-update, manual reload, idle-recycle), and the
+  // returned promise may reject for the same reason. swallow both.
+  try {
+    void chrome.runtime.sendMessage({ type: "oldgh:route-change", pathname, search }).catch(() => {});
+  } catch {}
 
   const willMount = route.kind !== "out-of-scope" && route.kind !== "todo";
   if (willMount) {

@@ -61,12 +61,17 @@ function interceptClicks(): void {
           : window.location.search;
         if (isFullyCoveredUrl(window.location.pathname, currentSearch)) {
           e.preventDefault();
-          void chrome.runtime
-            .sendMessage({ type: "oldgh:pre-navigate-uncovered" })
-            .catch(() => undefined)
-            .finally(() => {
-              window.location.assign(url.toString());
-            });
+          const go = (): void => { window.location.assign(url.toString()); };
+          // if the SW has been replaced under us, sendMessage can throw
+          // synchronously — make sure navigation still happens.
+          try {
+            void chrome.runtime
+              .sendMessage({ type: "oldgh:pre-navigate-uncovered" })
+              .catch(() => undefined)
+              .finally(go);
+          } catch {
+            go();
+          }
         }
         return;
       }
