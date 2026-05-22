@@ -200,9 +200,6 @@ function findPrimaryTitleLink(art: Element, actorLogin: string | null): { text: 
     const href = a.getAttribute("href") || "";
     const segs = href.split("?")[0]!.split("#")[0]!.split("/").filter(Boolean);
     if (segs.length !== 2) continue;
-    // skip the actor's own profile link — that's the "X did Y" header pattern,
-    // not the title of the card.
-    if (actorLogin && segs[0]!.toLowerCase() === actorLogin.toLowerCase() && segs.length === 1) continue;
     const text = cleanText(a.textContent || "");
     if (!text || !href) continue;
     // skip when the link text is just the actor name (some templates put a
