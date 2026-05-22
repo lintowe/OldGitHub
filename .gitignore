@@ -18,3 +18,6 @@ oldgithub-v*.zip
 .aider*/
 .cursor/
 .windsurf/
+
+# private working notes — never commit
+docs/

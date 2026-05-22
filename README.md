@@ -2,6 +2,11 @@
 
 The 2012–2013 GitHub layout, rebuilt as a Chrome extension.
 
+<p align="center">
+  <img src=".github/screenshot-dark.jpg" width="49%" alt="OldGitHub — dark theme" />
+  <img src=".github/screenshot-light.jpg" width="49%" alt="OldGitHub — light theme" />
+</p>
+
 Re-skins `github.com` (and the gist subdomain header) in the classic 2013 interface, light and dark. Reuses your existing session cookie — no PAT, no OAuth, no hosted infra.
 
 ## Install
