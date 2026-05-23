@@ -10,7 +10,15 @@ export function adoptBodyRoot(root: HTMLElement, afterSelector?: string): void {
       return;
     }
   }
-  document.body.append(root);
+  // Insert before the footer so the page reads header → content → footer.
+  // adoptBodyRoot fires once per navigation, so a stale append-to-body would
+  // otherwise push every new body root below the footer mounted at boot.
+  const footer = document.querySelector(".oldgh-footer");
+  if (footer && footer.parentNode === document.body) {
+    document.body.insertBefore(root, footer);
+  } else {
+    document.body.append(root);
+  }
 }
 
 export function removeAllBodyRoots(): void {

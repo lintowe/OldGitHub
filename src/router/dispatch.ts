@@ -111,7 +111,7 @@ function insertBodyError(message: string): void {
   if (after && after.parentNode) {
     after.after(el);
   } else {
-    document.body.append(el);
+    insertBeforeFooter(el);
   }
 }
 
@@ -132,7 +132,7 @@ function insertBodyPlaceholder(): void {
   if (after && after.parentNode) {
     after.after(el);
   } else {
-    document.body.append(el);
+    insertBeforeFooter(el);
   }
 }
 
@@ -337,7 +337,7 @@ function insertBodyNotFound(message: string): void {
   if (after && after.parentNode) {
     after.after(el);
   } else {
-    document.body.append(el);
+    insertBeforeFooter(el);
   }
 }
 
@@ -689,6 +689,15 @@ function unmountBody(): void {
   unmountTopics();
   unmountMeIssues();
   unmountProfile();
+}
+
+function insertBeforeFooter(el: HTMLElement): void {
+  const footer = document.querySelector(".oldgh-footer");
+  if (footer && footer.parentNode === document.body) {
+    document.body.insertBefore(el, footer);
+  } else {
+    document.body.append(el);
+  }
 }
 
 function currentPath(loc: Location | URL): string {
