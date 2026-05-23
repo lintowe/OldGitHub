@@ -206,9 +206,13 @@ async function startNotificationPolling(root: HTMLElement): Promise<void> {
   const badge = root.querySelector<HTMLElement>(".oldgh-header__bell-count");
   if (!badge) return;
 
+  let consecutiveFailures = 0;
+  let intervalId: number | null = null;
+
   const update = async (): Promise<void> => {
     try {
       const count = await getUnreadCount();
+      consecutiveFailures = 0;
       if (count > 0) {
         badge.hidden = false;
         badge.textContent = String(count);
@@ -217,13 +221,23 @@ async function startNotificationPolling(root: HTMLElement): Promise<void> {
         badge.textContent = "";
       }
     } catch (err) {
+      consecutiveFailures++;
       const reason = err instanceof AdapterFailure ? err.name + ": " + err.message : String(err);
-      console.debug("[oldgh] notifications poll skipped:", reason);
+      // log the first failure at debug, then stay quiet — the badge isn't
+      // worth a console entry per minute when the endpoint is unreachable
+      if (consecutiveFailures === 1) {
+        console.debug("[oldgh] notifications poll skipped:", reason);
+      }
+      if (consecutiveFailures >= 3 && intervalId != null) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+        console.debug("[oldgh] notifications poll halted after 3 consecutive failures");
+      }
     }
   };
 
   await update();
-  window.setInterval(() => {
+  intervalId = window.setInterval(() => {
     void update();
   }, POLL_INTERVAL_MS);
 }
