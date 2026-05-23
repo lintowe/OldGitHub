@@ -1275,6 +1275,10 @@ html[data-oldgh-theme="dark"] .oldgh-repo-blob__truncated > p {
   padding: 12px 14px;
   border-bottom: 1px solid var(--gh-border-faint);
   align-items: center;
+  transition: background-color 80ms ease-out;
+}
+.oldgh-repo-commits__item:hover {
+  background: var(--gh-bg-stripe);
 }
 .oldgh-repo-commits__item:last-child {
   border-bottom: none;
@@ -1324,8 +1328,14 @@ html[data-oldgh-theme="dark"] .oldgh-repo-blob__truncated > p {
   font-family: var(--gh-font-mono);
   font-size: var(--gh-size-xs);
   color: var(--gh-fg-muted);
-  background: transparent;
-  padding: 0;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  padding: 1px 6px;
+  border-radius: var(--gh-radius);
+}
+.oldgh-repo-commits__sha:hover code {
+  color: var(--gh-link);
+  border-color: var(--gh-border);
 }
 .oldgh-repo-commits__pagination {
   display: flex;
@@ -1880,6 +1890,10 @@ html[data-oldgh-hide-modern-profile] [data-pjax-container] > main {
 .oldgh-repo-list__item {
   padding: 14px 16px;
   border-bottom: 1px solid var(--gh-border-faint);
+  transition: background-color 80ms ease-out;
+}
+.oldgh-repo-list__item:hover {
+  background: var(--gh-bg-stripe);
 }
 .oldgh-repo-list__item:last-child {
   border-bottom: none;
@@ -2035,6 +2049,11 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
   padding: 12px 14px;
+  transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
+}
+.oldgh-profile__pinned-card:hover {
+  border-color: var(--gh-border-strong);
+  box-shadow: var(--gh-shadow-soft);
 }
 .oldgh-profile__pinned-title {
   margin: 0 0 6px;
@@ -2502,6 +2521,10 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   padding: 10px 14px;
   border-bottom: 1px solid var(--gh-border-faint);
   align-items: start;
+  transition: background-color 80ms ease-out;
+}
+.oldgh-issues__row:hover {
+  background: var(--gh-bg-stripe);
 }
 .oldgh-issues__row:last-child { border-bottom: none; }
 .oldgh-issues__state {
@@ -3505,7 +3528,9 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
   padding: 7px 14px;
   border-bottom: 1px solid var(--gh-border-faint);
   font-size: var(--gh-size-md);
+  transition: background-color 80ms ease-out;
 }
+.oldgh-notif__item:hover { background: var(--gh-bg-stripe); }
 .oldgh-notif__item:last-child { border-bottom: 0; }
 .oldgh-notif__item.is-unread {
   background: linear-gradient(to right, rgba(65, 131, 196, 0.08), transparent 200px);
@@ -3881,6 +3906,11 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
   border-radius: var(--gh-radius);
   padding: 8px 10px;
   background: var(--gh-bg-subtle);
+  transition: border-color 100ms ease-out, background-color 100ms ease-out;
+}
+.oldgh-dash__repo-card:hover {
+  background: var(--gh-bg-elev);
+  border-color: var(--gh-border-strong);
 }
 .oldgh-dash__repo-card-head {
   display: flex;
@@ -4043,8 +4073,8 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 }
 
 .oldgh-dash__protip {
-  padding: 10px 12px;
-  background: var(--gh-bg-elev);
+  padding: 10px 12px 10px 14px;
+  background: linear-gradient(to right, #fffbe6 0, #fffbe6 4px, var(--gh-bg-elev) 4px);
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
   box-shadow: var(--gh-shadow-soft);
@@ -4052,8 +4082,16 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
   color: var(--gh-fg-muted);
   line-height: 1.5;
 }
+html[data-oldgh-theme="dark"] .oldgh-dash__protip {
+  background: linear-gradient(to right, #3a2f0e 0, #3a2f0e 4px, var(--gh-bg-elev) 4px);
+}
 .oldgh-dash__protip strong {
-  color: var(--gh-fg);
+  color: #735c0f;
+  font-weight: bold;
+  margin-right: 2px;
+}
+html[data-oldgh-theme="dark"] .oldgh-dash__protip strong {
+  color: #d4a72c;
 }
 .oldgh-dash__protip kbd {
   display: inline-block;
@@ -4460,9 +4498,12 @@ html[data-oldgh-theme="dark"] .oldgh-diff__hunk .oldgh-diff__num { background: r
   padding: 0;
 }
 .oldgh-search__row {
-  padding: 14px 0;
+  padding: 14px 12px;
+  margin: 0 -12px;
   border-bottom: 1px solid var(--gh-border-faint);
+  transition: background-color 80ms ease-out;
 }
+.oldgh-search__row:hover { background: var(--gh-bg-stripe); }
 .oldgh-search__row:last-child { border-bottom: 0; }
 .oldgh-search__name {
   margin: 0 0 6px;
@@ -5449,7 +5490,9 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
   padding: 10px 14px;
   border-bottom: 1px solid var(--gh-border-faint);
   font-size: var(--gh-size-md);
+  transition: background-color 80ms ease-out;
 }
+.oldgh-repo-list__row:hover { background: var(--gh-bg-stripe); }
 .oldgh-repo-list__row:last-child { border-bottom: 0; }
 .oldgh-repo-list__main-cell {
   display: flex;
@@ -6068,9 +6111,12 @@ html[data-oldgh-theme="dark"] .oldgh-discussion__answer-head {
 }
 .oldgh-stars__list { list-style: none; margin: 0; padding: 0; }
 .oldgh-stars__row {
-  padding: 14px 0;
+  padding: 14px 12px;
+  margin: 0 -12px;
   border-bottom: 1px solid var(--gh-border-faint);
+  transition: background-color 80ms ease-out;
 }
+.oldgh-stars__row:hover { background: var(--gh-bg-stripe); }
 .oldgh-stars__row:last-child { border-bottom: 0; }
 .oldgh-stars__name {
   margin: 0 0 6px;
