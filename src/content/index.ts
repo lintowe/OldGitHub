@@ -2,6 +2,7 @@ import { killTurbo, mountRouter } from "@/router";
 import { isLoggedIn } from "@/auth/session";
 import { applyTheme, watchThemeChanges } from "@/theme";
 import { mountHeader } from "@/views/header";
+import { mountFooter } from "@/views/footer";
 import { mountHovercards } from "@/views/hovercards";
 
 const IS_GIST = window.location.hostname === "gist.github.com";
@@ -74,6 +75,7 @@ async function run(): Promise<void> {
   watchThemeChanges();
   console.debug("[oldgh] mounting header + router");
   await mountHeader();
+  mountFooter();
   mountHovercards();
   mountRouter();
 }

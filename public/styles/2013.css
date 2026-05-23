@@ -855,9 +855,14 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   font-size: var(--gh-size-sm);
   color: var(--gh-fg);
   background: var(--gh-bg-elev);
-  border: none;
+  border: 1px solid var(--gh-border-faint);
   outline: none;
   height: 28px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+.oldgh-repo-home__clone-pane input:focus {
+  border-color: var(--gh-link);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04), 0 0 0 3px rgba(65, 131, 196, 0.18);
 }
 .oldgh-repo-home__clone-body .oldgh-repo-home__copy {
   border-radius: 0;
@@ -965,6 +970,53 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   font-size: var(--gh-size-lg);
   line-height: 1.6;
   color: var(--gh-fg);
+  font-family: var(--gh-font-sans);
+}
+/* GitHub's REST-rendered markdown HTML ships with primer-css class hooks
+   and inline font-family declarations that pull in Mona Sans VF. We're
+   2013, Helvetica Neue all the way down. The wildcard reset is the only
+   way to stop Mona from inheriting through deep markdown trees; the
+   companion code/pre/kbd rule below puts the monospace stack back where
+   it belongs. */
+.oldgh-repo-home__readme-body *,
+.oldgh-issue__body,
+.oldgh-issue__body *,
+.oldgh-issue__comment-body,
+.oldgh-issue__comment-body *,
+.oldgh-wiki__body,
+.oldgh-wiki__body *,
+.oldgh-release__body,
+.oldgh-release__body *,
+.oldgh-discussion__body,
+.oldgh-discussion__body *,
+.markdown-body,
+.markdown-body * {
+  font-family: var(--gh-font-sans);
+}
+.oldgh-repo-home__readme-body code,
+.oldgh-repo-home__readme-body pre,
+.oldgh-repo-home__readme-body kbd,
+.oldgh-repo-home__readme-body tt,
+.oldgh-repo-home__readme-body samp,
+.oldgh-issue__body code,
+.oldgh-issue__body pre,
+.oldgh-issue__body kbd,
+.oldgh-issue__comment-body code,
+.oldgh-issue__comment-body pre,
+.oldgh-issue__comment-body kbd,
+.oldgh-wiki__body code,
+.oldgh-wiki__body pre,
+.oldgh-wiki__body kbd,
+.oldgh-release__body code,
+.oldgh-release__body pre,
+.oldgh-discussion__body code,
+.oldgh-discussion__body pre,
+.markdown-body code,
+.markdown-body pre,
+.markdown-body kbd,
+.markdown-body tt,
+.markdown-body samp {
+  font-family: var(--gh-font-mono);
 }
 .oldgh-repo-home__readme-body h1,
 .oldgh-repo-home__readme-body h2,
@@ -10368,4 +10420,131 @@ html[data-oldgh-theme="dark"] .oldgh-account-settings__exposed-dialog {
 .oldgh-account-settings__exposed-dialog button[type="submit"],
 .oldgh-account-settings__exposed-dialog input[type="submit"] {
   margin-top: 8px;
+}
+
+/* ============================================================ */
+/* 2013 GitHub polish round — text selection, time hovercards,   */
+/* filter-empty states, footer                                   */
+/* ============================================================ */
+
+/* GitHub blue for text selection — pinned, not user-agent default */
+html[data-oldgh="active"] ::selection {
+  background: var(--gh-link);
+  color: #fff;
+}
+html[data-oldgh="active"] ::-moz-selection {
+  background: var(--gh-link);
+  color: #fff;
+}
+
+/* Relative time elements get a 2013-style dotted underline + help cursor.
+   Hovering reveals the absolute time in the native title tooltip — this
+   is the small visual cue that says "there's more info here". */
+.oldgh-dash__feed-time,
+.oldgh-dash__broadcast-date,
+.oldgh-activity__when,
+.oldgh-notif__item-time,
+.oldgh-issue__comment-time,
+.oldgh-pr-commits__when,
+.oldgh-repo-list__star-when,
+.oldgh-repo-list__muted time,
+.oldgh-issues__meta time,
+.oldgh-page time[title],
+.oldgh-page span[title][datetime] {
+  border-bottom: 1px dotted var(--gh-border-strong);
+  cursor: help;
+}
+.oldgh-page time[title]:hover,
+.oldgh-page span[title][datetime]:hover {
+  border-bottom-color: var(--gh-fg-muted);
+}
+
+/* "No issues match the current filters" had no styling — give it a
+   subtle dashed panel that matches our existing empty-state vocabulary */
+.oldgh-issues__filter-empty {
+  margin: 18px 0 0;
+  padding: 28px 24px;
+  text-align: center;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+  background: var(--gh-bg-subtle);
+  border: 1px dashed var(--gh-border);
+  border-radius: var(--gh-radius);
+}
+
+/* ============================================================ */
+/* 2013 footer — strip below page, centered 980px, dim links     */
+/* ============================================================ */
+
+.oldgh-footer {
+  margin-top: 48px;
+  padding: 28px 0 36px;
+  border-top: 1px solid var(--gh-border-faint);
+  background: var(--gh-bg);
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+/* Only render the footer when we're actually mounted — keeps it from
+   floating beneath native pages on out-of-scope routes */
+.oldgh-footer { display: none; }
+html[data-oldgh-mounted] .oldgh-footer { display: block; }
+
+.oldgh-footer__inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.oldgh-footer__mark {
+  color: var(--gh-fg-faint);
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: color 100ms ease;
+}
+.oldgh-footer__mark:hover {
+  color: var(--gh-fg);
+}
+.oldgh-footer__mark .octicon {
+  width: 24px;
+  height: 24px;
+}
+.oldgh-footer__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 16px;
+  row-gap: 4px;
+  flex: 1 1 auto;
+}
+.oldgh-footer__links li {
+  position: relative;
+}
+.oldgh-footer__links li + li::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--gh-border-strong);
+  opacity: 0.7;
+}
+.oldgh-footer__links a {
+  color: var(--gh-fg-muted);
+  text-decoration: none;
+}
+.oldgh-footer__links a:hover {
+  color: var(--gh-link);
+  text-decoration: underline;
+}
+.oldgh-footer__year {
+  color: var(--gh-fg-faint);
+  letter-spacing: 0.01em;
 }
