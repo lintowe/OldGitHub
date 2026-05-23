@@ -21,7 +21,7 @@ function buildSidebar(): SidebarGroup[] {
       label: null,
       items: [
         { key: "profile", label: "Public profile", icon: "person", path: "/settings/profile" },
-        { key: "account", label: "Account", icon: "gear", path: "/settings/account" },
+        { key: "account", label: "Account", icon: "gear", path: "/settings/admin" },
         { key: "appearance", label: "Appearance", icon: "sun", path: "/settings/appearance" },
         { key: "accessibility", label: "Accessibility", icon: "accessibility", path: "/settings/accessibility" },
         { key: "notifications", label: "Notifications", icon: "bell", path: "/settings/notifications" },
@@ -56,12 +56,6 @@ function buildSidebar(): SidebarGroup[] {
       items: [
         { key: "applications", label: "Applications", icon: "apps", path: "/settings/apps/authorizations" },
         { key: "developer_settings", label: "Developer settings", icon: "code", path: "/settings/developers" },
-      ],
-    },
-    {
-      label: "Archives",
-      items: [
-        { key: "exports", label: "Archive your data", icon: "package-dependents", path: "/settings/admin" },
       ],
     },
   ];
@@ -117,6 +111,7 @@ export async function mountAccountSettings(pathname: string): Promise<void> {
     }
     cleanScrapedContent(native);
     main.innerHTML = `<div class="oldgh-account-settings__native">${native.innerHTML}</div>`;
+    rewireAccountDialogs(main);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     main.innerHTML = `<div class="oldgh-account-settings__empty">Couldn't load settings: ${escapeText(msg)}</div>`;
@@ -201,6 +196,39 @@ function cleanScrapedContent(el: Element): void {
     for (const attr of Array.from(node.attributes)) {
       if (/^on/i.test(attr.name)) node.removeAttribute(attr.name);
     }
+  }
+}
+
+// Confirmation `<dialog>` elements injected via innerHTML never activate
+// (dialog-helper / React event handlers don't run), so any action that
+// depends on opening one — disable 2FA, delete passkey, revoke key,
+// delete account, etc. — is dead on arrival. Promote them to inline
+// confirmation boxes so the form's submit button is reachable. Each
+// surfaced dialog gets a 2013-style warning border so the user knows
+// it's a destructive action.
+function rewireAccountDialogs(main: HTMLElement): void {
+  for (const dialog of Array.from(main.querySelectorAll<HTMLElement>("dialog"))) {
+    if (!dialog.querySelector("form")) continue;
+    // also skip dialogs that have no submit button — pure informational popups
+    if (!dialog.querySelector('button[type="submit"], input[type="submit"]')) continue;
+    const section = document.createElement("section");
+    section.className = "oldgh-account-settings__exposed-dialog";
+    while (dialog.firstChild) section.appendChild(dialog.firstChild);
+    dialog.replaceWith(section);
+    // dialog-helper wrapper above the dialog often duplicates the trigger
+    // button (the one that was supposed to open the dialog). Clear it.
+    const helper = section.parentElement?.tagName?.toLowerCase() === "dialog-helper" ? section.parentElement : null;
+    if (helper) {
+      while (helper.firstChild) helper.parentElement!.insertBefore(helper.firstChild, helper);
+      helper.remove();
+    }
+  }
+  // Some pages also have <dialog-helper> wrappers around content that's
+  // not a true dialog — strip those custom-element shells so their inner
+  // forms are reachable.
+  for (const helper of Array.from(main.querySelectorAll<HTMLElement>("dialog-helper"))) {
+    while (helper.firstChild) helper.parentElement!.insertBefore(helper.firstChild, helper);
+    helper.remove();
   }
 }
 

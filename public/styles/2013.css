@@ -10333,3 +10333,39 @@ html[data-oldgh-theme="dark"] .oldgh-btn--danger {
 html[data-oldgh-theme="dark"] .oldgh-btn--danger:hover:not([disabled]) {
   background: linear-gradient(to bottom, #c93530 0%, #a2231a 100%);
 }
+
+/* account-settings: hidden <dialog> confirmation forms promoted to inline
+   warning boxes so their submit buttons are reachable without React */
+.oldgh-account-settings__exposed-dialog {
+  display: block;
+  margin: 14px 0;
+  padding: 14px 16px;
+  background: #fff8e1;
+  border: 1px solid #ebc97e;
+  border-radius: var(--gh-radius);
+  color: #735c0f;
+}
+html[data-oldgh-theme="dark"] .oldgh-account-settings__exposed-dialog {
+  background: rgba(210, 153, 34, 0.12);
+  border-color: rgba(210, 153, 34, 0.4);
+  color: #e3b341;
+}
+.oldgh-account-settings__exposed-dialog h1,
+.oldgh-account-settings__exposed-dialog h2,
+.oldgh-account-settings__exposed-dialog h3 {
+  margin: 0 0 8px;
+  font-size: var(--gh-size-md);
+  font-weight: bold;
+}
+.oldgh-account-settings__exposed-dialog p {
+  margin: 0 0 10px;
+  font-size: var(--gh-size-md);
+  line-height: 1.4;
+}
+.oldgh-account-settings__exposed-dialog form {
+  margin: 0;
+}
+.oldgh-account-settings__exposed-dialog button[type="submit"],
+.oldgh-account-settings__exposed-dialog input[type="submit"] {
+  margin-top: 8px;
+}
