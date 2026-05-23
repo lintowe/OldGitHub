@@ -41,6 +41,8 @@ import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
 import { resolveRoute, type Route } from "./resolve";
 
+type MountKind = "repo" | "profile" | "top-level" | "none";
+
 const MOUNTED_ATTR = "data-oldgh-mounted";
 
 type RepoKey = { owner: string; repo: string };
@@ -176,6 +178,23 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     showProgress();
   }
   updateTopNavActive(pathname);
+  const newTitle = titleForRoute(route);
+  if (newTitle) document.title = newTitle;
+
+  // when the mount kind flips (repo ↔ profile/top-level), the old shell
+  // (header + body) and the new one are incompatible — leaving the old
+  // body visible during fetch shows the new repo header above a stale
+  // profile body, or the repo body without its title bar. wipe both
+  // sides of the shell before the new mount runs. same-kind transitions
+  // keep the existing keep-old-visible behavior (orange progress bar is
+  // the affordance there).
+  const nextKind = mountKindForRoute(route);
+  const prevKind = currentMountKind();
+  if (prevKind !== "none" && nextKind !== "none" && prevKind !== nextKind) {
+    removeAllBodyRoots();
+    teardownRepoHeader();
+    bodyState = { kind: "none" };
+  }
 
   try {
     if (route.kind === "out-of-scope") {
@@ -679,4 +698,48 @@ function currentPath(loc: Location | URL): string {
 function currentSearch(loc: Location | URL): string {
   const raw = "search" in loc ? loc.search : new URL(String(loc)).search;
   return raw.startsWith("?") ? raw.slice(1) : raw;
+}
+
+function mountKindForRoute(route: Route): MountKind {
+  if (route.kind === "profile") return "profile";
+  if (route.kind === "top-level") return "top-level";
+  if (route.kind === "out-of-scope" || route.kind === "todo") return "none";
+  return "repo";
+}
+
+function currentMountKind(): MountKind {
+  if (mountedRepo) return "repo";
+  if (bodyState.kind === "profile") return "profile";
+  if (bodyState.kind === "top-level") return "top-level";
+  return "none";
+}
+
+function titleForRoute(route: Route): string {
+  if (route.kind === "out-of-scope" || route.kind === "todo") return "";
+  if (route.kind === "profile") return `${route.login}`;
+  if (route.kind === "top-level") return route.title || "GitHub";
+  const nwo = `${route.owner}/${route.repo}`;
+  switch (route.kind) {
+    case "repo-issues": return `${route.subkind === "pulls" ? "Pull requests" : "Issues"} · ${nwo}`;
+    case "repo-issue": return `#${route.number} · ${nwo}`;
+    case "repo-wiki": return `${route.page === "Home" ? "Wiki" : route.page} · ${nwo}`;
+    case "repo-actions": return `Actions · ${nwo}`;
+    case "repo-actions-run": return `Run #${route.runId} · ${nwo}`;
+    case "repo-pulse": return `Pulse · ${nwo}`;
+    case "repo-graphs": return `Insights · ${nwo}`;
+    case "repo-projects": return `Projects · ${nwo}`;
+    case "repo-security": return `Security · ${nwo}`;
+    case "repo-discussions": return `Discussions · ${nwo}`;
+    case "repo-discussion": return `Discussion #${route.number} · ${nwo}`;
+    case "repo-settings": return `Settings · ${nwo}`;
+    case "repo-commits": return `Commits · ${nwo}`;
+    case "repo-commit": return `${route.sha.slice(0, 7)} · ${nwo}`;
+    case "repo-compare": return `Compare · ${nwo}`;
+    case "repo-blob":
+    case "repo-tree": {
+      const last = route.refAndPath.split("/").filter(Boolean).slice(-1)[0];
+      return last ? `${last} · ${nwo}` : nwo;
+    }
+    default: return nwo;
+  }
 }
