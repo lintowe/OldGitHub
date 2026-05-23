@@ -38,9 +38,11 @@ export async function mountRepoIssue(
       : await getIssue(owner, repo, number);
   } catch (err) {
     if (!(err instanceof AdapterFailure)) throw err;
-    // A 404 here means this issue/PR genuinely doesn't exist; bubble up so
-    // dispatch can show the friendly section-not-found panel.
-    if (/responded 404\b/.test(err.message)) throw err;
+    // Don't re-throw on 404: the anonymous REST API returns 404 for any
+    // private repo (regardless of whether the user can see it via cookie),
+    // so we always fall through to the cookie-authed HTML scrape below.
+    // hydrateScrapedBody surfaces a real "not found" message if even that
+    // fails.
   }
 
   const root = document.createElement("div");
@@ -128,6 +130,10 @@ async function hydrateScrapedBody(
   const url = `https://github.com/${owner}/${repo}/${segment}/${number}${sub}`;
   try {
     const resp = await fetch(url, { credentials: "include", headers: { Accept: "text/html" } });
+    if (resp.status === 404) {
+      container.innerHTML = `<p class="oldgh-issue__subtab-empty">This ${kind === "pull" ? "pull request" : "issue"} doesn't exist or you don't have access to it.</p>`;
+      return;
+    }
     if (!resp.ok) throw new Error(`status ${resp.status}`);
     const html = await resp.text();
     const doc = new DOMParser().parseFromString(html, "text/html");
