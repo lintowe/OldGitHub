@@ -10244,3 +10244,92 @@ html[data-oldgh-theme="dark"] .pl-mdr  { color: #d2a8ff; }
 html[data-oldgh-theme="dark"] .pl-ba   { color: #8b949e; }
 html[data-oldgh-theme="dark"] .pl-sg   { color: #484f58; }
 html[data-oldgh-theme="dark"] .pl-corl { color: #a5d6ff; }
+
+/* native confirm dialog (replaces broken dialog-helper actions in settings) */
+.oldgh-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 28, 0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+.oldgh-confirm-dialog {
+  width: min(520px, calc(100% - 32px));
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  padding: 18px 20px 16px;
+  color: var(--gh-fg);
+}
+.oldgh-confirm-dialog__title {
+  margin: 0 0 10px;
+  font-size: var(--gh-size-h2);
+  font-weight: bold;
+  line-height: 1.2;
+}
+.oldgh-confirm-dialog--danger .oldgh-confirm-dialog__title {
+  color: #bd2c00;
+}
+html[data-oldgh-theme="dark"] .oldgh-confirm-dialog--danger .oldgh-confirm-dialog__title {
+  color: #f85149;
+}
+.oldgh-confirm-dialog__body {
+  font-size: var(--gh-size-md);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.oldgh-confirm-dialog__body code {
+  background: var(--gh-bg);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.9em;
+}
+.oldgh-confirm-dialog__label {
+  display: block;
+  font-size: var(--gh-size-sm);
+  margin-bottom: 6px;
+}
+.oldgh-confirm-dialog__input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: var(--gh-size-md);
+  font-family: inherit;
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  background: var(--gh-bg);
+  color: var(--gh-fg);
+  box-sizing: border-box;
+  margin-bottom: 14px;
+}
+.oldgh-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.oldgh-confirm-dialog__actions .oldgh-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.oldgh-btn--danger {
+  background: linear-gradient(to bottom, #d44 0%, #b22 100%);
+  border-color: #911;
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.oldgh-btn--danger:hover:not([disabled]) {
+  background: linear-gradient(to bottom, #e55 0%, #c22 100%);
+  text-decoration: none;
+  color: #fff;
+}
+html[data-oldgh-theme="dark"] .oldgh-btn--danger {
+  background: linear-gradient(to bottom, #b62924 0%, #8e2017 100%);
+  border-color: #5e0d09;
+}
+html[data-oldgh-theme="dark"] .oldgh-btn--danger:hover:not([disabled]) {
+  background: linear-gradient(to bottom, #c93530 0%, #a2231a 100%);
+}

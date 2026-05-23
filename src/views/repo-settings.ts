@@ -105,10 +105,214 @@ export async function mountRepoSettings(owner: string, repo: string, subPath: st
     }
     cleanScrapedContent(native);
     main.innerHTML = `<div class="oldgh-settings__native">${native.innerHTML}</div>`;
+    // dialog-helper custom elements that drive Change visibility / Archive /
+    // Delete don't fire when injected via innerHTML — wire up native handlers
+    // that submit the underlying forms with our own confirmation dialog.
+    rewireDialogActions(owner, repo, main);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     main.innerHTML = `<div class="oldgh-settings__empty">Couldn't load settings: ${escapeText(msg)}</div>`;
   }
+}
+
+// In the scraped settings DOM, the "Change visibility", "Archive…",
+// "Delete this repository" buttons rely on GitHub's <dialog-helper> custom
+// element to open a confirmation dialog and submit. That custom element
+// doesn't activate when injected via innerHTML (no script context). We
+// detect those buttons and bind native click handlers that show a 2013
+// confirm dialog and submit the underlying form directly.
+function rewireDialogActions(owner: string, repo: string, main: HTMLElement): void {
+  for (const dialog of Array.from(main.querySelectorAll<HTMLElement>("dialog[data-new-visibility]"))) {
+    const target = dialog.getAttribute("data-new-visibility");
+    if (!target) continue;
+    const button = findVisibilityTrigger(dialog);
+    if (!button) continue;
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      void confirmVisibilityChange(owner, repo, target, main);
+    }, { capture: true });
+  }
+
+  const archiveBtn = findButtonByText(main, /archive this repository/i)
+    || findButtonByText(main, /^archive$/i);
+  if (archiveBtn && !archiveBtn.dataset["oldghBound"]) {
+    archiveBtn.dataset["oldghBound"] = "1";
+    archiveBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      void confirmArchive(owner, repo, main, false);
+    }, { capture: true });
+  }
+  const unarchiveBtn = findButtonByText(main, /unarchive this repository/i)
+    || findButtonByText(main, /^unarchive$/i);
+  if (unarchiveBtn && !unarchiveBtn.dataset["oldghBound"]) {
+    unarchiveBtn.dataset["oldghBound"] = "1";
+    unarchiveBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      void confirmArchive(owner, repo, main, true);
+    }, { capture: true });
+  }
+
+  const deleteBtn = findButtonByText(main, /^delete this repository$/i);
+  if (deleteBtn && !deleteBtn.dataset["oldghBound"]) {
+    deleteBtn.dataset["oldghBound"] = "1";
+    deleteBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      void confirmDelete(owner, repo, main);
+    }, { capture: true });
+  }
+}
+
+function findVisibilityTrigger(dialog: HTMLElement): HTMLButtonElement | null {
+  // The trigger button is rendered as a sibling of the dialog, with text
+  // describing the transition (e.g. "I want to make this repository public").
+  // It's marked aria-haspopup, type=button, and lives inside the same
+  // visibility-related section as the dialog.
+  let scope: HTMLElement | null = dialog.parentElement;
+  for (let i = 0; i < 4 && scope; i++) {
+    for (const btn of Array.from(scope.querySelectorAll<HTMLButtonElement>("button[aria-haspopup]"))) {
+      const txt = (btn.textContent || "").toLowerCase();
+      if (txt.includes("change visibility") || txt.includes("change repository visibility")) {
+        return btn;
+      }
+    }
+    scope = scope.parentElement;
+  }
+  return null;
+}
+
+function findButtonByText(scope: HTMLElement, re: RegExp): HTMLButtonElement | null {
+  for (const btn of Array.from(scope.querySelectorAll<HTMLButtonElement>("button"))) {
+    const txt = (btn.textContent || "").replace(/\s+/g, " ").trim();
+    if (re.test(txt)) return btn;
+  }
+  return null;
+}
+
+async function confirmVisibilityChange(owner: string, repo: string, target: string, main: HTMLElement): Promise<void> {
+  const form = main.querySelector<HTMLFormElement>('form[action$="/set_visibility"]');
+  if (!form) return;
+  const csrf = (form.querySelector<HTMLInputElement>('input[name="authenticity_token"]')?.value) || "";
+  const ok = await openConfirmDialog({
+    title: `Change visibility to ${target}`,
+    body: `Are you sure you want to make <strong>${owner}/${repo}</strong> ${target}?`,
+    confirmLabel: `I want to make this repository ${target}`,
+    danger: true,
+    verifyText: `${owner}/${repo}`,
+  });
+  if (!ok) return;
+  submitFormDirect(form.action, { authenticity_token: csrf, visibility: target });
+}
+
+async function confirmArchive(owner: string, repo: string, main: HTMLElement, unarchive: boolean): Promise<void> {
+  const form = main.querySelector<HTMLFormElement>(`form[action$="/settings/${unarchive ? "unarchive" : "archive"}"]`)
+    || main.querySelector<HTMLFormElement>('form[action$="/settings/archive"]');
+  if (!form) return;
+  const csrf = (form.querySelector<HTMLInputElement>('input[name="authenticity_token"]')?.value) || "";
+  const ok = await openConfirmDialog({
+    title: unarchive ? "Unarchive repository" : "Archive repository",
+    body: unarchive
+      ? `Unarchiving <strong>${owner}/${repo}</strong> will allow new issues, pull requests, and pushes again.`
+      : `Archiving <strong>${owner}/${repo}</strong> will make it read-only. Type the repository name to confirm.`,
+    confirmLabel: unarchive ? "Unarchive this repository" : "I understand, archive this repository",
+    danger: true,
+    verifyText: `${owner}/${repo}`,
+  });
+  if (!ok) return;
+  submitFormDirect(form.action, { authenticity_token: csrf, verify: `${owner}/${repo}` });
+}
+
+async function confirmDelete(owner: string, repo: string, main: HTMLElement): Promise<void> {
+  const form = main.querySelector<HTMLFormElement>('form[action$="/settings/delete"]');
+  if (!form) return;
+  const csrf = (form.querySelector<HTMLInputElement>('input[name="authenticity_token"]')?.value) || "";
+  const ok = await openConfirmDialog({
+    title: "Delete repository",
+    body: `This will permanently delete <strong>${owner}/${repo}</strong>, all its branches, issues, pull requests, releases, and discussions. <strong>This action cannot be undone.</strong> Type the full repository name to confirm.`,
+    confirmLabel: "I understand the consequences, delete this repository",
+    danger: true,
+    verifyText: `${owner}/${repo}`,
+  });
+  if (!ok) return;
+  submitFormDirect(form.action, { authenticity_token: csrf, _method: "delete", verify: `${owner}/${repo}` });
+}
+
+// Build a transient form and submit() it so the browser performs the POST
+// natively (cookies attached, server response navigates the page). The form
+// is added to the document so Chrome accepts the submit; we remove it on
+// any abort but in practice the page navigates before that matters.
+function submitFormDirect(action: string, fields: Record<string, string>): void {
+  const form = document.createElement("form");
+  form.method = "post";
+  form.action = action;
+  form.style.display = "none";
+  for (const [name, value] of Object.entries(fields)) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
+}
+
+type ConfirmOpts = {
+  title: string;
+  body: string;
+  confirmLabel: string;
+  danger?: boolean;
+  verifyText?: string;
+};
+
+function openConfirmDialog(opts: ConfirmOpts): Promise<boolean> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "oldgh-confirm-overlay";
+    const verifyId = `oldgh-confirm-verify-${Math.random().toString(36).slice(2, 8)}`;
+    overlay.innerHTML = `
+      <div class="oldgh-confirm-dialog ${opts.danger ? "oldgh-confirm-dialog--danger" : ""}" role="dialog" aria-modal="true">
+        <h2 class="oldgh-confirm-dialog__title">${escapeText(opts.title)}</h2>
+        <div class="oldgh-confirm-dialog__body">${opts.body}</div>
+        ${opts.verifyText ? `
+          <label class="oldgh-confirm-dialog__label" for="${verifyId}">Type <code>${escapeText(opts.verifyText)}</code> to confirm:</label>
+          <input type="text" id="${verifyId}" class="oldgh-confirm-dialog__input" autocomplete="off" autofocus />
+        ` : ""}
+        <div class="oldgh-confirm-dialog__actions">
+          <button type="button" class="oldgh-btn" data-oldgh-cancel>Cancel</button>
+          <button type="button" class="oldgh-btn oldgh-btn--danger" data-oldgh-confirm disabled>${escapeText(opts.confirmLabel)}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const confirmBtn = overlay.querySelector<HTMLButtonElement>("[data-oldgh-confirm]")!;
+    const cancelBtn = overlay.querySelector<HTMLButtonElement>("[data-oldgh-cancel]")!;
+    const verifyInput = overlay.querySelector<HTMLInputElement>(`#${verifyId}`);
+
+    const close = (ok: boolean): void => {
+      overlay.remove();
+      document.removeEventListener("keydown", onKey, true);
+      resolve(ok);
+    };
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") { e.preventDefault(); close(false); }
+    };
+    document.addEventListener("keydown", onKey, true);
+
+    const recheck = (): void => {
+      if (!verifyInput) { confirmBtn.disabled = false; return; }
+      confirmBtn.disabled = verifyInput.value !== opts.verifyText;
+    };
+    if (verifyInput) {
+      verifyInput.addEventListener("input", recheck);
+      window.setTimeout(() => verifyInput.focus(), 0);
+    } else {
+      confirmBtn.disabled = false;
+    }
+    confirmBtn.addEventListener("click", () => close(true));
+    cancelBtn.addEventListener("click", () => close(false));
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(false); });
+  });
 }
 
 export function unmountRepoSettings(): void {
