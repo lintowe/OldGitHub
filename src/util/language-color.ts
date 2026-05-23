@@ -237,9 +237,52 @@ const COLORS: Record<string, string> = {
   "YASnippet": "#32AB90",
   "Yacc": "#4B6BEF",
   "Zephir": "#118f7b",
+  // more popular entries that slip through (Linguist YAML)
+  "Scilab": "#ca0f21",
+  "Inno Setup": "#264b99",
+  "Pug": "#a86454",
+  "Sass": "#a53b70",
+  "Stylus": "#ff6347",
+  "GraphQL": "#e10098",
+  "GLSL": "#5686a5",
+  "HLSL": "#aace60",
+  "SuperCollider": "#46390b",
+  "Rich Text Format": "#168036",
+  "Cabal Config": "#483465",
+  "EJS": "#a91e50",
+  "JSON5": "#267CB9",
+  "JSON with Comments": "#292929",
+  "BibTeX": "#778899",
+  "Dotenv": "#e5cd55",
+  "TSV": "#237346",
+  "GitHub Actions Workflow": "#384d54",
+  "GitHub Workflow Definition": "#384d54",
+  "Visual Basic .NET": "#945db7",
+  "WebVTT": "#ffa500",
 };
+
+// Pre-build a lowercase shadow map so lookups match regardless of casing.
+// Linguist's canonical case is "TypeScript", but scraped sources sometimes
+// return lowercase ("typescript" from /search?l=typescript) — those should
+// still resolve to the right color and display name.
+const CANONICAL_BY_LC: Record<string, string> = {};
+for (const key of Object.keys(COLORS)) {
+  CANONICAL_BY_LC[key.toLowerCase()] = key;
+}
 
 export function languageColor(lang: string | null | undefined): string {
   if (!lang) return "#ccc";
-  return COLORS[lang] ?? "#ccc";
+  const direct = COLORS[lang];
+  if (direct) return direct;
+  const canonical = CANONICAL_BY_LC[lang.toLowerCase()];
+  return canonical ? COLORS[canonical]! : "#ccc";
+}
+
+// Return the Linguist-canonical case for a language name when known, or the
+// input unchanged. Lets views render "TypeScript" even when the scraper
+// hands them "typescript".
+export function canonicalLanguageName(lang: string | null | undefined): string {
+  if (!lang) return "";
+  if (lang in COLORS) return lang;
+  return CANONICAL_BY_LC[lang.toLowerCase()] ?? lang;
 }

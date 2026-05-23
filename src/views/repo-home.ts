@@ -1,7 +1,7 @@
 import { octicon } from "@/icons";
 import { getRepoOverview, type RepoOverview } from "@/adapters/repo-overview";
 import { getRepoLanguages } from "@/adapters/repo";
-import { languageColor } from "@/util/language-color";
+import { languageColor, canonicalLanguageName } from "@/util/language-color";
 import { hydrateTreeTable, renderTreeTable } from "./_tree-table";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
@@ -41,11 +41,11 @@ async function hydrateLanguagesBar(root: HTMLElement, owner: string, repo: strin
 }
 
 function renderLanguageBar(langs: Array<{ name: string; bytes: number; percent: number }>): string {
-  const top = langs.slice(0, 8);
+  const top = langs.slice(0, 8).map((l) => ({ ...l, display: canonicalLanguageName(l.name) }));
   const restPercent = langs.slice(8).reduce((s, l) => s + l.percent, 0);
-  const segs = top.map((l) => `<span class="oldgh-repo-home__lang-seg" style="width:${l.percent.toFixed(2)}%;background:${languageColor(l.name)}" title="${escapeAttr(l.name)} ${l.percent.toFixed(1)}%"></span>`).join("");
+  const segs = top.map((l) => `<span class="oldgh-repo-home__lang-seg" style="width:${l.percent.toFixed(2)}%;background:${languageColor(l.name)}" title="${escapeAttr(l.display)} ${l.percent.toFixed(1)}%"></span>`).join("");
   const otherSeg = restPercent > 0.1 ? `<span class="oldgh-repo-home__lang-seg" style="width:${restPercent.toFixed(2)}%;background:#ccc" title="Other ${restPercent.toFixed(1)}%"></span>` : "";
-  const labels = top.map((l) => `<span class="oldgh-repo-home__lang-label"><span class="oldgh-repo-home__lang-dot" style="background:${languageColor(l.name)}"></span>${escapeText(l.name)} <strong>${l.percent.toFixed(1)}%</strong></span>`).join(" ");
+  const labels = top.map((l) => `<span class="oldgh-repo-home__lang-label"><span class="oldgh-repo-home__lang-dot" style="background:${languageColor(l.name)}"></span>${escapeText(l.display)} <strong>${l.percent.toFixed(1)}%</strong></span>`).join(" ");
   return `
     <div class="oldgh-repo-home__langs">
       <div class="oldgh-repo-home__lang-bar">${segs}${otherSeg}</div>
