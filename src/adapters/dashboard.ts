@@ -125,7 +125,13 @@ function parseFeedArticle(art: Element): FeedItem | null {
   const avatarImg = art.querySelector<HTMLImageElement>("header img");
   const actor = parseActor(art, avatarImg);
 
-  const time = art.querySelector("relative-time, time-ago, time");
+  // prefer the header time (the event's own timestamp). a fallback to any
+  // time in the article catches quieter card types whose header omits one,
+  // but without the fallback being first, a body excerpt's embedded time
+  // can shadow the event time and make a 2-minute-old event read as "1
+  // week ago".
+  const time = art.querySelector("header relative-time, header time-ago, header time")
+    ?? art.querySelector("relative-time, time-ago, time");
   const occurredAt = time?.getAttribute("datetime") ?? null;
 
   const titleLink = findPrimaryTitleLink(art, actor?.login || null);
