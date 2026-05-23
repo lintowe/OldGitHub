@@ -17,6 +17,7 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
 
   bindCloneTabs(root);
   bindCopyButtons(root);
+  bindBranchPicker(root, { owner, repo, branch: overview.branch });
 
   void hydrateTreeTable(root, {
     owner,
@@ -78,12 +79,23 @@ function renderTopBar(o: RepoOverview): string {
   return `
     <div class="oldgh-repo-home__topbar">
       <div class="oldgh-repo-home__refbox">
-        <button type="button" class="oldgh-btn oldgh-repo-home__branch-btn" aria-haspopup="menu">
-          ${branchIcon}
-          <span>branch:</span>
-          <strong>${escapeText(o.branch)}</strong>
-          ${octicon("triangle-down", { className: "oldgh-chevron" })}
-        </button>
+        <details class="oldgh-branch-picker">
+          <summary class="oldgh-btn oldgh-branch-picker__button" aria-haspopup="menu">
+            ${branchIcon}
+            <span>branch:</span>
+            <strong>${escapeText(o.branch)}</strong>
+            ${octicon("triangle-down", { className: "oldgh-chevron" })}
+          </summary>
+          <div class="oldgh-branch-picker__panel" role="menu">
+            <div class="oldgh-branch-picker__filter">
+              <input type="text" placeholder="Filter branches" aria-label="Filter branches" autocomplete="off" />
+            </div>
+            <ul class="oldgh-branch-picker__list" data-loading="pending">
+              <li class="oldgh-branch-picker__status">Loading branches&hellip;</li>
+            </ul>
+            <a class="oldgh-branch-picker__footer" href="/${o.owner}/${o.repo}/branches">View all branches</a>
+          </div>
+        </details>
         ${commits}
       </div>
       ${renderCloneBox(o)}
@@ -165,6 +177,89 @@ function bindCloneTabs(root: HTMLElement): void {
       p.hidden = p.dataset["pane"] !== key;
     });
   });
+}
+
+const branchCache = new Map<string, string[]>();
+let branchPickerOutsideClickInstalled = false;
+
+function installBranchPickerOutsideClick(): void {
+  if (branchPickerOutsideClickInstalled) return;
+  branchPickerOutsideClickInstalled = true;
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll<HTMLDetailsElement>(".oldgh-branch-picker[open]").forEach((d) => {
+      if (!d.contains(e.target as Node)) d.open = false;
+    });
+  });
+}
+
+function bindBranchPicker(root: HTMLElement, ctx: { owner: string; repo: string; branch: string }): void {
+  installBranchPickerOutsideClick();
+  const details = root.querySelector<HTMLDetailsElement>(".oldgh-branch-picker");
+  if (!details) return;
+  const list = details.querySelector<HTMLUListElement>(".oldgh-branch-picker__list");
+  const input = details.querySelector<HTMLInputElement>(".oldgh-branch-picker__filter input");
+
+  details.addEventListener("toggle", () => {
+    if (!details.open) return;
+    if (input) {
+      input.value = "";
+      // focus after the toggle paint so the input is actually visible
+      window.setTimeout(() => input.focus(), 0);
+    }
+    void loadBranches(list, ctx);
+  });
+
+  input?.addEventListener("input", () => {
+    if (!list) return;
+    const q = input.value.trim().toLowerCase();
+    list.querySelectorAll<HTMLElement>("li[data-name]").forEach((li) => {
+      const match = q === "" || (li.dataset["name"] ?? "").toLowerCase().includes(q);
+      li.hidden = !match;
+    });
+  });
+
+  details.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      details.open = false;
+      (details.querySelector<HTMLElement>("summary"))?.focus();
+    }
+  });
+}
+
+async function loadBranches(list: HTMLUListElement | null, ctx: { owner: string; repo: string; branch: string }): Promise<void> {
+  if (!list || list.dataset["loading"] !== "pending") return;
+  list.dataset["loading"] = "done";
+  const key = `${ctx.owner}/${ctx.repo}`;
+  let names = branchCache.get(key);
+  if (!names) {
+    try {
+      const res = await fetch(`https://api.github.com/repos/${ctx.owner}/${ctx.repo}/branches?per_page=100`, { credentials: "include" });
+      if (!res.ok) throw new Error(`branches ${res.status}`);
+      const data = await res.json() as Array<{ name: string }>;
+      names = data.map((b) => b.name);
+      // current branch first, then alphabetic
+      names.sort((a, b) => {
+        if (a === ctx.branch) return -1;
+        if (b === ctx.branch) return 1;
+        return a.localeCompare(b);
+      });
+      branchCache.set(key, names);
+    } catch (err) {
+      console.debug("[oldgh] branch list fetch failed:", err);
+      list.innerHTML = `<li class="oldgh-branch-picker__status">Couldn't load branches.</li>`;
+      return;
+    }
+  }
+  if (names.length === 0) {
+    list.innerHTML = `<li class="oldgh-branch-picker__status">No branches.</li>`;
+    return;
+  }
+  const checkIcon = octicon("check", { size: 14 });
+  list.innerHTML = names.map((name) => {
+    const isCurrent = name === ctx.branch;
+    const href = `/${ctx.owner}/${ctx.repo}/tree/${encodeURIComponent(name)}`;
+    return `<li data-name="${escapeAttr(name)}"${isCurrent ? " data-current" : ""}><a href="${escapeAttr(href)}">${isCurrent ? checkIcon : `<span class="oldgh-branch-picker__check-spacer" aria-hidden="true"></span>`}<span class="oldgh-branch-picker__name">${escapeText(name)}</span></a></li>`;
+  }).join("");
 }
 
 function bindCopyButtons(root: HTMLElement): void {

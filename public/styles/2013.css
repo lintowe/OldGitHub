@@ -784,12 +784,134 @@ html[data-oldgh-mounted] body > .logged-out > footer.footer {
   flex: 0 1 auto;
 }
 
-.oldgh-repo-home__branch-btn {
-  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
-  font-weight: normal;
+/* branch picker dropdown */
+.oldgh-branch-picker {
+  position: relative;
 }
-.oldgh-repo-home__branch-btn strong {
+.oldgh-branch-picker > summary {
+  list-style: none;
+  font-weight: normal;
+  user-select: none;
+}
+.oldgh-branch-picker > summary::-webkit-details-marker { display: none; }
+.oldgh-branch-picker > summary strong {
   font-weight: bold;
+  margin: 0 2px;
+}
+.oldgh-branch-picker[open] > summary {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top-hover), var(--gh-btn-bg-bottom-hover));
+}
+.oldgh-branch-picker__panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 280px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  overflow: hidden;
+}
+html[data-oldgh-theme="dark"] .oldgh-branch-picker__panel {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+}
+.oldgh-branch-picker__panel::before {
+  /* little triangle pointer pointing back at the button */
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 14px;
+  width: 12px;
+  height: 7px;
+  background: var(--gh-bg-elev);
+  border-top: 1px solid var(--gh-border);
+  border-left: 1px solid var(--gh-border);
+  transform: skew(-45deg);
+  border-top-left-radius: 2px;
+}
+.oldgh-branch-picker__filter {
+  padding: 8px;
+  border-bottom: 1px solid var(--gh-border-faint);
+  background: var(--gh-bg-subtle);
+}
+.oldgh-branch-picker__filter input {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg);
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-input-border, var(--gh-border));
+  border-radius: var(--gh-radius);
+  box-sizing: border-box;
+}
+.oldgh-branch-picker__filter input:focus {
+  outline: none;
+  border-color: var(--gh-link);
+  box-shadow: 0 0 0 2px rgba(65, 131, 196, 0.25);
+}
+.oldgh-branch-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.oldgh-branch-picker__list li {
+  margin: 0;
+  padding: 0;
+}
+.oldgh-branch-picker__list li a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 8px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.oldgh-branch-picker__list li a:hover {
+  background: var(--gh-bg-stripe);
+  text-decoration: none;
+}
+.oldgh-branch-picker__list li[data-current] a {
+  font-weight: bold;
+}
+.oldgh-branch-picker__list li .octicon {
+  color: var(--gh-fg);
+  flex-shrink: 0;
+}
+.oldgh-branch-picker__check-spacer {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.oldgh-branch-picker__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.oldgh-branch-picker__status {
+  padding: 10px 12px;
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+  text-align: center;
+}
+.oldgh-branch-picker__footer {
+  display: block;
+  padding: 6px 12px;
+  font-size: var(--gh-size-sm);
+  text-align: center;
+  color: var(--gh-link);
+  border-top: 1px solid var(--gh-border-faint);
+  background: var(--gh-bg-subtle);
+}
+.oldgh-branch-picker__footer:hover {
+  background: var(--gh-bg-stripe);
+  text-decoration: none;
 }
 
 .oldgh-repo-home__commits {
@@ -10673,7 +10795,7 @@ html[data-oldgh-theme="dark"] .oldgh-watching__avatar {
    navigation and not on every mouse click. */
 html[data-oldgh="active"] .oldgh-btn:focus-visible,
 html[data-oldgh="active"] button.oldgh-btn:focus-visible,
-html[data-oldgh="active"] .oldgh-repo-home__branch-btn:focus-visible,
+html[data-oldgh="active"] summary.oldgh-btn:focus-visible,
 html[data-oldgh="active"] .oldgh-repo-home__clone-tab:focus-visible,
 html[data-oldgh="active"] .oldgh-repo-header__action-btn:focus-visible,
 html[data-oldgh="active"] .oldgh-repo-header__action-count:focus-visible {
