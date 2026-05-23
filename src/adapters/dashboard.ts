@@ -280,33 +280,32 @@ function pickDescription(container: Element): string | null {
 }
 
 function pickLanguage(container: Element): string | null {
-  // Walk up looking for a language marker, but stop before we'd cross into
-  // another repo's section (trending cards bundle several repos per article).
+  // Walk up from the link's container looking for an [itemprop]. The first
+  // scope that holds one is this repo's per-card content. If we reach a
+  // scope that already has the itemprop but also more than one repo link,
+  // bail — that means we'd be guessing which repo's language we're reading.
   let scope: Element | null = container;
-  for (let i = 0; i < 6 && scope; i++) {
+  for (let i = 0; i < 8 && scope; i++) {
     const itemProp = scope.querySelector("[itemprop='programmingLanguage']");
-    if (itemProp) {
-      const txt = cleanText(itemProp.textContent || "");
-      if (txt) return txt;
+    const dot = !itemProp ? scope.querySelector('span[style*="background-color"]') : null;
+    if (itemProp || dot) {
+      let repoLinks = 0;
+      for (const a of Array.from(scope.querySelectorAll("a[href]"))) {
+        const href = a.getAttribute("href") || "";
+        if (/^\/[\w.-]+\/[\w.-]+(?:[/?#].*)?$/.test(href)) repoLinks++;
+        if (repoLinks > 1) break;
+      }
+      if (repoLinks > 1) return null;
+      if (itemProp) {
+        const txt = cleanText(itemProp.textContent || "");
+        if (txt) return txt;
+      }
+      if (dot && dot.nextElementSibling) {
+        const txt = cleanText(dot.nextElementSibling.textContent || "");
+        if (txt) return txt;
+      }
     }
-    // modern markup: a small colored span followed by the language name
-    const dot = scope.querySelector('span[style*="background-color"]');
-    if (dot && dot.nextElementSibling) {
-      const txt = cleanText(dot.nextElementSibling.textContent || "");
-      if (txt) return txt;
-    }
-    const parent: Element | null = scope.parentElement;
-    if (!parent) break;
-    // count repo links at the parent's scope — if >1, walking up would
-    // pull in the wrong repo's language
-    let repoLinks = 0;
-    for (const a of Array.from(parent.querySelectorAll("a[href]"))) {
-      const href = a.getAttribute("href") || "";
-      if (/^\/[\w.-]+\/[\w.-]+(?:[/?#].*)?$/.test(href)) repoLinks++;
-      if (repoLinks > 1) break;
-    }
-    if (repoLinks > 1) break;
-    scope = parent;
+    scope = scope.parentElement;
   }
   return null;
 }
