@@ -2415,6 +2415,43 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
 .oldgh-profile__contribs-graph .sr-only {
   display: none;
 }
+/* defensive cell sizing — GitHub occasionally renders cells as a non-td
+   element (svg <rect>, <button>, inner <div>) that the td-scoped rules
+   above miss. catch any element carrying the contribution-day signal
+   and force it back to 11x11 with the same per-level palette. */
+.oldgh-profile__contribs-graph [data-level],
+.oldgh-profile__contribs-graph .ContributionCalendar-day {
+  width: 11px !important;
+  height: 11px !important;
+  min-width: 11px;
+  max-width: 11px;
+  min-height: 11px;
+  max-height: 11px;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  border-radius: 2px;
+}
+.oldgh-profile__contribs-graph rect.ContributionCalendar-day,
+.oldgh-profile__contribs-graph rect[data-level] {
+  /* svg <rect> ignores html box-model; explicit svg geometry props */
+  rx: 2;
+  ry: 2;
+}
+.oldgh-profile__contribs-graph [data-level="0"] { background: #eeeeee; fill: #eeeeee; }
+.oldgh-profile__contribs-graph [data-level="1"] { background: #d6e685; fill: #d6e685; }
+.oldgh-profile__contribs-graph [data-level="2"] { background: #8cc665; fill: #8cc665; }
+.oldgh-profile__contribs-graph [data-level="3"] { background: #44a340; fill: #44a340; }
+.oldgh-profile__contribs-graph [data-level="4"] { background: #1e6823; fill: #1e6823; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="0"] { background: #2a2a2a; fill: #2a2a2a; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="1"] { background: #0e4429; fill: #0e4429; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="2"] { background: #006d32; fill: #006d32; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="3"] { background: #26a641; fill: #26a641; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="4"] { background: #39d353; fill: #39d353; }
+/* if GH ships a parallel <svg> next to the <table>, hide the svg so we
+   don't show both representations. tables come first in the markup. */
+.oldgh-profile__contribs-graph table ~ svg {
+  display: none !important;
+}
 
 html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.ContributionCalendar-day,
 html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day { background: #2a2a2a; }
