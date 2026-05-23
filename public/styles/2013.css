@@ -181,6 +181,10 @@ html[data-oldgh="active"] .oldgh-header__logo svg {
   gap: 6px;
   font-weight: bold;
   font-size: var(--gh-size-lg);
+  transition: opacity 120ms ease-out;
+}
+.oldgh-header__logo:hover {
+  opacity: 0.75;
 }
 .oldgh-header__nav {
   display: flex;
@@ -5808,6 +5812,72 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
   padding: 36px 24px;
   text-align: center;
   color: var(--gh-fg-faint);
+}
+
+/* Repo home: latest commit ribbon — sits flush atop the file tree so the
+   two share a visual frame, like 2013 GH did. */
+.oldgh-repo-home__latest-slot:has(.oldgh-latest-commit) + .oldgh-table {
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.oldgh-latest-commit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-top: 12px;
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius) var(--gh-radius) 0 0;
+  font-size: var(--gh-size-sm);
+  min-width: 0;
+}
+.oldgh-latest-commit__avatar {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--gh-radius);
+  flex-shrink: 0;
+  border: 1px solid var(--gh-border-faint);
+  background: var(--gh-bg-elev);
+}
+.oldgh-latest-commit__author {
+  font-weight: bold;
+  color: var(--gh-fg);
+  flex-shrink: 0;
+}
+.oldgh-latest-commit__message {
+  flex: 1;
+  min-width: 0;
+  color: var(--gh-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oldgh-latest-commit__message:hover {
+  color: var(--gh-link);
+}
+.oldgh-latest-commit__sha {
+  flex-shrink: 0;
+}
+.oldgh-latest-commit__sha code {
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border-faint);
+  padding: 1px 6px;
+  border-radius: var(--gh-radius);
+}
+.oldgh-latest-commit__sha:hover code {
+  color: var(--gh-link);
+  border-color: var(--gh-border);
+}
+.oldgh-latest-commit__time {
+  flex-shrink: 0;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-xs);
 }
 
 /* Repo home language bar */

@@ -2,6 +2,7 @@ import { octicon } from "@/icons";
 import { getRepoOverview, type RepoOverview } from "@/adapters/repo-overview";
 import { getRepoLanguages } from "@/adapters/repo";
 import { languageColor, canonicalLanguageName } from "@/util/language-color";
+import { absoluteTime, relativeTime } from "@/util/time";
 import { hydrateTreeTable, renderTreeTable } from "./_tree-table";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
@@ -27,6 +28,84 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
   });
 
   void hydrateLanguagesBar(root, owner, repo);
+  void hydrateLatestCommit(root, { owner, repo, branch: overview.branch });
+}
+
+type LatestCommitData = {
+  sha: string;
+  message: string;
+  date: string;
+  authorLogin: string | null;
+  authorName: string;
+  authorAvatarUrl: string | null;
+};
+
+async function hydrateLatestCommit(
+  root: HTMLElement,
+  ctx: { owner: string; repo: string; branch: string },
+): Promise<void> {
+  const slot = root.querySelector<HTMLElement>(".oldgh-repo-home__latest-slot");
+  if (!slot) return;
+  try {
+    const url = `https://api.github.com/repos/${ctx.owner}/${ctx.repo}/commits?sha=${encodeURIComponent(ctx.branch)}&per_page=1`;
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) return;
+    const arr = (await res.json()) as unknown;
+    if (!Array.isArray(arr) || arr.length === 0) return;
+    const data = parseLatestCommit(arr[0]);
+    if (!data) return;
+    slot.innerHTML = renderLatestCommit(ctx, data);
+  } catch (err) {
+    console.debug("[oldgh] latest commit fetch failed:", err);
+  }
+}
+
+function parseLatestCommit(raw: unknown): LatestCommitData | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const sha = typeof r["sha"] === "string" ? (r["sha"] as string) : "";
+  if (!sha) return null;
+  const commit = r["commit"] as Record<string, unknown> | undefined;
+  const commitAuthor = commit?.["author"] as Record<string, unknown> | undefined;
+  const apiAuthor = r["author"] as Record<string, unknown> | undefined;
+  const message = typeof commit?.["message"] === "string" ? (commit["message"] as string) : "";
+  const date = typeof commitAuthor?.["date"] === "string"
+    ? (commitAuthor["date"] as string)
+    : typeof (commit?.["committer"] as Record<string, unknown> | undefined)?.["date"] === "string"
+      ? ((commit?.["committer"] as Record<string, unknown>)["date"] as string)
+      : "";
+  return {
+    sha,
+    message: message.split("\n")[0] ?? "",
+    date,
+    authorLogin: typeof apiAuthor?.["login"] === "string" ? (apiAuthor["login"] as string) : null,
+    authorName: typeof commitAuthor?.["name"] === "string" ? (commitAuthor["name"] as string) : "unknown",
+    authorAvatarUrl: typeof apiAuthor?.["avatar_url"] === "string" ? (apiAuthor["avatar_url"] as string) : null,
+  };
+}
+
+function renderLatestCommit(ctx: { owner: string; repo: string }, c: LatestCommitData): string {
+  const commitUrl = `/${ctx.owner}/${ctx.repo}/commit/${c.sha}`;
+  const authorHref = c.authorLogin ? `/${c.authorLogin}` : null;
+  const displayName = c.authorLogin ?? c.authorName;
+  const avatar = c.authorAvatarUrl
+    ? `<img class="oldgh-latest-commit__avatar" src="${escapeAttr(c.authorAvatarUrl)}" alt="" width="20" height="20" />`
+    : "";
+  const author = authorHref
+    ? `<a class="oldgh-latest-commit__author" href="${escapeAttr(authorHref)}">${escapeText(displayName)}</a>`
+    : `<span class="oldgh-latest-commit__author">${escapeText(displayName)}</span>`;
+  const time = c.date
+    ? `<time class="oldgh-latest-commit__time" datetime="${escapeAttr(c.date)}" title="${escapeAttr(absoluteTime(c.date))}">${escapeText(relativeTime(c.date))}</time>`
+    : "";
+  return `
+    <div class="oldgh-latest-commit">
+      ${avatar}
+      ${author}
+      <a class="oldgh-latest-commit__message" href="${escapeAttr(commitUrl)}" title="${escapeAttr(c.message)}">${escapeText(c.message)}</a>
+      <a class="oldgh-latest-commit__sha" href="${escapeAttr(commitUrl)}" title="${escapeAttr(c.sha)}"><code>${escapeText(c.sha.slice(0, 7))}</code></a>
+      ${time}
+    </div>
+  `;
 }
 
 async function hydrateLanguagesBar(root: HTMLElement, owner: string, repo: string): Promise<void> {
@@ -64,6 +143,7 @@ function renderShell(o: RepoOverview): string {
     <div class="oldgh-page">
       ${renderTopBar(o)}
       <div class="oldgh-repo-home__langs-slot"></div>
+      <div class="oldgh-repo-home__latest-slot"></div>
       ${renderTreeTable({ owner: o.owner, repo: o.repo, branch: o.branch, basePath: "" }, o.tree)}
       ${renderReadme(o)}
     </div>
