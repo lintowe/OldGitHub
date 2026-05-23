@@ -1251,14 +1251,29 @@ html[data-oldgh-theme="dark"] .oldgh-repo-blob__truncated > p {
 }
 .oldgh-repo-commits__group {
   margin-bottom: 18px;
+  position: relative;
 }
 .oldgh-repo-commits__group-title {
-  margin: 0 0 8px;
-  padding: 6px 0;
+  margin: 0 0 10px;
+  padding: 6px 0 6px 22px;
   font-size: var(--gh-size-md);
   font-weight: normal;
   color: var(--gh-fg-muted);
   border-bottom: 1px solid var(--gh-border-faint);
+  position: relative;
+}
+.oldgh-repo-commits__group-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  background: var(--gh-bg-elev);
+  border: 2px solid var(--gh-border);
+  border-radius: 50%;
+  box-sizing: border-box;
 }
 .oldgh-repo-commits__list {
   margin: 0;
