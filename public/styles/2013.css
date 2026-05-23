@@ -1515,8 +1515,11 @@ html[data-oldgh-theme="dark"] .oldgh-repo-blob__truncated > p {
 .oldgh-repo-commit__sha code {
   font-family: var(--gh-font-mono);
   font-size: var(--gh-size-xs);
-  background: transparent;
-  padding: 0;
+  color: var(--gh-fg-muted);
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  padding: 2px 8px;
+  border-radius: var(--gh-radius);
 }
 .oldgh-repo-commit__body {
   margin: 10px 0 0;
@@ -1544,9 +1547,11 @@ html[data-oldgh-theme="dark"] .oldgh-repo-blob__truncated > p {
 }
 .oldgh-repo-commit__parents code {
   font-family: var(--gh-font-mono);
-  background: transparent;
-  padding: 0;
   color: var(--gh-link);
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  padding: 1px 6px;
+  border-radius: var(--gh-radius);
 }
 .oldgh-repo-commit__stats {
   display: flex;
@@ -3071,12 +3076,26 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   flex-wrap: wrap;
 }
 .oldgh-issue__reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   border: 1px solid var(--gh-border);
   border-radius: 12px;
   padding: 1px 8px;
   font-size: 11px;
   color: var(--gh-fg-muted);
   background: var(--gh-bg);
+  transition: background-color 100ms ease-out, border-color 100ms ease-out, color 100ms ease-out;
+  cursor: default;
+}
+.oldgh-issue__reaction:hover {
+  background: #ddf4ff;
+  border-color: #54aeff;
+  color: var(--gh-link);
+}
+html[data-oldgh-theme="dark"] .oldgh-issue__reaction:hover {
+  background: rgba(56, 139, 253, 0.18);
+  border-color: rgba(56, 139, 253, 0.45);
 }
 .oldgh-issue__event {
   display: flex;
