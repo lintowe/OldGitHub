@@ -69,10 +69,39 @@ export async function mountRepoReleases(owner: string, repo: string, search: str
     ]);
     const latestId = latestRaw ? readNumber(latestRaw, "id") : null;
     const items = releasesRaw.map((r) => parseRelease(r, latestId)).filter((r): r is Release => r !== null);
+    if (items.length === 0) {
+      main.innerHTML = renderNoReleases(owner, repo);
+      return;
+    }
     main.innerHTML = renderList(owner, repo, items, page);
   } catch (err) {
-    main.innerHTML = `<div class="oldgh-releases__empty">Couldn't load releases: ${escapeText(err instanceof Error ? err.message : String(err))}</div>`;
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/responded 404\b/.test(msg)) {
+      // The anonymous REST API returns 404 for private repos; the user might
+      // still be able to see releases via the cookie-authed HTML page.
+      main.innerHTML = renderPrivateNotice(owner, repo);
+      return;
+    }
+    main.innerHTML = `<div class="oldgh-releases__empty">Couldn't load releases: ${escapeText(msg)}</div>`;
   }
+}
+
+function renderNoReleases(owner: string, repo: string): string {
+  return `
+    <div class="oldgh-releases__empty">
+      <p class="oldgh-releases__empty-title">There aren't any releases here.</p>
+      <p class="oldgh-releases__empty-hint">Releases are how you ship versions of your project. <a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/releases/new">Draft the first release</a>.</p>
+    </div>
+  `;
+}
+
+function renderPrivateNotice(owner: string, repo: string): string {
+  return `
+    <div class="oldgh-releases__empty">
+      <p class="oldgh-releases__empty-title">Releases for this repository aren't publicly available.</p>
+      <p class="oldgh-releases__empty-hint">GitHub's REST API requires authentication for private repos. <a href="https://github.com/${escapeAttr(owner)}/${escapeAttr(repo)}/releases" rel="noopener">View releases on github.com</a>.</p>
+    </div>
+  `;
 }
 
 export function unmountRepoReleases(): void {

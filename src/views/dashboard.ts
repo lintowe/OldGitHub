@@ -195,10 +195,32 @@ function renderBroadcastBox(items: ChangelogItem[]): string {
   `;
 }
 
+// Authentic 2013 dashboard cycled through a small library of ProTips on
+// every page load — keyboard shortcuts, navigation hints, the occasional
+// piece of trivia. We rotate the same way (random pick per render) so
+// returning to the dashboard surfaces something new.
+const PRO_TIPS: string[] = [
+  `Use <kbd>g</kbd> then <kbd>i</kbd> on any repository to jump to its Issues.`,
+  `Use <kbd>g</kbd> then <kbd>p</kbd> on any repository to jump to its Pull Requests.`,
+  `Use <kbd>g</kbd> then <kbd>c</kbd> on any repository to jump to its Code.`,
+  `Use <kbd>g</kbd> then <kbd>w</kbd> on any repository to jump to its Wiki.`,
+  `Use <kbd>g</kbd> then <kbd>n</kbd> to jump to your Notifications.`,
+  `Press <kbd>t</kbd> in the file browser to open the file finder.`,
+  `Use <kbd>s</kbd> or <kbd>/</kbd> from anywhere to focus the search bar.`,
+  `Press <kbd>?</kbd> to see every keyboard shortcut available on this page.`,
+  `Hold <kbd>shift</kbd> while clicking a link to open it in a new tab.`,
+  `Star a repository to keep it close — your stars live at <a href="/stars">your stars</a>.`,
+  `Subscribe to the <a href="https://github.blog" rel="noopener">GitHub Blog</a> for engineering deep-dives.`,
+  `Pin up to six repositories on your profile to show off what you're proud of.`,
+  `Use <kbd>l</kbd> on any issue or PR to filter by label.`,
+  `Append <code>.diff</code> or <code>.patch</code> to any PR URL for a plain-text view.`,
+];
+
 function renderProTipBox(): string {
+  const tip = PRO_TIPS[Math.floor(Math.random() * PRO_TIPS.length)]!;
   return `
     <div class="oldgh-dash__protip">
-      <strong>ProTip!</strong> Use <kbd>g</kbd> then <kbd>i</kbd> on any repository to jump to its Issues.
+      <strong>ProTip!</strong> ${tip}
     </div>
   `;
 }
