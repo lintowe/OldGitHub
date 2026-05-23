@@ -208,8 +208,12 @@ function cleanScrapedContent(el: Element): void {
 // it's a destructive action.
 function rewireAccountDialogs(main: HTMLElement): void {
   for (const dialog of Array.from(main.querySelectorAll<HTMLElement>("dialog"))) {
-    if (!dialog.querySelector("form")) continue;
-    // also skip dialogs that have no submit button — pure informational popups
+    // need either a form inside or a form ancestor — the latter is how
+    // GitHub puts inputs+submit inside a dialog while the <form> wraps
+    // the whole section (rename-form-dialog, delete-passkey-*).
+    const hasInnerForm = !!dialog.querySelector("form");
+    const hasAncestorForm = !!dialog.closest("form");
+    if (!hasInnerForm && !hasAncestorForm) continue;
     if (!dialog.querySelector('button[type="submit"], input[type="submit"]')) continue;
     const section = document.createElement("section");
     section.className = "oldgh-account-settings__exposed-dialog";
