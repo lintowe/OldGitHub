@@ -178,7 +178,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     showProgress();
   }
   updateTopNavActive(pathname);
-  const newTitle = titleForRoute(route);
+  const newTitle = titleForRoute(route, pathname);
   if (newTitle) document.title = newTitle;
 
   // when the mount kind flips (repo ↔ profile/top-level), the old shell
@@ -714,7 +714,7 @@ function currentMountKind(): MountKind {
   return "none";
 }
 
-function titleForRoute(route: Route): string {
+function titleForRoute(route: Route, pathname: string): string {
   if (route.kind === "out-of-scope" || route.kind === "todo") return "";
   if (route.kind === "profile") return `${route.login}`;
   if (route.kind === "top-level") return route.title || "GitHub";
@@ -740,6 +740,22 @@ function titleForRoute(route: Route): string {
       const last = route.refAndPath.split("/").filter(Boolean).slice(-1)[0];
       return last ? `${last} · ${nwo}` : nwo;
     }
+    case "repo-other": {
+      const sub = pathname.replace(`/${route.owner}/${route.repo}`, "").replace(/^\//, "").split(/[\/?]/)[0] || "";
+      const label = REPO_OTHER_TITLE[sub];
+      return label ? `${label} · ${nwo}` : nwo;
+    }
     default: return nwo;
   }
 }
+
+const REPO_OTHER_TITLE: Record<string, string> = {
+  releases: "Releases",
+  tags: "Tags",
+  branches: "Branches",
+  stargazers: "Stargazers",
+  forks: "Forks",
+  watchers: "Watchers",
+  labels: "Labels",
+  milestones: "Milestones",
+};
