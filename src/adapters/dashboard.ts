@@ -292,8 +292,11 @@ function pickLanguage(container: Element): string | null {
       const distinctRepos = new Set<string>();
       for (const a of Array.from(scope.querySelectorAll("a[href]"))) {
         const href = a.getAttribute("href") || "";
-        if (/^\/[\w.-]+\/[\w.-]+(?:[/?#].*)?$/.test(href)) {
-          distinctRepos.add(href.split(/[?#]/)[0]!);
+        // normalize to just /owner/repo so trailing /stargazers, /forks
+        // etc. don't count as different repos
+        const m = href.match(/^(\/[\w.-]+\/[\w.-]+)(?:[/?#]|$)/);
+        if (m) {
+          distinctRepos.add(m[1]!);
           if (distinctRepos.size > 1) break;
         }
       }
