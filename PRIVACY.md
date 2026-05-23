@@ -1,26 +1,16 @@
 # OldGitHub — Privacy Policy
 
-_Last updated: 2026-05-21_
+_Last updated: 2026-05-23_
 
-OldGitHub is a browser extension that re-renders `github.com` in its 2013-era visual style. The source code is published in this repository and the Chrome Web Store build is produced directly from it.
+OldGitHub re-renders `github.com` in its 2013-era visual style.
 
-## Data handled by the extension
-
-- **GitHub session cookie** — sent automatically by the browser when the extension fetches pages from `github.com` and `*.githubusercontent.com` to render the themed views. The cookie is never read directly by the extension code, copied, or transmitted elsewhere.
-- **`chrome.storage.sync`** — stores the user's chosen theme (`light`, `dark`, or `auto`). This setting lives in the user's browser/Google profile.
-
-The extension's production manifest restricts host access to:
-
+**Host access (manifest):**
 - `https://github.com/*`
 - `https://gist.github.com/*`
 - `https://*.githubusercontent.com/*`
 
-All network traffic stays within these hosts and is the same traffic a normal browser session would generate while using GitHub.
+**Stored data:** one `chrome.storage.sync` key holding the chosen theme (`light`, `dark`, or `auto`).
 
-## Changes to this policy
+The extension fetches the same pages and APIs your browser would already request while you use GitHub. Nothing is sent to any other host. The GitHub session cookie is attached automatically by the browser and is never read by the extension code.
 
-If the data-handling behavior changes, this file will be updated and the change will land in a tagged commit so the diff is auditable.
-
-## Contact
-
-Bugs, security issues, or privacy questions: file a public issue on the repository.
+Bugs or privacy questions: open an issue at https://github.com/lintowe/OldGitHub.
