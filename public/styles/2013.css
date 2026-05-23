@@ -103,6 +103,13 @@ html[data-oldgh="active"]:not([data-oldgh-host="gist"]) body {
   color: var(--gh-fg);
   background: var(--gh-bg);
 }
+/* prevent a transient page-level horizontal scrollbar during route changes
+   and markdown render — native github fragments occasionally measure wider
+   than the viewport for a frame before our content swap completes. inner
+   scrollable surfaces (pre, table, blob source) keep their own overflow */
+html[data-oldgh="active"]:not([data-oldgh-host="gist"]) body {
+  overflow-x: clip;
+}
 
 /* on gist subdomain we only theme our own header; the gist body keeps its
    native typography */

@@ -20,33 +20,37 @@ type TabKey = (typeof TABS)[number]["key"];
 
 const ROOT_CLASS = "oldgh-repo-header";
 
-export async function mountRepoHeader(owner: string, repo: string): Promise<void> {
-  unmountRepoHeader();
-  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-header", "");
-
-  const skeleton = document.createElement("div");
-  skeleton.className = `${ROOT_CLASS} ${ROOT_CLASS}--skeleton`;
-  skeleton.dataset.oldghOwner = owner;
-  skeleton.dataset.oldghRepo = repo;
-  skeleton.setAttribute("aria-hidden", "true");
-  const after = document.querySelector(".oldgh-header");
-  if (after && after.parentNode) {
-    after.after(skeleton);
-  } else {
-    document.body.prepend(skeleton);
-  }
-
+export async function mountRepoHeader(owner: string, repo: string, prefetched?: Promise<RepoSummary | null> | RepoSummary | null): Promise<void> {
   let summary: RepoSummary | null = null;
   try {
-    summary = await getRepoSummary(owner, repo);
+    summary = prefetched !== undefined ? await prefetched : await getRepoSummary(owner, repo);
   } catch (err) {
     console.debug("[oldgh] getRepoSummary failed, rendering minimal header:", err);
   }
 
-  skeleton.classList.remove(`${ROOT_CLASS}--skeleton`);
-  skeleton.innerHTML = summary
+  const header = document.createElement("div");
+  header.className = ROOT_CLASS;
+  header.dataset.oldghOwner = owner;
+  header.dataset.oldghRepo = repo;
+  header.innerHTML = summary
     ? renderRepoHeaderHtml(summary, currentTabKey(owner, repo, window.location.pathname))
     : renderMinimalHeader(owner, repo, currentTabKey(owner, repo, window.location.pathname));
+
+  unmountRepoHeader();
+  document.documentElement.setAttribute("data-oldgh-hide-modern-repo-header", "");
+  const after = document.querySelector(".oldgh-header");
+  if (after && after.parentNode) {
+    after.after(header);
+  } else {
+    document.body.prepend(header);
+  }
+}
+
+export function prefetchRepoSummary(owner: string, repo: string): Promise<RepoSummary | null> {
+  return getRepoSummary(owner, repo).catch((err) => {
+    console.debug("[oldgh] prefetchRepoSummary failed:", err);
+    return null;
+  });
 }
 
 function renderMinimalHeader(owner: string, repo: string, activeTab: TabKey): string {

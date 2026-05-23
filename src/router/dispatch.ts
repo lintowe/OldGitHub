@@ -1,5 +1,5 @@
 import { AdapterFailure } from "@/adapters";
-import { mountRepoHeader, unmountRepoHeader, updateActiveTab } from "@/views/repo-header";
+import { mountRepoHeader, unmountRepoHeader, updateActiveTab, prefetchRepoSummary } from "@/views/repo-header";
 import { updateTopNavActive } from "@/views/header";
 import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
@@ -40,8 +40,6 @@ import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
 import { mountProfile, unmountProfile } from "@/views/profile";
 import { removeAllBodyRoots } from "@/views/_body";
 import { resolveRoute, type Route } from "./resolve";
-
-type MountKind = "repo" | "profile" | "top-level" | "none";
 
 const MOUNTED_ATTR = "data-oldgh-mounted";
 
@@ -181,20 +179,13 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
   const newTitle = titleForRoute(route, pathname);
   if (newTitle) document.title = newTitle;
 
-  // when the mount kind flips (repo ↔ profile/top-level), the old shell
-  // (header + body) and the new one are incompatible — leaving the old
-  // body visible during fetch shows the new repo header above a stale
-  // profile body, or the repo body without its title bar. wipe both
-  // sides of the shell before the new mount runs. same-kind transitions
-  // keep the existing keep-old-visible behavior (orange progress bar is
-  // the affordance there).
-  const nextKind = mountKindForRoute(route);
-  const prevKind = currentMountKind();
-  if (prevKind !== "none" && nextKind !== "none" && prevKind !== nextKind) {
-    removeAllBodyRoots();
-    teardownRepoHeader();
-    bodyState = { kind: "none" };
-  }
+  // No pre-emptive wipe on cross-kind transitions. Keep the old shell visible
+  // (it acts as a "still" of the previous page) while fetches run; the orange
+  // progress bar is the loading affordance. Body and header each swap atomically
+  // when their fetches resolve. Body is applied BEFORE the header on cross-kind
+  // transitions so the user never sees a new repo header above a stale profile
+  // body. For cross-repo navigation we pre-fetch the repo summary in parallel
+  // with the body to minimise the gap between body-swap and header-swap.
 
   try {
     if (route.kind === "out-of-scope") {
@@ -231,14 +222,21 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     ) {
       const target = targetBodyForRoute(route);
       if (!sameBody(bodyState, target)) {
-        // keep the old body root visible while we fetch the new one — the
-        // orange progress bar at top is the loading affordance. mountX's
-        // adoptBodyRoot() at the end will atomically swap the DOM. failure
-        // path in the catch below still wipes via removeAllBodyRoots.
         bodyState = { kind: "none" };
       }
-      await ensureRepoHeader(route.owner, route.repo, pathname);
+      const sameRepo = mountedRepo && mountedRepo.owner === route.owner && mountedRepo.repo === route.repo;
+      if (sameRepo) {
+        // header is already correct; tab swap is synchronous
+        updateActiveTab(route.owner, route.repo, pathname);
+        await applyBodyState(target);
+        return;
+      }
+      // cross-repo or cross-kind: pre-fetch summary in parallel with body so
+      // the two swaps happen back-to-back rather than serially.
+      const summaryPromise = prefetchRepoSummary(route.owner, route.repo);
       await applyBodyState(target);
+      await mountRepoHeader(route.owner, route.repo, summaryPromise);
+      mountedRepo = { owner: route.owner, repo: route.repo };
       return;
     }
 
@@ -247,8 +245,10 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       if (!sameBody(bodyState, target)) {
         bodyState = { kind: "none" };
       }
-      teardownRepoHeader();
+      // body first — old shell (incl. repo header if leaving a repo) stays
+      // visible until the new profile body is in place, then header tears down.
       await applyBodyState(target);
+      teardownRepoHeader();
       return;
     }
 
@@ -257,8 +257,8 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
       if (!sameBody(bodyState, target)) {
         bodyState = { kind: "none" };
       }
-      teardownRepoHeader();
       await applyBodyState(target);
+      teardownRepoHeader();
       return;
     }
 
@@ -388,15 +388,6 @@ function repoOtherPath(owner: string, repo: string): { pathname: string; search:
   const first = rest.split("/")[0] || "Other";
   const title = first.charAt(0).toUpperCase() + first.slice(1);
   return { pathname, search, title };
-}
-
-async function ensureRepoHeader(owner: string, repo: string, pathname: string): Promise<void> {
-  if (!mountedRepo || mountedRepo.owner !== owner || mountedRepo.repo !== repo) {
-    await mountRepoHeader(owner, repo);
-    mountedRepo = { owner, repo };
-  } else {
-    updateActiveTab(owner, repo, pathname);
-  }
 }
 
 function teardownRepoHeader(): void {
@@ -707,20 +698,6 @@ function currentPath(loc: Location | URL): string {
 function currentSearch(loc: Location | URL): string {
   const raw = "search" in loc ? loc.search : new URL(String(loc)).search;
   return raw.startsWith("?") ? raw.slice(1) : raw;
-}
-
-function mountKindForRoute(route: Route): MountKind {
-  if (route.kind === "profile") return "profile";
-  if (route.kind === "top-level") return "top-level";
-  if (route.kind === "out-of-scope" || route.kind === "todo") return "none";
-  return "repo";
-}
-
-function currentMountKind(): MountKind {
-  if (mountedRepo) return "repo";
-  if (bodyState.kind === "profile") return "profile";
-  if (bodyState.kind === "top-level") return "top-level";
-  return "none";
 }
 
 function titleForRoute(route: Route, pathname: string): string {
