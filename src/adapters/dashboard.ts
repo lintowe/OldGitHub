@@ -280,22 +280,24 @@ function pickDescription(container: Element): string | null {
 }
 
 function pickLanguage(container: Element): string | null {
-  // Walk up from the link's container looking for an [itemprop]. The first
-  // scope that holds one is this repo's per-card content. If we reach a
-  // scope that already has the itemprop but also more than one repo link,
-  // bail — that means we'd be guessing which repo's language we're reading.
+  // Walk up looking for an [itemprop]. Cards routinely have the avatar and
+  // title BOTH link to /owner/repo, so dedupe by normalized URL — what we
+  // want to detect is multiple *distinct* repos in scope (a sign we've
+  // walked past the per-card boundary).
   let scope: Element | null = container;
   for (let i = 0; i < 8 && scope; i++) {
     const itemProp = scope.querySelector("[itemprop='programmingLanguage']");
     const dot = !itemProp ? scope.querySelector('span[style*="background-color"]') : null;
     if (itemProp || dot) {
-      let repoLinks = 0;
+      const distinctRepos = new Set<string>();
       for (const a of Array.from(scope.querySelectorAll("a[href]"))) {
         const href = a.getAttribute("href") || "";
-        if (/^\/[\w.-]+\/[\w.-]+(?:[/?#].*)?$/.test(href)) repoLinks++;
-        if (repoLinks > 1) break;
+        if (/^\/[\w.-]+\/[\w.-]+(?:[/?#].*)?$/.test(href)) {
+          distinctRepos.add(href.split(/[?#]/)[0]!);
+          if (distinctRepos.size > 1) break;
+        }
       }
-      if (repoLinks > 1) return null;
+      if (distinctRepos.size > 1) return null;
       if (itemProp) {
         const txt = cleanText(itemProp.textContent || "");
         if (txt) return txt;
