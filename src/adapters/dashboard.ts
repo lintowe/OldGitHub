@@ -280,8 +280,35 @@ function pickDescription(container: Element): string | null {
 }
 
 function pickLanguage(container: Element): string | null {
-  const langDot = container.querySelector("[itemprop='programmingLanguage'], .repo-language-color + *");
-  return langDot ? cleanText(langDot.textContent || "") || null : null;
+  // Walk up looking for a language marker, but stop before we'd cross into
+  // another repo's section (trending cards bundle several repos per article).
+  let scope: Element | null = container;
+  for (let i = 0; i < 6 && scope; i++) {
+    const itemProp = scope.querySelector("[itemprop='programmingLanguage']");
+    if (itemProp) {
+      const txt = cleanText(itemProp.textContent || "");
+      if (txt) return txt;
+    }
+    // modern markup: a small colored span followed by the language name
+    const dot = scope.querySelector('span[style*="background-color"]');
+    if (dot && dot.nextElementSibling) {
+      const txt = cleanText(dot.nextElementSibling.textContent || "");
+      if (txt) return txt;
+    }
+    const parent: Element | null = scope.parentElement;
+    if (!parent) break;
+    // count repo links at the parent's scope — if >1, walking up would
+    // pull in the wrong repo's language
+    let repoLinks = 0;
+    for (const a of Array.from(parent.querySelectorAll("a[href]"))) {
+      const href = a.getAttribute("href") || "";
+      if (/^\/[\w.-]+\/[\w.-]+(?:[/?#].*)?$/.test(href)) repoLinks++;
+      if (repoLinks > 1) break;
+    }
+    if (repoLinks > 1) break;
+    scope = parent;
+  }
+  return null;
 }
 
 function pickStars(container: Element): string | null {
