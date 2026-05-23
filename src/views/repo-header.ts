@@ -114,6 +114,9 @@ function renderRepoHeaderHtml(s: RepoSummary, activeTab: TabKey): string {
   const archivedBadge = s.isArchived
     ? ` <span class="oldgh-repo-header__archived" title="This repository is archived">Public archive</span>`
     : "";
+  const archivedBanner = s.isArchived
+    ? `<div class="oldgh-repo-header__archive-banner">${octicon("archive", { size: 16 })}<span>This repository has been archived by the owner. It is now read-only.</span></div>`
+    : "";
 
   const topics = s.topics.length > 0
     ? `<p class="oldgh-repo-header__topics">${s.topics.slice(0, 12).map((t) => `<a class="oldgh-repo-header__topic" href="/topics/${escapeAttr(t)}">${escapeText(t)}</a>`).join("")}</p>`
@@ -160,6 +163,7 @@ function renderRepoHeaderHtml(s: RepoSummary, activeTab: TabKey): string {
       ${forkOf}
       ${description}
       ${topics}
+      ${archivedBanner}
       <nav class="oldgh-repo-tabs" aria-label="Repository">
         <ul class="oldgh-tabs">
           ${TABS.filter((t) => isTabAvailable(s, t.key)).map((t) => renderTab(s, t, activeTab)).join("")}

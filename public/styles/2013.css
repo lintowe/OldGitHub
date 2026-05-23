@@ -278,6 +278,7 @@ html[data-oldgh="active"] .oldgh-header__nav a[aria-current="page"] {
   color: var(--gh-fg);
   border: 1px solid transparent;
   border-bottom-color: var(--gh-border);
+  white-space: nowrap;
 }
 .oldgh-tabs__link:hover {
   text-decoration: none;
@@ -607,6 +608,30 @@ html[data-oldgh-hide-modern-repo-header] .UnderlineNav.js-repo-nav {
 html[data-oldgh-theme="dark"] .oldgh-repo-header__archived {
   background: rgba(210, 153, 34, 0.18);
   border-color: rgba(210, 153, 34, 0.45);
+  color: #e3b341;
+}
+.oldgh-repo-header__archive-banner {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #fff8e1;
+  border: 1px solid #ebc97e;
+  border-radius: var(--gh-radius);
+  color: #735c0f;
+  font-size: var(--gh-size-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.oldgh-repo-header__archive-banner .octicon {
+  color: #b87000;
+  flex-shrink: 0;
+}
+html[data-oldgh-theme="dark"] .oldgh-repo-header__archive-banner {
+  background: rgba(210, 153, 34, 0.12);
+  border-color: rgba(210, 153, 34, 0.4);
+  color: #e3b341;
+}
+html[data-oldgh-theme="dark"] .oldgh-repo-header__archive-banner .octicon {
   color: #e3b341;
 }
 .oldgh-repo-header__topics {
