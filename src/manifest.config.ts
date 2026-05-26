@@ -50,7 +50,7 @@ export function buildManifest(mode: "development" | "production"): chrome.runtim
       open_in_tab: true,
     },
 
-    permissions: ["storage", "scripting", "declarativeNetRequest"],
+    permissions: ["storage", "declarativeNetRequest"],
     host_permissions: hostPermissions,
 
     web_accessible_resources: [

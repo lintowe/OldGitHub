@@ -1,25 +1,47 @@
-// generate extension icons (16/32/48/128) by rasterizing the 2013-era GitHub
-// mark-github octicon. emits public/icons/icon-{size}.png.
+// generate extension icons (16/32/48/128) from assets/source-icon.png.
+// the source is the OldGitHub wordmark on a transparent background; trim its
+// transparent padding, extend to a square canvas with a small margin, then
+// rasterise at each output size with lanczos3. emits public/icons/icon-{size}.png.
 
-import { writeFileSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Resvg } from "@resvg/resvg-js";
+import sharp from "sharp";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = resolve(here, "..", "public", "icons");
+const source = resolve(here, "..", "assets", "source-icon.png");
 mkdirSync(outDir, { recursive: true });
 
-// the 2013 mark-github octicon, recolored to the 2013 dark-foreground tone
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="#1b1f23" fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>`;
+const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
+
+const trimmed = await sharp(source)
+  .trim({ background: TRANSPARENT, threshold: 16 })
+  .png()
+  .toBuffer({ resolveWithObject: true });
+const { width, height } = trimmed.info;
+
+// pad to a square canvas with a small breathing margin
+const side = Math.round(Math.max(width, height) * 1.10);
+const padLeft = Math.round((side - width) / 2);
+const padTop = Math.round((side - height) / 2);
+
+const squared = await sharp(trimmed.data)
+  .extend({
+    top: padTop,
+    bottom: side - height - padTop,
+    left: padLeft,
+    right: side - width - padLeft,
+    background: TRANSPARENT,
+  })
+  .png()
+  .toBuffer();
 
 for (const size of [16, 32, 48, 128]) {
-  const resvg = new Resvg(svg, {
-    fitTo: { mode: "width", value: size },
-    background: "rgba(0,0,0,0)",
-  });
-  const png = resvg.render().asPng();
   const file = resolve(outDir, `icon-${size}.png`);
-  writeFileSync(file, png);
-  console.log(`wrote ${file} (${png.length} bytes)`);
+  await sharp(squared)
+    .resize(size, size, { kernel: "lanczos3" })
+    .png({ compressionLevel: 9 })
+    .toFile(file);
+  console.log(`wrote ${file}`);
 }
