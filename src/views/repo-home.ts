@@ -29,6 +29,55 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
 
   void hydrateLanguagesBar(root, owner, repo);
   void hydrateLatestCommit(root, { owner, repo, branch: overview.branch });
+  void hydrateRepoNumbers(root, owner, repo);
+}
+
+// 2013 GitHub's signature "numbers summary" strip: commits / branches /
+// releases / contributors as icon+count links below the description. commits
+// comes from the overview payload; the other three counts are read from the
+// REST API's Link rel="last" page number (or the returned array length when a
+// repo is small enough to fit one page). each metric degrades independently —
+// a failed/rate-limited fetch just drops that one item rather than showing a
+// broken count.
+async function hydrateRepoNumbers(root: HTMLElement, owner: string, repo: string): Promise<void> {
+  const base = `https://api.github.com/repos/${owner}/${repo}`;
+  const [branches, releases, contributors] = await Promise.all([
+    fetchCount(`${base}/branches?per_page=1`),
+    fetchCount(`${base}/releases?per_page=1`),
+    fetchCount(`${base}/contributors?per_page=1&anon=1`),
+  ]);
+  setNumber(root, "branches", branches, "branch", "branches");
+  setNumber(root, "releases", releases, "release", "releases");
+  setNumber(root, "contributors", contributors, "contributor", "contributors");
+}
+
+async function fetchCount(url: string): Promise<number | null> {
+  try {
+    const res = await fetch(url, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
+    if (!res.ok) return null;
+    const link = res.headers.get("Link") || res.headers.get("link");
+    if (link) {
+      const m = /[?&]page=(\d+)>;\s*rel="last"/.exec(link);
+      if (m) return parseInt(m[1]!, 10);
+    }
+    const arr = (await res.json()) as unknown;
+    return Array.isArray(arr) ? arr.length : null;
+  } catch {
+    return null;
+  }
+}
+
+function setNumber(root: HTMLElement, key: string, count: number | null, singular: string, plural: string): void {
+  const li = root.querySelector<HTMLElement>(`.oldgh-repo-numbers li[data-numbers="${key}"]`);
+  if (!li) return;
+  if (count === null) {
+    li.remove();
+    return;
+  }
+  const numEl = li.querySelector<HTMLElement>(".oldgh-repo-numbers__num");
+  const labelEl = li.querySelector<HTMLElement>(".oldgh-repo-numbers__label");
+  if (numEl) numEl.textContent = count.toLocaleString();
+  if (labelEl) labelEl.textContent = count === 1 ? singular : plural;
 }
 
 type LatestCommitData = {
@@ -141,6 +190,7 @@ export function unmountRepoHome(): void {
 function renderShell(o: RepoOverview): string {
   return `
     <div class="oldgh-page">
+      ${renderNumbersBar(o)}
       ${renderTopBar(o)}
       <div class="oldgh-repo-home__langs-slot"></div>
       <div class="oldgh-repo-home__latest-slot"></div>
@@ -150,12 +200,26 @@ function renderShell(o: RepoOverview): string {
   `;
 }
 
+function renderNumbersBar(o: RepoOverview): string {
+  const commits = o.commitCount
+    ? `<li class="oldgh-repo-numbers__item"><a href="/${o.owner}/${o.repo}/commits/${escapeAttr(o.branch)}">${octicon("history", { size: 16 })}<span class="oldgh-repo-numbers__num">${escapeText(o.commitCount)}</span> <span class="oldgh-repo-numbers__label">commits</span></a></li>`
+    : "";
+  // branches / releases / contributors counts fill in via hydrateRepoNumbers;
+  // they start with a thin placeholder and each drops out if its fetch fails.
+  const pending = (key: string, icon: string, href: string, label: string): string =>
+    `<li class="oldgh-repo-numbers__item" data-numbers="${key}"><a href="${escapeAttr(href)}">${octicon(icon, { size: 16 })}<span class="oldgh-repo-numbers__num">&middot;&middot;</span> <span class="oldgh-repo-numbers__label">${label}</span></a></li>`;
+  return `
+    <ul class="oldgh-repo-numbers">
+      ${commits}
+      ${pending("branches", "git-branch", `/${o.owner}/${o.repo}/branches`, "branches")}
+      ${pending("releases", "tag", `/${o.owner}/${o.repo}/releases`, "releases")}
+      ${pending("contributors", "organization", `/${o.owner}/${o.repo}/graphs/contributors`, "contributors")}
+    </ul>
+  `;
+}
+
 function renderTopBar(o: RepoOverview): string {
   const branchIcon = octicon("git-branch", { size: 14 });
-  const commitsIcon = octicon("history", { size: 14 });
-  const commits = o.commitCount
-    ? `<a class="oldgh-repo-home__commits" href="/${o.owner}/${o.repo}/commits/${escapeAttr(o.branch)}">${commitsIcon}<strong>${escapeText(o.commitCount)}</strong> commits</a>`
-    : "";
   return `
     <div class="oldgh-repo-home__topbar">
       <div class="oldgh-repo-home__refbox">
@@ -176,7 +240,6 @@ function renderTopBar(o: RepoOverview): string {
             <a class="oldgh-branch-picker__footer" href="/${o.owner}/${o.repo}/branches">View all branches</a>
           </div>
         </details>
-        ${commits}
       </div>
       ${renderCloneBox(o)}
     </div>

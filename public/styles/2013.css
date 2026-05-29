@@ -898,6 +898,47 @@ html[data-oldgh-host="gist"] .FormControl-input {
   padding-bottom: 40px;
 }
 
+/* 2013 numbers-summary strip — commits / branches / releases / contributors */
+.oldgh-repo-numbers {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+.oldgh-repo-numbers__item {
+  margin: 0;
+}
+.oldgh-repo-numbers__item + .oldgh-repo-numbers__item {
+  border-left: 1px solid var(--gh-border-faint);
+}
+.oldgh-repo-numbers__item a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 18px 14px;
+  font-size: var(--gh-size-md);
+  color: var(--gh-fg-muted);
+}
+.oldgh-repo-numbers__item:first-child a {
+  padding-left: 2px;
+}
+.oldgh-repo-numbers__item a:hover {
+  color: var(--gh-link);
+  text-decoration: none;
+}
+.oldgh-repo-numbers__item a:hover .oldgh-repo-numbers__num {
+  color: var(--gh-link);
+}
+.oldgh-repo-numbers__item .octicon {
+  color: var(--gh-fg-faint);
+}
+.oldgh-repo-numbers__num {
+  font-weight: bold;
+  color: var(--gh-fg);
+}
+
 .oldgh-repo-home__topbar {
   display: flex;
   align-items: center;

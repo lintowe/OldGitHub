@@ -342,7 +342,30 @@ export async function getTreeCommitInfo(
   if (!data || typeof data !== "object") {
     throw new AdapterFailure("getTreeCommitInfo", "unexpected payload shape");
   }
-  return data as Record<string, CommitInfo>;
+  // current shape: { entries: { "<path>": { oid, url, date, shortMessageHtmlLink: { value } } } }
+  // older shape was a flat map keyed by path with shortMessageHtmlLink as a string.
+  const root = data as Record<string, unknown>;
+  const entries = (root["entries"] && typeof root["entries"] === "object")
+    ? (root["entries"] as Record<string, unknown>)
+    : root;
+  const out: Record<string, CommitInfo> = {};
+  for (const [key, raw] of Object.entries(entries)) {
+    if (!raw || typeof raw !== "object") continue;
+    const e = raw as Record<string, unknown>;
+    const link = e["shortMessageHtmlLink"];
+    const linkHtml = typeof link === "string"
+      ? link
+      : (link && typeof link === "object" && typeof (link as Record<string, unknown>)["value"] === "string")
+        ? ((link as Record<string, unknown>)["value"] as string)
+        : "";
+    out[key] = {
+      oid: typeof e["oid"] === "string" ? (e["oid"] as string) : "",
+      url: typeof e["url"] === "string" ? (e["url"] as string) : "",
+      date: typeof e["date"] === "string" ? (e["date"] as string) : "",
+      shortMessageHtmlLink: linkHtml,
+    };
+  }
+  return out;
 }
 
 function encodeBranch(branch: string): string {
