@@ -174,7 +174,13 @@ function cleanScrapedContent(el: Element): void {
   // bundle running, every conditional warning shows at once. avatar upload
   // errors, .js-* hide-until-error stubs, [hidden] attribute holdouts.
   const hiddenSelectors = [
-    "[hidden]",
+    // a blanket [hidden] strip is too broad — GitHub keeps real, reachable
+    // controls (collapsed sections, conditional 2FA panels, the delete-account
+    // confirm block, dialog bodies, tab panels) behind [hidden] and reveals
+    // them via JS we don't run. only strip the error/flash stubs.
+    "[hidden].js-flash-error",
+    "[hidden].flash-error",
+    "[hidden][class*='error']",
     ".js-avatar-upload-error",
     ".js-upload-error",
     ".js-upload-image-error",
@@ -184,7 +190,12 @@ function cleanScrapedContent(el: Element): void {
     "[data-test-selector*='error']:empty",
   ];
   for (const sel of hiddenSelectors) {
-    el.querySelectorAll(sel).forEach((n) => n.remove());
+    el.querySelectorAll(sel).forEach((n) => {
+      // never strip a hidden node that holds a form/dialog/tabpanel — that's
+      // real content GitHub reveals on interaction, not an error stub
+      if (n.matches("dialog, [role='tabpanel']") || n.querySelector("form, button[type='submit'], input[type='submit']")) return;
+      n.remove();
+    });
   }
   for (const node of Array.from(el.querySelectorAll<HTMLElement>("div, section"))) {
     const text = (node.textContent || "").trim();
@@ -219,6 +230,11 @@ function rewireAccountDialogs(main: HTMLElement): void {
     section.className = "oldgh-account-settings__exposed-dialog";
     while (dialog.firstChild) section.appendChild(dialog.firstChild);
     dialog.replaceWith(section);
+    // React dialogs carry overlay/backdrop scaffolding and a close-X that,
+    // once surfaced inline, render as a stray fixed panel or a dead pill.
+    section.querySelectorAll(
+      "[class*='prc-Dialog-Backdrop'], [class*='prc-Overlay-Backdrop'], [class*='prc-Dialog-CloseButton'], [aria-label='Close']",
+    ).forEach((n) => n.remove());
     // dialog-helper wrapper above the dialog often duplicates the trigger
     // button (the one that was supposed to open the dialog). Clear it.
     const helper = section.parentElement?.tagName?.toLowerCase() === "dialog-helper" ? section.parentElement : null;

@@ -4067,6 +4067,268 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
   display: none;
 }
 
+/* ─── Settings: full modern-Primer (prc-*) reskin ──────────────── */
+/* The /settings/* and /:owner/:repo/settings/* pages are pure Primer
+   React: buttons/inputs/toggles/cards/banners all carry hashed prc-*
+   classes that the legacy-class rules in the __native blocks above miss,
+   so modern UI bleeds through. This block covers the modern component
+   set for BOTH settings scopes. Substring [class*="prc-..."] matches the
+   hashed suffixes; !important beats Primer's high-specificity hashed
+   rules. All colors via --gh-* so light+dark adapt. */
+
+/* buttons */
+.oldgh-account-settings__native [class*="prc-Button-"],
+.oldgh-settings__native [class*="prc-Button-"] {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
+  border: 1px solid var(--gh-btn-border) !important;
+  border-radius: var(--gh-radius) !important;
+  color: var(--gh-btn-fg) !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: var(--gh-shadow-inset);
+  padding: 3px 12px !important;
+  font-size: var(--gh-size-md) !important;
+  font-weight: bold;
+  min-height: unset !important;
+}
+[data-oldgh-theme="dark"] .oldgh-account-settings__native [class*="prc-Button-"],
+[data-oldgh-theme="dark"] .oldgh-settings__native [class*="prc-Button-"] {
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+.oldgh-account-settings__native [class*="prc-Button-"][data-variant="primary"],
+.oldgh-settings__native [class*="prc-Button-"][data-variant="primary"] {
+  background: linear-gradient(to bottom, var(--gh-btn-primary-bg-top), var(--gh-btn-primary-bg-bottom)) !important;
+  border-color: var(--gh-btn-primary-border) !important;
+  color: var(--gh-btn-primary-fg) !important;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+.oldgh-account-settings__native [class*="prc-Button-"][data-variant="danger"],
+.oldgh-settings__native [class*="prc-Button-"][data-variant="danger"] {
+  color: #fff !important;
+  background: linear-gradient(to bottom, #d75147, #ad3a30) !important;
+  border-color: #8a2c25 !important;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.oldgh-account-settings__native [class*="prc-Button-"][data-variant="invisible"],
+.oldgh-settings__native [class*="prc-Button-"][data-variant="invisible"] {
+  background: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  color: var(--gh-link) !important;
+}
+/* never gradient-ify a toggle switch that happens to be a <button> */
+.oldgh-account-settings__native [class*="prc-ToggleSwitch"],
+.oldgh-settings__native [class*="prc-ToggleSwitch"] {
+  background: var(--gh-border) !important;
+}
+
+/* text inputs / selects (modern wraps the input in a bordered span) */
+.oldgh-account-settings__native input.FormControl-input,
+.oldgh-account-settings__native [class*="prc-TextInput"] input,
+.oldgh-account-settings__native [class*="prc-components-Input"],
+.oldgh-account-settings__native [class*="prc-Select-"] select,
+.oldgh-settings__native input.FormControl-input,
+.oldgh-settings__native .form-control,
+.oldgh-settings__native [class*="prc-TextInput"] input,
+.oldgh-settings__native [class*="prc-components-Input"],
+.oldgh-settings__native [class*="prc-Select-"] select {
+  background: var(--gh-bg-elev) !important;
+  border: 1px solid var(--gh-border) !important;
+  border-radius: var(--gh-radius) !important;
+  color: var(--gh-fg) !important;
+  padding: 4px 8px !important;
+  font-size: var(--gh-size-md) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+/* neutralize the modern wrapper span's own border so there's no double box */
+.oldgh-account-settings__native [class*="prc-TextInput-Wrapper"],
+.oldgh-account-settings__native span[class*="prc-TextInput"],
+.oldgh-settings__native [class*="prc-TextInput-Wrapper"],
+.oldgh-settings__native span[class*="prc-TextInput"] {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* ToggleSwitch — flatten the modern pill to the 2013 toggle */
+.oldgh-account-settings__native [class*="prc-ToggleSwitch-ToggleSwitch"],
+.oldgh-settings__native [class*="prc-ToggleSwitch-ToggleSwitch"],
+.oldgh-account-settings__native .ToggleSwitch,
+.oldgh-settings__native .ToggleSwitch {
+  width: 32px !important;
+  height: 18px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: var(--gh-border) !important;
+  border: 1px solid var(--gh-border-strong) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+.oldgh-account-settings__native [class*="prc-ToggleSwitch-ToggleSwitch"][aria-checked="true"],
+.oldgh-account-settings__native [class*="prc-ToggleSwitch-ToggleSwitch"][aria-pressed="true"],
+.oldgh-account-settings__native .ToggleSwitch[aria-pressed="true"],
+.oldgh-settings__native [class*="prc-ToggleSwitch-ToggleSwitch"][aria-checked="true"],
+.oldgh-settings__native [class*="prc-ToggleSwitch-ToggleSwitch"][aria-pressed="true"],
+.oldgh-settings__native .ToggleSwitch[aria-pressed="true"] {
+  background: var(--gh-btn-primary-bg-bottom) !important;
+  border-color: var(--gh-btn-primary-border) !important;
+}
+.oldgh-account-settings__native [class*="prc-ToggleSwitch-Status"],
+.oldgh-settings__native [class*="prc-ToggleSwitch-Status"],
+.oldgh-account-settings__native .ToggleSwitch-status,
+.oldgh-settings__native .ToggleSwitch-status {
+  display: none !important;
+}
+.oldgh-account-settings__native [class*="prc-ToggleSwitch-Knob"],
+.oldgh-settings__native [class*="prc-ToggleSwitch-Knob"],
+.oldgh-account-settings__native .ToggleSwitch-knob,
+.oldgh-settings__native .ToggleSwitch-knob {
+  box-shadow: none !important;
+}
+
+/* containers: collapse the modern PageLayout grid, theme the modern Box */
+.oldgh-account-settings__native [class*="prc-PageLayout-PageLayoutRoot"],
+.oldgh-account-settings__native [class*="prc-PageLayout-PageLayoutWrapper"],
+.oldgh-account-settings__native [class*="prc-PageLayout-PageLayoutContent"],
+.oldgh-settings__native [class*="prc-PageLayout-PageLayoutRoot"],
+.oldgh-settings__native [class*="prc-PageLayout-PageLayoutWrapper"],
+.oldgh-settings__native [class*="prc-PageLayout-PageLayoutContent"] {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.oldgh-account-settings__native [class*="prc-PageLayout-PaneWrapper"],
+.oldgh-account-settings__native [class*="prc-PageLayout-HorizontalDivider"],
+.oldgh-account-settings__native [class*="prc-PageLayout-VerticalDivider"],
+.oldgh-settings__native [class*="prc-PageLayout-PaneWrapper"],
+.oldgh-settings__native [class*="prc-PageLayout-HorizontalDivider"],
+.oldgh-settings__native [class*="prc-PageLayout-VerticalDivider"] {
+  display: none !important;
+}
+.oldgh-account-settings__native [class*="prc-Box-"],
+.oldgh-settings__native [class*="prc-Box-"] {
+  background: transparent;
+  border-color: var(--gh-border-faint);
+}
+.oldgh-account-settings__native [class*="prc-Heading-Heading"],
+.oldgh-settings__native [class*="prc-Heading-Heading"] {
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--gh-fg);
+  margin: 18px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gh-border-faint);
+}
+/* legacy + modern .Box-row separators (the dominant element on the General page) */
+.oldgh-settings__native .Box-row {
+  padding: 10px 14px;
+  border-top: 1px solid var(--gh-border-faint);
+  background: transparent;
+}
+.oldgh-settings__native .Box-row:first-child { border-top: 0; }
+
+/* Subhead section dividers */
+.oldgh-account-settings__native .Subhead,
+.oldgh-settings__native .Subhead {
+  border-bottom: 1px solid var(--gh-border-faint);
+  padding-bottom: 6px;
+  margin: 18px 0 8px;
+}
+.oldgh-account-settings__native .Subhead-heading,
+.oldgh-settings__native .Subhead-heading {
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--gh-fg);
+  border-bottom: 0;
+}
+
+/* Banner / flash notices (modern prc-Banner + legacy .flash) */
+.oldgh-account-settings__native [class*="prc-Banner-Banner"],
+.oldgh-settings__native [class*="prc-Banner-Banner"] {
+  padding: 10px 14px;
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  background: var(--gh-bg-stripe);
+  color: var(--gh-fg);
+  margin: 10px 0;
+}
+.oldgh-account-settings__native [class*="prc-Banner-Banner"][data-variant="critical"],
+.oldgh-settings__native [class*="prc-Banner-Banner"][data-variant="critical"] {
+  border-color: #d75147;
+  background: rgba(215, 81, 71, 0.08);
+}
+.oldgh-account-settings__native [class*="prc-Banner-Banner"][data-variant="warning"],
+.oldgh-settings__native [class*="prc-Banner-Banner"][data-variant="warning"] {
+  border-color: #d8b658;
+  background: rgba(216, 182, 88, 0.12);
+}
+.oldgh-account-settings__native [class*="prc-Banner-Banner"][data-variant="success"],
+.oldgh-settings__native [class*="prc-Banner-Banner"][data-variant="success"] {
+  border-color: var(--gh-btn-primary-border);
+  background: rgba(98, 196, 98, 0.10);
+}
+.oldgh-account-settings__native [class*="prc-Banner-Icon"],
+.oldgh-account-settings__native [class*="prc-Banner-Title"],
+.oldgh-settings__native [class*="prc-Banner-Icon"],
+.oldgh-settings__native [class*="prc-Banner-Title"] {
+  color: inherit;
+}
+
+/* Token / Label pills */
+.oldgh-account-settings__native [class*="prc-Token-Token"],
+.oldgh-account-settings__native [class*="prc-Label-Label"],
+.oldgh-settings__native [class*="prc-Token-Token"],
+.oldgh-settings__native [class*="prc-Label-Label"],
+.oldgh-settings__native .Label {
+  background: var(--gh-bg-stripe);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  color: var(--gh-fg-muted);
+  padding: 1px 7px;
+  font-size: var(--gh-size-xs);
+  font-weight: bold;
+}
+
+/* ActionList / SelectPanel / Overlay dropdown menus */
+.oldgh-account-settings__native [class*="prc-ActionList-ActionList"],
+.oldgh-account-settings__native [class*="prc-Overlay-Overlay"][role="menu"],
+.oldgh-account-settings__native [class*="prc-SelectPanel"],
+.oldgh-settings__native [class*="prc-ActionList-ActionList"],
+.oldgh-settings__native [class*="prc-Overlay-Overlay"][role="menu"],
+.oldgh-settings__native [class*="prc-SelectPanel"] {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+}
+.oldgh-account-settings__native [class*="prc-ActionList-Item"][aria-selected="true"],
+.oldgh-account-settings__native [class*="prc-ActionList-Item"]:hover,
+.oldgh-settings__native [class*="prc-ActionList-Item"][aria-selected="true"],
+.oldgh-settings__native [class*="prc-ActionList-Item"]:hover {
+  background: var(--gh-bg-stripe);
+}
+
+/* Avatar */
+.oldgh-account-settings__native [class*="prc-Avatar-Avatar"],
+.oldgh-settings__native [class*="prc-Avatar-Avatar"] {
+  border: 1px solid var(--gh-border);
+}
+
+/* exposed danger-zone dialog: strip leftover modern overlay chrome */
+.oldgh-account-settings__exposed-dialog [class*="prc-Dialog"],
+.oldgh-account-settings__exposed-dialog [class*="prc-Overlay"] {
+  position: static !important;
+  inset: auto !important;
+  width: auto !important;
+  max-width: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
 /* ─── Dashboard (2013-style news feed) ─────────────────────────── */
 .oldgh-dashboard {
   max-width: 980px;

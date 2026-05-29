@@ -27,7 +27,7 @@ function buildSidebar(owner: string, repo: string): SidebarGroup[] {
     {
       label: "Access",
       items: [
-        { key: "access", label: "Collaborators", icon: "people", path: `${base}/access` },
+        { key: "access", label: "Collaborators", icon: "person", path: `${base}/access` },
       ],
     },
     {
@@ -45,7 +45,7 @@ function buildSidebar(owner: string, repo: string): SidebarGroup[] {
     {
       label: "Security",
       items: [
-        { key: "security_analysis", label: "Code security", icon: "shield-check", path: `${base}/security_analysis` },
+        { key: "security_analysis", label: "Code security", icon: "shield", path: `${base}/security_analysis` },
         { key: "keys", label: "Deploy keys", icon: "key", path: `${base}/keys` },
         { key: "secrets", label: "Secrets and variables", icon: "lock", path: `${base}/secrets/actions` },
       ],
@@ -190,7 +190,11 @@ function findButtonByText(scope: HTMLElement, re: RegExp): HTMLButtonElement | n
 
 async function confirmVisibilityChange(owner: string, repo: string, target: string, main: HTMLElement): Promise<void> {
   const form = main.querySelector<HTMLFormElement>('form[action$="/set_visibility"]');
-  if (!form) return;
+  if (!form) {
+    // selector miss (GitHub markup drifted) — degrade to native instead of a dead click
+    window.location.href = `https://github.com/${owner}/${repo}/settings`;
+    return;
+  }
   const csrf = (form.querySelector<HTMLInputElement>('input[name="authenticity_token"]')?.value) || "";
   const ok = await openConfirmDialog({
     title: `Change visibility to ${target}`,
@@ -206,7 +210,10 @@ async function confirmVisibilityChange(owner: string, repo: string, target: stri
 async function confirmArchive(owner: string, repo: string, main: HTMLElement, unarchive: boolean): Promise<void> {
   const form = main.querySelector<HTMLFormElement>(`form[action$="/settings/${unarchive ? "unarchive" : "archive"}"]`)
     || main.querySelector<HTMLFormElement>('form[action$="/settings/archive"]');
-  if (!form) return;
+  if (!form) {
+    window.location.href = `https://github.com/${owner}/${repo}/settings`;
+    return;
+  }
   const csrf = (form.querySelector<HTMLInputElement>('input[name="authenticity_token"]')?.value) || "";
   const ok = await openConfirmDialog({
     title: unarchive ? "Unarchive repository" : "Archive repository",
@@ -223,7 +230,10 @@ async function confirmArchive(owner: string, repo: string, main: HTMLElement, un
 
 async function confirmDelete(owner: string, repo: string, main: HTMLElement): Promise<void> {
   const form = main.querySelector<HTMLFormElement>('form[action$="/settings/delete"]');
-  if (!form) return;
+  if (!form) {
+    window.location.href = `https://github.com/${owner}/${repo}/settings`;
+    return;
+  }
   const csrf = (form.querySelector<HTMLInputElement>('input[name="authenticity_token"]')?.value) || "";
   const ok = await openConfirmDialog({
     title: "Delete repository",
