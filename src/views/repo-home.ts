@@ -13,11 +13,16 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
-  root.innerHTML = renderShell(overview);
+  root.innerHTML = overview.isEmpty ? renderEmptyShell(overview) : renderShell(overview);
   adoptBodyRoot(root, ".oldgh-repo-header");
 
   bindCloneTabs(root);
   bindCopyButtons(root);
+
+  // an empty repo has no tree/commits/languages to hydrate — the quick-setup
+  // panel is fully rendered up front.
+  if (overview.isEmpty) return;
+
   bindBranchPicker(root, { owner, repo, branch: overview.branch });
 
   void hydrateTreeTable(root, {
@@ -30,6 +35,45 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
   void hydrateLanguagesBar(root, owner, repo);
   void hydrateLatestCommit(root, { owner, repo, branch: overview.branch });
   void hydrateRepoNumbers(root, owner, repo);
+}
+
+// brand-new repo with no commits: 2013 "Quick setup" panel — clone box + the
+// git push instructions, instead of the scary generic adapter error.
+function renderEmptyShell(o: RepoOverview): string {
+  const httpsUrl = o.clone.https ?? `https://github.com/${o.owner}/${o.repo}.git`;
+  const sshUrl = o.clone.ssh ?? `git@github.com:${o.owner}/${o.repo}.git`;
+  const createCmds = [
+    "echo \"# " + o.repo + "\" >> README.md",
+    "git init",
+    "git add README.md",
+    'git commit -m "first commit"',
+    `git branch -M ${o.branch}`,
+    `git remote add origin ${httpsUrl}`,
+    `git push -u origin ${o.branch}`,
+  ].join("\n");
+  const existingCmds = [
+    `git remote add origin ${httpsUrl}`,
+    `git branch -M ${o.branch}`,
+    `git push -u origin ${o.branch}`,
+  ].join("\n");
+  return `
+    <div class="oldgh-page">
+      <div class="oldgh-quick-setup">
+        <h2 class="oldgh-quick-setup__title">Quick setup — if you've done this kind of thing before</h2>
+        ${renderCloneBox(o)}
+        <p class="oldgh-quick-setup__hint">Get started by <a href="https://docs.github.com/articles/creating-a-new-repository" rel="noopener">creating a new file</a> or pushing an existing repository from the command line.</p>
+        <section class="oldgh-quick-setup__block">
+          <h3>…or create a new repository on the command line</h3>
+          <pre class="oldgh-quick-setup__cmds"><code>${escapeText(createCmds)}</code></pre>
+        </section>
+        <section class="oldgh-quick-setup__block">
+          <h3>…or push an existing repository from the command line</h3>
+          <pre class="oldgh-quick-setup__cmds"><code>${escapeText(existingCmds)}</code></pre>
+        </section>
+        <p class="oldgh-quick-setup__ssh">SSH: <code>${escapeText(sshUrl)}</code></p>
+      </div>
+    </div>
+  `;
 }
 
 // 2013 GitHub's signature "numbers summary" strip: commits / branches /

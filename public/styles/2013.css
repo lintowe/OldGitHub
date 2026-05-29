@@ -950,6 +950,56 @@ html[data-oldgh-host="gist"] .FormControl-input {
   padding-bottom: 40px;
 }
 
+/* empty-repo quick-setup panel */
+.oldgh-quick-setup {
+  margin-top: 18px;
+  max-width: 760px;
+}
+.oldgh-quick-setup__title {
+  margin: 0 0 14px;
+  font-size: var(--gh-size-h2);
+  font-weight: 300;
+  color: var(--gh-fg);
+}
+.oldgh-quick-setup__hint {
+  margin: 14px 0 22px;
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-md);
+}
+.oldgh-quick-setup__block {
+  margin: 0 0 20px;
+}
+.oldgh-quick-setup__block h3 {
+  margin: 0 0 8px;
+  font-size: var(--gh-size-md);
+  font-weight: bold;
+  color: var(--gh-fg-muted);
+}
+.oldgh-quick-setup__cmds {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-sm);
+  line-height: 1.6;
+  color: var(--gh-fg);
+  overflow-x: auto;
+  white-space: pre;
+}
+.oldgh-quick-setup__ssh {
+  font-size: var(--gh-size-sm);
+  color: var(--gh-fg-muted);
+}
+.oldgh-quick-setup__ssh code {
+  font-family: var(--gh-font-mono);
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  padding: 1px 6px;
+  border-radius: var(--gh-radius);
+}
+
 /* 2013 numbers-summary strip — commits / branches / releases / contributors */
 .oldgh-repo-numbers {
   list-style: none;

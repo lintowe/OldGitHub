@@ -28,6 +28,7 @@ export type RepoOverview = {
   tree: TreeItem[];
   readme: ReadmeFile | null;
   clone: CloneUrls;
+  isEmpty?: boolean;
 };
 
 export type CommitInfo = {
@@ -306,12 +307,18 @@ export async function getRepoOverview(owner: string, repo: string): Promise<Repo
   const route = read<{ payload?: unknown }>(payload, "payload");
   const routeData = read<{ codeViewRepoRoute?: unknown }>(route, "codeViewRepoRoute");
   if (!routeData) {
+    // a brand-new repo with no commits has no tree route. before treating this
+    // as a failure, check whether it's simply empty and show a quick-setup view.
+    const empty = await detectEmptyRepo(owner, repo);
+    if (empty) return emptyOverview(owner, repo, empty.branch);
     throw new AdapterFailure("getRepoOverview", "missing codeViewRepoRoute in payload");
   }
 
   const refInfo = read<{ name?: unknown }>(routeData, "refInfo");
   const branch = typeof refInfo?.name === "string" ? refInfo.name : null;
   if (!branch) {
+    const empty = await detectEmptyRepo(owner, repo);
+    if (empty) return emptyOverview(owner, repo, empty.branch);
     throw new AdapterFailure("getRepoOverview", "missing refInfo.name");
   }
 
@@ -324,6 +331,53 @@ export async function getRepoOverview(owner: string, repo: string): Promise<Repo
   const readme = readReadme(overview);
 
   return { owner, repo, branch, commitCount, tree, readme, clone };
+}
+
+// the commits API returns 409 "Git Repository is empty" for a repo with no
+// commits — the unambiguous empty-repo signal. resolve the default branch so
+// the quick-setup instructions name the right branch.
+async function detectEmptyRepo(owner: string, repo: string): Promise<{ branch: string } | null> {
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`,
+      { credentials: "omit", headers: { Accept: "application/vnd.github+json" } },
+    );
+    if (res.status !== 409) return null;
+    let branch = "main";
+    try {
+      const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        credentials: "omit",
+        headers: { Accept: "application/vnd.github+json" },
+      });
+      if (repoRes.ok) {
+        const data = (await repoRes.json()) as { default_branch?: unknown };
+        if (typeof data.default_branch === "string") branch = data.default_branch;
+      }
+    } catch {
+      // keep the "main" default
+    }
+    return { branch };
+  } catch {
+    return null;
+  }
+}
+
+function emptyOverview(owner: string, repo: string, branch: string): RepoOverview {
+  return {
+    owner,
+    repo,
+    branch,
+    commitCount: null,
+    tree: [],
+    readme: null,
+    clone: {
+      https: `https://github.com/${owner}/${repo}.git`,
+      ssh: `git@github.com:${owner}/${repo}.git`,
+      ghCli: `gh repo clone ${owner}/${repo}`,
+      zip: null,
+    },
+    isEmpty: true,
+  };
 }
 
 export async function getTreeCommitInfo(
