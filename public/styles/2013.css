@@ -905,7 +905,7 @@ html[data-oldgh-host="gist"] .labels .label {
 }
 /* buttons inside the native gist body — match our 2013 pill */
 html[data-oldgh-host="gist"] .btn,
-html[data-oldgh-host="gist"] [class*="prc-Button-"] {
+html[data-oldgh-host="gist"] [class*="prc-Button-ButtonBase"] {
   background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
   border: 1px solid var(--gh-btn-border);
   border-radius: var(--gh-radius);
@@ -4167,10 +4167,10 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 .oldgh-section__content .btn,
 .oldgh-section__content .Button,
 .oldgh-section__content button.Button,
-.oldgh-section__content [class*="prc-Button-"],
+.oldgh-section__content [class*="prc-Button-ButtonBase"],
 .oldgh-issue__subtab .btn,
 .oldgh-issue__subtab .Button,
-.oldgh-issue__subtab [class*="prc-Button-"] {
+.oldgh-issue__subtab [class*="prc-Button-ButtonBase"] {
   background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
   border: 1px solid var(--gh-btn-border) !important;
   border-radius: var(--gh-radius) !important;
@@ -4185,13 +4185,13 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 }
 [data-oldgh-theme="dark"] .oldgh-section__content .btn,
 [data-oldgh-theme="dark"] .oldgh-section__content .Button,
-[data-oldgh-theme="dark"] .oldgh-section__content [class*="prc-Button-"],
-[data-oldgh-theme="dark"] .oldgh-issue__subtab [class*="prc-Button-"] {
+[data-oldgh-theme="dark"] .oldgh-section__content [class*="prc-Button-ButtonBase"],
+[data-oldgh-theme="dark"] .oldgh-issue__subtab [class*="prc-Button-ButtonBase"] {
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
 .oldgh-section__content .btn-primary,
 .oldgh-section__content .Button--primary,
-.oldgh-section__content [class*="prc-Button-Button-"][data-variant="primary"] {
+.oldgh-section__content [class*="prc-Button-ButtonBase"][data-variant="primary"] {
   background: linear-gradient(to bottom, var(--gh-btn-primary-bg-top), var(--gh-btn-primary-bg-bottom)) !important;
   border-color: var(--gh-btn-primary-border) !important;
   color: var(--gh-btn-primary-fg) !important;
@@ -4346,8 +4346,8 @@ html[data-oldgh-theme="dark"] .oldgh-issue__subtab .blob-code-deletion { backgro
    rules. All colors via --gh-* so light+dark adapt. */
 
 /* buttons */
-.oldgh-account-settings__native [class*="prc-Button-"],
-.oldgh-settings__native [class*="prc-Button-"] {
+.oldgh-account-settings__native [class*="prc-Button-ButtonBase"],
+.oldgh-settings__native [class*="prc-Button-ButtonBase"] {
   background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
   border: 1px solid var(--gh-btn-border) !important;
   border-radius: var(--gh-radius) !important;
@@ -4359,26 +4359,26 @@ html[data-oldgh-theme="dark"] .oldgh-issue__subtab .blob-code-deletion { backgro
   font-weight: bold;
   min-height: unset !important;
 }
-[data-oldgh-theme="dark"] .oldgh-account-settings__native [class*="prc-Button-"],
-[data-oldgh-theme="dark"] .oldgh-settings__native [class*="prc-Button-"] {
+[data-oldgh-theme="dark"] .oldgh-account-settings__native [class*="prc-Button-ButtonBase"],
+[data-oldgh-theme="dark"] .oldgh-settings__native [class*="prc-Button-ButtonBase"] {
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
-.oldgh-account-settings__native [class*="prc-Button-"][data-variant="primary"],
-.oldgh-settings__native [class*="prc-Button-"][data-variant="primary"] {
+.oldgh-account-settings__native [class*="prc-Button-ButtonBase"][data-variant="primary"],
+.oldgh-settings__native [class*="prc-Button-ButtonBase"][data-variant="primary"] {
   background: linear-gradient(to bottom, var(--gh-btn-primary-bg-top), var(--gh-btn-primary-bg-bottom)) !important;
   border-color: var(--gh-btn-primary-border) !important;
   color: var(--gh-btn-primary-fg) !important;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
-.oldgh-account-settings__native [class*="prc-Button-"][data-variant="danger"],
-.oldgh-settings__native [class*="prc-Button-"][data-variant="danger"] {
+.oldgh-account-settings__native [class*="prc-Button-ButtonBase"][data-variant="danger"],
+.oldgh-settings__native [class*="prc-Button-ButtonBase"][data-variant="danger"] {
   color: #fff !important;
   background: linear-gradient(to bottom, #d75147, #ad3a30) !important;
   border-color: #8a2c25 !important;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
 }
-.oldgh-account-settings__native [class*="prc-Button-"][data-variant="invisible"],
-.oldgh-settings__native [class*="prc-Button-"][data-variant="invisible"] {
+.oldgh-account-settings__native [class*="prc-Button-ButtonBase"][data-variant="invisible"],
+.oldgh-settings__native [class*="prc-Button-ButtonBase"][data-variant="invisible"] {
   background: none !important;
   border-color: transparent !important;
   box-shadow: none !important;
@@ -4629,13 +4629,13 @@ html[data-oldgh-theme="dark"] .oldgh-issue__subtab .blob-code-deletion { backgro
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08) !important;
 }
 .oldgh-account-settings__native [class*="prc-Select-"],
-.oldgh-account-settings__native button[aria-haspopup="true"][class*="prc-Button-"],
+.oldgh-account-settings__native button[aria-haspopup="true"][class*="prc-Button-ButtonBase"],
 .oldgh-settings__native [class*="prc-Select-"],
-.oldgh-settings__native button[aria-haspopup="true"][class*="prc-Button-"],
+.oldgh-settings__native button[aria-haspopup="true"][class*="prc-Button-ButtonBase"],
 .oldgh-section__content [class*="prc-Select-"],
-.oldgh-section__content button[aria-haspopup][class*="prc-Button-"],
+.oldgh-section__content button[aria-haspopup][class*="prc-Button-ButtonBase"],
 .oldgh-profile__scraped [class*="prc-Select-"],
-.oldgh-profile__scraped button[aria-haspopup][class*="prc-Button-"] {
+.oldgh-profile__scraped button[aria-haspopup][class*="prc-Button-ButtonBase"] {
   background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
   background-image: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
   border: 1px solid var(--gh-btn-border) !important;
@@ -4675,7 +4675,7 @@ html[data-oldgh-theme="dark"] .oldgh-issue__subtab .blob-code-deletion { backgro
    controls don't show through. */
 .oldgh-profile__scraped .btn,
 .oldgh-profile__scraped .Button,
-.oldgh-profile__scraped [class*="prc-Button-"] {
+.oldgh-profile__scraped [class*="prc-Button-ButtonBase"] {
   background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
   border: 1px solid var(--gh-btn-border) !important;
   border-radius: var(--gh-radius) !important;
