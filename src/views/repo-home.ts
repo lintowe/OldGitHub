@@ -97,7 +97,10 @@ async function hydrateLatestCommit(
   if (!slot) return;
   try {
     const url = `https://api.github.com/repos/${ctx.owner}/${ctx.repo}/commits?sha=${encodeURIComponent(ctx.branch)}&per_page=1`;
-    const res = await fetch(url, { credentials: "include" });
+    // omit, not include: api.github.com returns Access-Control-Allow-Origin:*,
+    // which the browser rejects for a credentialed request — include throws on
+    // every repo. anon works for public repos; private repos just skip the ribbon.
+    const res = await fetch(url, { credentials: "omit" });
     if (!res.ok) return;
     const arr = (await res.json()) as unknown;
     if (!Array.isArray(arr) || arr.length === 0) return;
@@ -376,7 +379,9 @@ async function loadBranches(list: HTMLUListElement | null, ctx: { owner: string;
   let names = branchCache.get(key);
   if (!names) {
     try {
-      const res = await fetch(`https://api.github.com/repos/${ctx.owner}/${ctx.repo}/branches?per_page=100`, { credentials: "include" });
+      // omit, not include — api.github.com sends ACAO:* which fails a
+      // credentialed CORS request; include threw and the picker never loaded
+      const res = await fetch(`https://api.github.com/repos/${ctx.owner}/${ctx.repo}/branches?per_page=100`, { credentials: "omit" });
       if (!res.ok) throw new Error(`branches ${res.status}`);
       const data = await res.json() as Array<{ name: string }>;
       names = data.map((b) => b.name);
