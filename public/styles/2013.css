@@ -2368,14 +2368,14 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ccc;
+  background: var(--gh-border-strong);
 }
 .oldgh-lang-dot {
   display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ccc;
+  background: var(--gh-border-strong);
   margin-right: 4px;
   vertical-align: middle;
 }
@@ -2563,16 +2563,19 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-legend-cell[data-level="4
   rx: 2;
   ry: 2;
 }
-.oldgh-profile__contribs-graph [data-level="0"] { background: #eeeeee; fill: #eeeeee; }
-.oldgh-profile__contribs-graph [data-level="1"] { background: #d6e685; fill: #d6e685; }
-.oldgh-profile__contribs-graph [data-level="2"] { background: #8cc665; fill: #8cc665; }
-.oldgh-profile__contribs-graph [data-level="3"] { background: #44a340; fill: #44a340; }
-.oldgh-profile__contribs-graph [data-level="4"] { background: #1e6823; fill: #1e6823; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="0"] { background: #2a2a2a; fill: #2a2a2a; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="1"] { background: #0e4429; fill: #0e4429; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="2"] { background: #006d32; fill: #006d32; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="3"] { background: #26a641; fill: #26a641; }
-html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="4"] { background: #39d353; fill: #39d353; }
+/* !important so the 2013 palette beats any inline background-color/fill that
+   GitHub ships on the scraped contribution cells (the markup is injected
+   verbatim, so without this an inline modern-green style wins) */
+.oldgh-profile__contribs-graph [data-level="0"] { background: #eeeeee !important; fill: #eeeeee !important; }
+.oldgh-profile__contribs-graph [data-level="1"] { background: #d6e685 !important; fill: #d6e685 !important; }
+.oldgh-profile__contribs-graph [data-level="2"] { background: #8cc665 !important; fill: #8cc665 !important; }
+.oldgh-profile__contribs-graph [data-level="3"] { background: #44a340 !important; fill: #44a340 !important; }
+.oldgh-profile__contribs-graph [data-level="4"] { background: #1e6823 !important; fill: #1e6823 !important; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="0"] { background: #2a2a2a !important; fill: #2a2a2a !important; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="1"] { background: #0e4429 !important; fill: #0e4429 !important; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="2"] { background: #006d32 !important; fill: #006d32 !important; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="3"] { background: #26a641 !important; fill: #26a641 !important; }
+html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph [data-level="4"] { background: #39d353 !important; fill: #39d353 !important; }
 /* if GH ships a parallel <svg> next to the <table>, hide the svg so we
    don't show both representations. tables come first in the markup. */
 .oldgh-profile__contribs-graph table ~ svg {
@@ -2878,7 +2881,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 .oldgh-issues__label {
   display: inline-block;
   padding: 1px 7px;
-  border-radius: 10px;
+  border-radius: var(--gh-radius);
   font-size: 11px;
   font-weight: bold;
   line-height: 1.5;
@@ -4048,7 +4051,7 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 .oldgh-profile__scraped .UnderlineNav-item[aria-current] {
   color: var(--gh-fg);
   font-weight: bold;
-  border-bottom: 2px solid #e36209;
+  border-bottom: 2px solid var(--gh-link);
 }
 
 /* Avatars retain their roundness in 2013 we used border-radius:3px instead */
@@ -4066,6 +4069,32 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 .oldgh-issue__subtab [data-component="UpgradeBanner"] {
   display: none;
 }
+
+/* Scraped unified-diff tables (private-repo PR/issue fallback). GitHub ships
+   light-mode green/red hex inline, which is unreadable on the dark page; force
+   token-based backgrounds so both themes read correctly. */
+.oldgh-section__content .diff-table,
+.oldgh-section__content .blob-code,
+.oldgh-section__content .blob-num,
+.oldgh-issue__subtab .diff-table,
+.oldgh-issue__subtab .blob-code,
+.oldgh-issue__subtab .blob-num {
+  background: var(--gh-bg-elev) !important;
+  color: var(--gh-fg) !important;
+  border-color: var(--gh-border-faint) !important;
+}
+.oldgh-section__content .blob-num,
+.oldgh-issue__subtab .blob-num { color: var(--gh-fg-faint) !important; }
+.oldgh-section__content .blob-code-addition,
+.oldgh-issue__subtab .blob-code-addition { background: rgba(108, 198, 68, 0.12) !important; }
+.oldgh-section__content .blob-code-deletion,
+.oldgh-issue__subtab .blob-code-deletion { background: rgba(189, 44, 0, 0.12) !important; }
+html[data-oldgh-theme="dark"] .oldgh-section__content .blob-code-addition,
+html[data-oldgh-theme="dark"] .oldgh-issue__subtab .blob-code-addition { background: rgba(126, 231, 135, 0.10) !important; }
+html[data-oldgh-theme="dark"] .oldgh-section__content .blob-code-deletion,
+html[data-oldgh-theme="dark"] .oldgh-issue__subtab .blob-code-deletion { background: rgba(255, 123, 114, 0.12) !important; }
+.oldgh-section__content .blob-code-inner,
+.oldgh-issue__subtab .blob-code-inner { color: var(--gh-fg) !important; }
 
 /* ─── Settings: full modern-Primer (prc-*) reskin ──────────────── */
 /* The /settings/* and /:owner/:repo/settings/* pages are pure Primer
@@ -4384,7 +4413,7 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 }
 .oldgh-dash__feed-tabs li.is-active a {
   color: var(--gh-fg);
-  border-bottom-color: #e36209;
+  border-bottom-color: var(--gh-link);
   font-weight: bold;
 }
 .oldgh-dash__feed-tabs .octicon {
@@ -5139,16 +5168,15 @@ html[data-oldgh-theme="dark"] .oldgh-search__tag--warn {
   margin-right: 6px;
   padding: 1px 8px;
   font-size: 11px;
-  border: 1px solid #d1e3f5;
+  border: 1px solid rgba(65, 131, 196, 0.30);
   border-radius: 999px;
-  background: #f1f8ff;
-  color: #0366d6;
+  background: rgba(65, 131, 196, 0.08);
+  color: var(--gh-link);
 }
-.oldgh-search__topic:hover { background: #e1efff; text-decoration: none; }
+.oldgh-search__topic:hover { background: rgba(65, 131, 196, 0.16); text-decoration: none; }
 html[data-oldgh-theme="dark"] .oldgh-search__topic {
   background: rgba(106, 169, 224, 0.12);
   border-color: rgba(106, 169, 224, 0.35);
-  color: var(--gh-link);
 }
 html[data-oldgh-theme="dark"] .oldgh-search__topic:hover {
   background: rgba(106, 169, 224, 0.22);
@@ -6264,6 +6292,7 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
   border-top: none;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+  margin-top: 0;
 }
 .oldgh-latest-commit {
   display: flex;
@@ -6340,6 +6369,9 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
   display: block;
   height: 100%;
 }
+.oldgh-repo-home__lang-seg--other {
+  background: var(--gh-border-strong);
+}
 .oldgh-repo-home__lang-labels {
   margin-top: 6px;
   display: flex;
@@ -6363,6 +6395,9 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
   height: 10px;
   border-radius: 50%;
   border: 1px solid rgba(0,0,0,0.12);
+}
+.oldgh-repo-home__lang-dot--other {
+  background: var(--gh-border-strong);
 }
 
 /* Hovercards */
@@ -9281,7 +9316,8 @@ html[data-oldgh-theme="dark"] .oldgh-trending__momentum {
 }
 .oldgh-trending__dev-row:last-child { border-bottom: 0; }
 .oldgh-trending__dev-avatar img {
-  border-radius: 50%;
+  border-radius: 3px;
+  border: 1px solid var(--gh-border);
   display: block;
 }
 .oldgh-trending__dev-main {

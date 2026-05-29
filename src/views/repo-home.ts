@@ -124,12 +124,12 @@ function renderLanguageBar(langs: Array<{ name: string; bytes: number; percent: 
   const top = langs.slice(0, 8).map((l) => ({ ...l, display: canonicalLanguageName(l.name) }));
   const restPercent = langs.slice(8).reduce((s, l) => s + l.percent, 0);
   const segs = top.map((l) => `<span class="oldgh-repo-home__lang-seg" style="width:${l.percent.toFixed(2)}%;background:${languageColor(l.name)}" title="${escapeAttr(l.display)} ${l.percent.toFixed(1)}%"></span>`).join("");
-  const otherSeg = restPercent > 0.1 ? `<span class="oldgh-repo-home__lang-seg" style="width:${restPercent.toFixed(2)}%;background:#ccc" title="Other ${restPercent.toFixed(1)}%"></span>` : "";
+  const otherSeg = restPercent > 0.1 ? `<span class="oldgh-repo-home__lang-seg oldgh-repo-home__lang-seg--other" style="width:${restPercent.toFixed(2)}%" title="Other ${restPercent.toFixed(1)}%"></span>` : "";
   const labels = top.map((l) => `<span class="oldgh-repo-home__lang-label"><span class="oldgh-repo-home__lang-dot" style="background:${languageColor(l.name)}"></span>${escapeText(l.display)} <strong>${l.percent.toFixed(1)}%</strong></span>`).join(" ");
   return `
     <div class="oldgh-repo-home__langs">
       <div class="oldgh-repo-home__lang-bar">${segs}${otherSeg}</div>
-      <div class="oldgh-repo-home__lang-labels">${labels}${restPercent > 0.1 ? ` <span class="oldgh-repo-home__lang-label"><span class="oldgh-repo-home__lang-dot" style="background:#ccc"></span>Other <strong>${restPercent.toFixed(1)}%</strong></span>` : ""}</div>
+      <div class="oldgh-repo-home__lang-labels">${labels}${restPercent > 0.1 ? ` <span class="oldgh-repo-home__lang-label"><span class="oldgh-repo-home__lang-dot oldgh-repo-home__lang-dot--other"></span>Other <strong>${restPercent.toFixed(1)}%</strong></span>` : ""}</div>
     </div>
   `;
 }

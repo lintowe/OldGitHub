@@ -1,4 +1,5 @@
 import { octicon } from "@/icons";
+import { languageColor as languageColorFor } from "@/util/language-color";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-explore";
@@ -238,7 +239,7 @@ function renderRepos(items: TrendingRepo[]): string {
           </div>
           ${r.description ? `<p class="oldgh-explore__repo-desc">${escapeText(r.description)}</p>` : ""}
           <div class="oldgh-explore__repo-meta">
-            ${r.language ? `<span><span class="oldgh-search__lang-dot" style="background:${r.languageColor || "#ccc"}"></span>${escapeText(r.language)}</span>` : ""}
+            ${r.language ? `<span><span class="oldgh-search__lang-dot" style="background:${r.languageColor || languageColorFor(r.language)}"></span>${escapeText(r.language)}</span>` : ""}
             <span>${octicon("star", { size: 12 })} ${formatCount(r.stars)}</span>
           </div>
         </li>
