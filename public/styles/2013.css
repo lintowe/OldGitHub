@@ -1281,6 +1281,10 @@ html[data-oldgh-theme="dark"] .oldgh-branch-picker__panel {
   padding: 0 8px;
   height: 28px;
 }
+/* copy-success: 2013 showed a green check, instant 'copied' read */
+.oldgh-repo-home__copy.is-copied .octicon {
+  color: var(--gh-state-open);
+}
 .oldgh-repo-home__clone-actions {
   display: flex;
 }
@@ -7327,6 +7331,11 @@ html[data-oldgh-theme="dark"] .oldgh-discussion__answer-head {
   gap: 14px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--gh-border-faint);
+  transition: background-color 80ms ease-out;
+}
+.oldgh-packages__row:hover,
+.oldgh-user-projects__row:hover {
+  background: var(--gh-bg-stripe);
 }
 .oldgh-packages__row:last-child,
 .oldgh-user-projects__row:last-child {

@@ -463,8 +463,10 @@ function bindCopyButtons(root: HTMLElement): void {
     void navigator.clipboard.writeText(text).then(() => {
       const prev = btn.innerHTML;
       btn.innerHTML = octicon("check", { size: 14 });
+      btn.classList.add("is-copied");
       window.setTimeout(() => {
         btn.innerHTML = prev;
+        btn.classList.remove("is-copied");
       }, 1200);
     });
   });
