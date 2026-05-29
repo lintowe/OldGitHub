@@ -1041,6 +1041,66 @@ html[data-oldgh-host="gist"] .FormControl-input {
   color: var(--gh-fg);
 }
 
+/* latest-release callout — quick download from the repo home */
+.oldgh-release-callout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 0 0 14px;
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+  font-size: var(--gh-size-sm);
+}
+.oldgh-release-callout > .octicon {
+  color: var(--gh-state-open);
+  flex-shrink: 0;
+}
+.oldgh-release-callout__label {
+  color: var(--gh-fg-muted);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+.oldgh-release-callout__tag {
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-xs);
+  color: var(--gh-fg);
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border-faint);
+  padding: 1px 6px;
+  border-radius: var(--gh-radius);
+  flex-shrink: 0;
+}
+.oldgh-release-callout__name {
+  color: var(--gh-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+.oldgh-release-callout__pre {
+  flex-shrink: 0;
+  font-size: var(--gh-size-xs);
+  font-weight: bold;
+  color: #b08800;
+  border: 1px solid #d8b658;
+  background: rgba(176, 136, 0, 0.10);
+  border-radius: var(--gh-radius);
+  padding: 0 6px;
+}
+.oldgh-release-callout__time {
+  flex-shrink: 0;
+  color: var(--gh-fg-faint);
+  font-size: var(--gh-size-xs);
+}
+.oldgh-release-callout__dl {
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
 .oldgh-repo-home__topbar {
   display: flex;
   align-items: center;
@@ -10333,10 +10393,12 @@ html[data-oldgh-theme="dark"] .oldgh-actions-run__job-header:hover {
   margin-top: 8px;
 }
 .oldgh-issues__empty-hint {
+  /* inline-block so the parent text-align:center centers the whole block —
+     margin:auto here loses to the higher-specificity ".oldgh-issues__empty p"
+     margin reset, which pins it left. */
+  display: inline-block;
   font-size: 12px;
   max-width: 460px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 /* ======================= */

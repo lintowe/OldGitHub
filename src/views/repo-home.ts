@@ -35,6 +35,94 @@ export async function mountRepoHome(owner: string, repo: string): Promise<void> 
   void hydrateLanguagesBar(root, owner, repo);
   void hydrateLatestCommit(root, { owner, repo, branch: overview.branch });
   void hydrateRepoNumbers(root, owner, repo);
+  void hydrateLatestRelease(root, owner, repo);
+}
+
+type ReleaseAsset = { name: string; url: string; size: number };
+type LatestRelease = {
+  tag: string;
+  name: string;
+  publishedAt: string;
+  htmlUrl: string;
+  isPrerelease: boolean;
+  assets: ReleaseAsset[];
+  zipUrl: string;
+};
+
+// surface the latest release on the repo home with a direct download — without
+// the extension a user can grab a new build from the repo home's release
+// shortcut; we restore that. fetched from the REST releases/latest endpoint;
+// the slot stays empty (no layout shift) when a repo has no releases.
+async function hydrateLatestRelease(root: HTMLElement, owner: string, repo: string): Promise<void> {
+  const slot = root.querySelector<HTMLElement>(".oldgh-repo-home__release-slot");
+  if (!slot) return;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
+      credentials: "omit",
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!res.ok) return;
+    const data = parseLatestRelease(await res.json());
+    if (!data) return;
+    slot.innerHTML = renderLatestRelease(owner, repo, data);
+  } catch (err) {
+    console.debug("[oldgh] latest release fetch failed:", err);
+  }
+}
+
+function parseLatestRelease(raw: unknown): LatestRelease | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const tag = typeof r["tag_name"] === "string" ? (r["tag_name"] as string) : "";
+  if (!tag) return null;
+  const assetsRaw = Array.isArray(r["assets"]) ? (r["assets"] as unknown[]) : [];
+  const assets: ReleaseAsset[] = [];
+  for (const a of assetsRaw) {
+    if (!a || typeof a !== "object") continue;
+    const o = a as Record<string, unknown>;
+    const url = typeof o["browser_download_url"] === "string" ? (o["browser_download_url"] as string) : "";
+    const name = typeof o["name"] === "string" ? (o["name"] as string) : "";
+    if (url && name) assets.push({ name, url, size: typeof o["size"] === "number" ? (o["size"] as number) : 0 });
+  }
+  return {
+    tag,
+    name: typeof r["name"] === "string" && r["name"] ? (r["name"] as string) : tag,
+    publishedAt: typeof r["published_at"] === "string" ? (r["published_at"] as string) : "",
+    htmlUrl: typeof r["html_url"] === "string" ? (r["html_url"] as string) : "",
+    isPrerelease: r["prerelease"] === true,
+    assets,
+    zipUrl: typeof r["zipball_url"] === "string" ? (r["zipball_url"] as string) : "",
+  };
+}
+
+function renderLatestRelease(owner: string, repo: string, rel: LatestRelease): string {
+  const releaseHref = `/${owner}/${repo}/releases/tag/${encodeURIComponent(rel.tag)}`;
+  const time = rel.publishedAt
+    ? `<time class="oldgh-release-callout__time" datetime="${escapeAttr(rel.publishedAt)}" title="${escapeAttr(absoluteTime(rel.publishedAt))}">${escapeText(relativeTime(rel.publishedAt))}</time>`
+    : "";
+  // one binary asset → download it directly; several → go to the release page
+  // where our releases view lists them all; none → offer the source zip.
+  let download: string;
+  if (rel.assets.length === 1) {
+    const a = rel.assets[0]!;
+    download = `<a class="oldgh-btn oldgh-btn--primary oldgh-release-callout__dl" href="${escapeAttr(a.url)}" download>${octicon("cloud-download", { size: 14 })}<span>Download</span></a>`;
+  } else if (rel.assets.length > 1) {
+    download = `<a class="oldgh-btn oldgh-btn--primary oldgh-release-callout__dl" href="${escapeAttr(releaseHref)}">${octicon("cloud-download", { size: 14 })}<span>Download (${rel.assets.length})</span></a>`;
+  } else {
+    download = `<a class="oldgh-btn oldgh-release-callout__dl" href="${escapeAttr(rel.zipUrl || releaseHref)}"${rel.zipUrl ? " download" : ""}>${octicon("cloud-download", { size: 14 })}<span>Source zip</span></a>`;
+  }
+  const pre = rel.isPrerelease ? `<span class="oldgh-release-callout__pre">Pre-release</span>` : "";
+  return `
+    <div class="oldgh-release-callout">
+      ${octicon("tag", { size: 16 })}
+      <span class="oldgh-release-callout__label">Latest release</span>
+      <a class="oldgh-release-callout__tag" href="${escapeAttr(releaseHref)}">${escapeText(rel.tag)}</a>
+      <a class="oldgh-release-callout__name" href="${escapeAttr(releaseHref)}" title="${escapeAttr(rel.name)}">${escapeText(rel.name)}</a>
+      ${pre}
+      ${time}
+      ${download}
+    </div>
+  `;
 }
 
 // brand-new repo with no commits: 2013 "Quick setup" panel — clone box + the
@@ -238,6 +326,7 @@ function renderShell(o: RepoOverview): string {
   return `
     <div class="oldgh-page">
       ${renderNumbersBar(o)}
+      <div class="oldgh-repo-home__release-slot"></div>
       ${renderTopBar(o)}
       <div class="oldgh-repo-home__langs-slot"></div>
       <div class="oldgh-repo-home__latest-slot"></div>
