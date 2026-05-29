@@ -4096,6 +4096,37 @@ html[data-oldgh-theme="dark"] .oldgh-issue__subtab .blob-code-deletion { backgro
 .oldgh-section__content .blob-code-inner,
 .oldgh-issue__subtab .blob-code-inner { color: var(--gh-fg) !important; }
 
+/* Dark-mode readability for scraped fragments: Primer's stylesheet is blocked,
+   so native HTML keeps default-black text and inline light-mode colors that
+   vanish on the dark page. Force a readable foreground, map Primer fg utility
+   classes to tokens, and override inline text colors. */
+[data-oldgh-theme="dark"] .oldgh-section__content,
+[data-oldgh-theme="dark"] .oldgh-issue__subtab,
+[data-oldgh-theme="dark"] .oldgh-profile__scraped {
+  color: var(--gh-fg);
+}
+[data-oldgh-theme="dark"] .oldgh-section__content .color-fg-default,
+[data-oldgh-theme="dark"] .oldgh-section__content .color-fg-emphasis,
+[data-oldgh-theme="dark"] .oldgh-issue__subtab .color-fg-default,
+[data-oldgh-theme="dark"] .oldgh-profile__scraped .color-fg-default {
+  color: var(--gh-fg) !important;
+}
+[data-oldgh-theme="dark"] .oldgh-section__content .color-fg-muted,
+[data-oldgh-theme="dark"] .oldgh-section__content .color-fg-subtle,
+[data-oldgh-theme="dark"] .oldgh-section__content .text-gray,
+[data-oldgh-theme="dark"] .oldgh-section__content .text-gray-light,
+[data-oldgh-theme="dark"] .oldgh-issue__subtab .color-fg-muted,
+[data-oldgh-theme="dark"] .oldgh-profile__scraped .color-fg-muted {
+  color: var(--gh-fg-muted) !important;
+}
+[data-oldgh-theme="dark"] .oldgh-section__content [style*="color:#"],
+[data-oldgh-theme="dark"] .oldgh-section__content [style*="color: #"],
+[data-oldgh-theme="dark"] .oldgh-section__content [style*="color: rgb"],
+[data-oldgh-theme="dark"] .oldgh-issue__subtab [style*="color:#"],
+[data-oldgh-theme="dark"] .oldgh-issue__subtab [style*="color: #"] {
+  color: var(--gh-fg) !important;
+}
+
 /* ─── Settings: full modern-Primer (prc-*) reskin ──────────────── */
 /* The /settings/* and /:owner/:repo/settings/* pages are pure Primer
    React: buttons/inputs/toggles/cards/banners all carry hashed prc-*
@@ -6262,7 +6293,7 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
 .oldgh-repo-list__milestone-bar span {
   display: block;
   height: 100%;
-  background: linear-gradient(to bottom, #6cc644, #4a934a);
+  background: linear-gradient(to bottom, var(--gh-state-open), #4a934a);
 }
 .oldgh-repo-list__milestone-meta {
   display: flex;
@@ -6280,7 +6311,8 @@ html[data-oldgh-theme="dark"] .oldgh-pulse__split-num--closed { color: #ff7b72; 
   color: var(--gh-fg-muted);
 }
 .oldgh-repo-list__loading,
-.oldgh-repo-list__empty {
+.oldgh-repo-list__empty,
+.oldgh-section__loading {
   padding: 36px 24px;
   text-align: center;
   color: var(--gh-fg-faint);
@@ -6515,10 +6547,10 @@ html[data-oldgh-theme="dark"] .oldgh-hovercard__chip--warn {
   color: #fff;
   margin-top: 2px;
 }
-.oldgh-hovercard__state--open { background: #6cc644; }
-.oldgh-hovercard__state--closed { background: #bd2c00; }
-.oldgh-hovercard__state--merged { background: #6e5494; }
-.oldgh-hovercard__state--draft { background: #6a737d; }
+.oldgh-hovercard__state--open { background: var(--gh-state-open); }
+.oldgh-hovercard__state--closed { background: var(--gh-state-closed); }
+.oldgh-hovercard__state--merged { background: var(--gh-state-merged); }
+.oldgh-hovercard__state--draft { background: var(--gh-fg-muted); }
 .oldgh-hovercard__issue-title {
   display: block;
   font-size: var(--gh-size-lg);
@@ -10160,10 +10192,10 @@ html[data-oldgh-theme="dark"] .oldgh-profile__readme .oldgh-profile__section-tit
   left: 0;
   height: 2px;
   width: 0;
-  background: #4183c4;
+  background: #e36209;
   z-index: 99999;
   pointer-events: none;
-  box-shadow: 0 0 6px rgba(65, 131, 196, 0.6);
+  box-shadow: 0 0 6px rgba(227, 98, 9, 0.6);
   transition: width 280ms ease-out, opacity 200ms ease-out;
   opacity: 0;
 }

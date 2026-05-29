@@ -12,21 +12,28 @@ export async function mountRepoSection(
   subPath: string,
   titleFallback: string,
 ): Promise<void> {
-  const view = await scrapeSection(owner, repo, subPath, { titleFallback });
-
+  // adopt a themed shell with a loading slot first so the stale previous body
+  // is swapped out instantly — otherwise the old page sits under the newly
+  // active tab for the whole scrape. then fill the content slot when ready.
   const root = document.createElement("div");
   root.className = `${ROOT_CLASS} ${ROOT_CLASS}--${kind}`;
   root.innerHTML = `
     <div class="oldgh-page">
       <header class="oldgh-section__header">
-        <h1>${escapeText(view.title)}</h1>
+        <h1>${escapeText(titleFallback)}</h1>
       </header>
       <div class="oldgh-section__content">
-        ${view.contentHtml}
+        <div class="oldgh-section__loading">Loading&hellip;</div>
       </div>
     </div>
   `;
   adoptBodyRoot(root, ".oldgh-repo-header");
+
+  const view = await scrapeSection(owner, repo, subPath, { titleFallback });
+  const h1 = root.querySelector<HTMLElement>(".oldgh-section__header h1");
+  if (h1) h1.textContent = view.title;
+  const content = root.querySelector<HTMLElement>(".oldgh-section__content");
+  if (content) content.innerHTML = view.contentHtml;
 }
 
 export function unmountRepoSection(): void {

@@ -212,9 +212,10 @@ async function renderLabels(owner: string, repo: string, page: number): Promise<
     const name = readString(r, "name") ?? "";
     const color = (readString(r, "color") ?? "ccc").replace(/^#/, "");
     const desc = readString(r, "description") ?? "";
+    const labelQuery = new URLSearchParams({ q: `is:open label:"${name}"` }).toString();
     return `
       <li class="oldgh-repo-list__label-row">
-        <a class="oldgh-repo-list__label" href="/${escapeAttr(owner)}/${escapeAttr(repo)}/issues?q=is:open+label:&quot;${encodeURIComponent(name)}&quot;" style="background:#${escapeAttr(color)};color:${labelTextColor(color)};">${escapeText(name)}</a>
+        <a class="oldgh-repo-list__label" href="/${escapeAttr(owner)}/${escapeAttr(repo)}/issues?${escapeAttr(labelQuery)}" style="background:#${escapeAttr(color)};color:${labelTextColor(color)};">${escapeText(name)}</a>
         ${desc ? `<span class="oldgh-repo-list__label-desc">${escapeText(desc)}</span>` : ""}
       </li>
     `;
