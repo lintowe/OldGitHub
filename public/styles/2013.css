@@ -460,7 +460,7 @@ html[data-oldgh-theme="dark"] .oldgh-header__search-input {
   position: absolute;
   top: 100%;
   right: 0;
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   padding: 4px 0;
   min-width: 180px;
   list-style: none;
@@ -470,6 +470,19 @@ html[data-oldgh-theme="dark"] .oldgh-header__search-input {
   border-radius: var(--gh-radius);
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
   z-index: 100;
+}
+/* 2013 dropdown pointer notch joining the menu to its trigger (right-aligned) */
+.oldgh-header__menu-list::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  background: var(--gh-bg-elev);
+  border-top: 1px solid var(--gh-border);
+  border-left: 1px solid var(--gh-border);
+  transform: rotate(45deg);
 }
 .oldgh-header__menu-list a,
 .oldgh-header__menu-list button {
@@ -703,6 +716,7 @@ html[data-oldgh-theme="dark"] .oldgh-repo-header__archive-banner .octicon {
   border-bottom-right-radius: 0;
 }
 .oldgh-repo-header__action-count {
+  position: relative;
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
@@ -722,10 +736,26 @@ html[data-oldgh-theme="dark"] .oldgh-repo-header__archive-banner .octicon {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
   box-shadow: var(--gh-shadow-inset);
 }
+/* 2013 count-bubble tail: a small triangle notch pointing left into the count */
+.oldgh-repo-header__action-count::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  margin-top: -4px;
+  width: 7px;
+  height: 7px;
+  background: var(--gh-btn-bg-top);
+  border-left: 1px solid var(--gh-btn-border);
+  border-bottom: 1px solid var(--gh-btn-border);
+  transform: rotate(45deg);
+}
 [data-oldgh-theme="dark"] .oldgh-repo-header__action-count {
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
-.oldgh-repo-header__action-count:hover {
+/* light both halves of the grouped pill as one unit on hover/active */
+.oldgh-repo-header__action:hover .oldgh-repo-header__action-btn,
+.oldgh-repo-header__action:hover .oldgh-repo-header__action-count {
   background: linear-gradient(
     to bottom,
     var(--gh-btn-bg-top-hover),
@@ -733,6 +763,13 @@ html[data-oldgh-theme="dark"] .oldgh-repo-header__archive-banner .octicon {
   );
   text-decoration: none;
   color: var(--gh-btn-fg);
+}
+.oldgh-repo-header__action:hover .oldgh-repo-header__action-count::before {
+  background: var(--gh-btn-bg-top-hover);
+}
+.oldgh-repo-header__action:active .oldgh-repo-header__action-btn,
+.oldgh-repo-header__action:active .oldgh-repo-header__action-count {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .oldgh-repo-header__action:not(:has(.oldgh-repo-header__action-count)) .oldgh-repo-header__action-btn {
   border-radius: var(--gh-radius);
@@ -1003,18 +1040,18 @@ html[data-oldgh-theme="dark"] .oldgh-branch-picker__panel {
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
 }
 .oldgh-branch-picker__panel::before {
-  /* little triangle pointer pointing back at the button */
+  /* rotated-square notch — one corner becomes the upward point (skew sheared
+     into a parallelogram, which never read as a caret) */
   content: "";
   position: absolute;
-  top: -7px;
+  top: -6px;
   left: 14px;
-  width: 12px;
-  height: 7px;
+  width: 10px;
+  height: 10px;
   background: var(--gh-bg-elev);
   border-top: 1px solid var(--gh-border);
   border-left: 1px solid var(--gh-border);
-  transform: skew(-45deg);
-  border-top-left-radius: 2px;
+  transform: rotate(45deg);
 }
 .oldgh-branch-picker__filter {
   padding: 8px;
@@ -1030,6 +1067,7 @@ html[data-oldgh-theme="dark"] .oldgh-branch-picker__panel {
   border: 1px solid var(--gh-input-border, var(--gh-border));
   border-radius: var(--gh-radius);
   box-sizing: border-box;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
 }
 .oldgh-branch-picker__filter input:focus {
   outline: none;
@@ -1146,6 +1184,10 @@ html[data-oldgh-theme="dark"] .oldgh-branch-picker__panel {
 }
 .oldgh-repo-home__clone-tab:last-child {
   border-right: none;
+}
+.oldgh-repo-home__clone-tab:not([aria-selected="true"]):hover {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top-hover), var(--gh-btn-bg-bottom-hover));
+  color: var(--gh-fg);
 }
 .oldgh-repo-home__clone-tab[aria-selected="true"] {
   background: var(--gh-bg-elev);
@@ -2834,6 +2876,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   background: var(--gh-bg-elev);
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
 }
 .oldgh-issues__new {
   flex-shrink: 0;
@@ -5356,6 +5399,7 @@ html[data-oldgh-theme="dark"] .oldgh-diff__hunk .oldgh-diff__num { background: r
   border-radius: 3px;
   background: var(--gh-bg-elev);
   color: var(--gh-fg);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
 }
 .oldgh-search__layout {
   display: grid;
@@ -7481,11 +7525,11 @@ html[data-oldgh-theme="dark"] .oldgh-collections__hero {
   border-radius: var(--gh-radius);
   box-shadow: var(--gh-shadow-soft);
   overflow: hidden;
-  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  transition: border-color 100ms ease-out, box-shadow 100ms ease-out;
 }
 .oldgh-collections__card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+  border-color: var(--gh-border-strong);
+  box-shadow: var(--gh-shadow-soft);
 }
 .oldgh-collections__card-link {
   display: flex;
@@ -7753,11 +7797,11 @@ html[data-oldgh-theme="dark"] .oldgh-marketplace__hero {
   border-radius: var(--gh-radius);
   box-shadow: var(--gh-shadow-soft);
   overflow: hidden;
-  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  transition: border-color 100ms ease-out, box-shadow 100ms ease-out;
 }
 .oldgh-marketplace__card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+  border-color: var(--gh-border-strong);
+  box-shadow: var(--gh-shadow-soft);
 }
 .oldgh-marketplace__card-link {
   display: flex;
@@ -8337,11 +8381,11 @@ html[data-oldgh-theme="dark"] .oldgh-sponsors__hero {
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
   box-shadow: var(--gh-shadow-soft);
-  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  transition: border-color 100ms ease-out, box-shadow 100ms ease-out;
 }
 .oldgh-sponsors__card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+  border-color: var(--gh-border-strong);
+  box-shadow: var(--gh-shadow-soft);
 }
 .oldgh-sponsors__avatar img {
   border-radius: 4px;
@@ -10298,11 +10342,11 @@ html[data-oldgh-theme="dark"] .oldgh-actions-run__job-header:hover {
   border-radius: var(--gh-radius);
   box-shadow: var(--gh-shadow-soft);
   position: relative;
-  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  transition: border-color 100ms ease-out, box-shadow 100ms ease-out;
 }
 .oldgh-achievements__item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+  border-color: var(--gh-border-strong);
+  box-shadow: var(--gh-shadow-soft);
 }
 .oldgh-achievements__icon-wrap {
   position: relative;
@@ -11674,14 +11718,26 @@ html[data-oldgh="active"] input[type="password"]:focus-visible,
 html[data-oldgh="active"] textarea:focus-visible,
 html[data-oldgh="active"] select:focus-visible {
   outline: none;
-  border-color: var(--gh-link);
-  box-shadow: 0 0 0 3px rgba(65, 131, 196, 0.22);
+  border-color: var(--gh-focus);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075), var(--gh-focus-glow);
 }
 
 html[data-oldgh="active"] .oldgh-header__search-input:focus-visible {
   outline: none;
-  border-color: var(--gh-link);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(65, 131, 196, 0.22);
+  border-color: var(--gh-focus);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06), var(--gh-focus-glow);
+}
+
+/* dropdown menu items (header create/user/theme menus, branch picker list) —
+   keyboard focus reuses the menu's own hover highlight so <a> and <button>
+   items focus identically */
+html[data-oldgh="active"] .oldgh-header__menu-list a:focus-visible,
+html[data-oldgh="active"] .oldgh-header__menu-list button:focus-visible,
+html[data-oldgh="active"] .oldgh-branch-picker__list li a:focus-visible {
+  outline: none;
+  background: var(--gh-link);
+  color: #fff;
+  text-decoration: none;
 }
 
 /* link focus — subtle underline + halo, only on keyboard nav */
@@ -11690,6 +11746,17 @@ html[data-oldgh="active"] a:focus-visible {
   text-decoration: underline;
   box-shadow: 0 0 0 2px rgba(65, 131, 196, 0.28);
   border-radius: 2px;
+}
+
+/* global disabled-button state (2013 faded, no hover, default cursor) */
+html[data-oldgh="active"] .oldgh-btn[disabled],
+html[data-oldgh="active"] .oldgh-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+html[data-oldgh="active"] .oldgh-btn[disabled]:hover,
+html[data-oldgh="active"] .oldgh-btn[aria-disabled="true"]:hover {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
 }
 
 /* Tab hover state — inactive tabs get a hint of the elevated bg so it's
