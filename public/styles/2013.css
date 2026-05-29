@@ -750,18 +750,144 @@ html[data-oldgh-hide-modern-repo-body] .application-main {
   display: none !important;
 }
 
-/* master hide rule — set by dispatcher eagerly to prevent flash during route transitions */
-html[data-oldgh-mounted] .application-main,
-html[data-oldgh-mounted] react-app[app-name="react-code-view"],
-html[data-oldgh-mounted] react-app[app-name="profile"],
-html[data-oldgh-mounted] [data-pjax-container] > main,
-html[data-oldgh-mounted] [data-pjax-container] > .repository-content,
-html[data-oldgh-mounted] turbo-frame#repo-content-turbo-frame,
-html[data-oldgh-mounted] turbo-frame#user-profile-frame-wide,
-html[data-oldgh-mounted] body > .logged-in > footer.footer,
-html[data-oldgh-mounted] body > footer.footer,
-html[data-oldgh-mounted] body > .logged-out > footer.footer {
+/* master hide rule — set by dispatcher eagerly to prevent flash during route transitions.
+   the :not([data-oldgh-host="gist"]) guard is load-bearing: on gist.github.com eagerStyle
+   sets data-oldgh-mounted at document_start and the gist branch keeps it as a passthrough
+   value, so without this guard the native gist body (.application-main) and footer would be
+   hidden forever, leaving our header floating over a blank page. */
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) .application-main,
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) react-app[app-name="react-code-view"],
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) react-app[app-name="profile"],
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) [data-pjax-container] > main,
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) [data-pjax-container] > .repository-content,
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) turbo-frame#repo-content-turbo-frame,
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) turbo-frame#user-profile-frame-wide,
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) body > .logged-in > footer.footer,
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) body > footer.footer,
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) body > .logged-out > footer.footer {
   display: none !important;
+}
+
+/* ============================================================ */
+/* gist.github.com passthrough — re-skin the NATIVE gist body to */
+/* 2013 under our themed header. gist still ships the older       */
+/* Primer-CSS markup (.file/.blob-wrapper/.gist-meta), so these   */
+/* class names are stable. all colors via --gh-* so dark works.   */
+/* the base reset (lines ~98-139) is excluded from gist, so we    */
+/* set the page surface here too.                                 */
+/* ============================================================ */
+html[data-oldgh-host="gist"] body {
+  background: var(--gh-bg) !important;
+  color: var(--gh-fg);
+  font-family: var(--gh-font-sans);
+}
+html[data-oldgh-host="gist"] .application-main,
+html[data-oldgh-host="gist"] main {
+  background: var(--gh-bg);
+}
+html[data-oldgh-host="gist"] a:not(.oldgh-btn):not(.btn) {
+  color: var(--gh-link);
+  text-decoration: none;
+}
+html[data-oldgh-host="gist"] a:not(.oldgh-btn):not(.btn):hover {
+  text-decoration: underline;
+}
+/* gist file box + header */
+html[data-oldgh-host="gist"] .file,
+html[data-oldgh-host="gist"] .Box {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  box-shadow: var(--gh-shadow-soft);
+}
+html[data-oldgh-host="gist"] .file-header,
+html[data-oldgh-host="gist"] .Box-header,
+html[data-oldgh-host="gist"] .gist-blob-name,
+html[data-oldgh-host="gist"] .file-info {
+  background: linear-gradient(to bottom, var(--gh-bg-subtle), var(--gh-bg-stripe));
+  border-bottom: 1px solid var(--gh-border);
+  color: var(--gh-fg);
+  font-family: var(--gh-font-sans);
+}
+/* code body */
+html[data-oldgh-host="gist"] .blob-wrapper,
+html[data-oldgh-host="gist"] .blob-code,
+html[data-oldgh-host="gist"] .blob-num,
+html[data-oldgh-host="gist"] .highlight,
+html[data-oldgh-host="gist"] .highlight pre {
+  background: var(--gh-bg-elev);
+}
+html[data-oldgh-host="gist"] .blob-code,
+html[data-oldgh-host="gist"] .blob-num,
+html[data-oldgh-host="gist"] .blob-wrapper pre,
+html[data-oldgh-host="gist"] .blob-wrapper code,
+html[data-oldgh-host="gist"] .highlight pre {
+  font-family: var(--gh-font-mono);
+  font-size: var(--gh-size-sm);
+}
+html[data-oldgh-host="gist"] .blob-num {
+  color: var(--gh-fg-faint);
+  border-color: var(--gh-border-faint);
+}
+html[data-oldgh-host="gist"] .blob-code-inner {
+  color: var(--gh-fg);
+}
+/* gist meta / header / labels */
+html[data-oldgh-host="gist"] .gist-meta {
+  color: var(--gh-fg-muted);
+  font-size: var(--gh-size-xs);
+}
+html[data-oldgh-host="gist"] .gisthead,
+html[data-oldgh-host="gist"] .gist-header,
+html[data-oldgh-host="gist"] .gist-header-title {
+  color: var(--gh-fg);
+  border-color: var(--gh-border);
+}
+html[data-oldgh-host="gist"] .Label,
+html[data-oldgh-host="gist"] .Counter,
+html[data-oldgh-host="gist"] .labels .label {
+  background: var(--gh-bg-subtle);
+  border: 1px solid var(--gh-border);
+  color: var(--gh-fg-muted);
+  border-radius: var(--gh-radius);
+}
+/* buttons inside the native gist body — match our 2013 pill */
+html[data-oldgh-host="gist"] .btn,
+html[data-oldgh-host="gist"] [class*="prc-Button-"] {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom));
+  border: 1px solid var(--gh-btn-border);
+  border-radius: var(--gh-radius);
+  color: var(--gh-btn-fg);
+}
+/* comments */
+html[data-oldgh-host="gist"] .timeline-comment,
+html[data-oldgh-host="gist"] .comment-body {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  border-radius: var(--gh-radius);
+  color: var(--gh-fg);
+}
+html[data-oldgh-host="gist"] .timeline-comment-header {
+  background: var(--gh-bg-subtle);
+  border-bottom: 1px solid var(--gh-border);
+  color: var(--gh-fg-muted);
+}
+/* revision list / commits */
+html[data-oldgh-host="gist"] .gist-revision,
+html[data-oldgh-host="gist"] .commit {
+  background: var(--gh-bg-elev);
+  border-color: var(--gh-border);
+  color: var(--gh-fg);
+}
+/* form fields (gist edit/new) */
+html[data-oldgh-host="gist"] input[type="text"],
+html[data-oldgh-host="gist"] textarea,
+html[data-oldgh-host="gist"] .form-control,
+html[data-oldgh-host="gist"] .FormControl-input {
+  background: var(--gh-bg-elev);
+  border: 1px solid var(--gh-border);
+  color: var(--gh-fg);
+  border-radius: var(--gh-radius);
 }
 
 .oldgh-repo-home {
@@ -10815,7 +10941,7 @@ html[data-oldgh="active"] ::-moz-selection {
 /* Only render the footer when we're actually mounted — keeps it from
    floating beneath native pages on out-of-scope routes */
 .oldgh-footer { display: none; }
-html[data-oldgh-mounted] .oldgh-footer { display: block; }
+html[data-oldgh-mounted]:not([data-oldgh-host="gist"]) .oldgh-footer { display: block; }
 
 .oldgh-footer__inner {
   max-width: 980px;
