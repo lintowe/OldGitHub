@@ -814,10 +814,14 @@ html[data-oldgh-host="gist"] .Box {
 html[data-oldgh-host="gist"] .file-header,
 html[data-oldgh-host="gist"] .Box-header,
 html[data-oldgh-host="gist"] .gist-blob-name,
-html[data-oldgh-host="gist"] .file-info {
-  background: linear-gradient(to bottom, var(--gh-bg-subtle), var(--gh-bg-stripe));
-  border-bottom: 1px solid var(--gh-border);
-  color: var(--gh-fg);
+html[data-oldgh-host="gist"] .file-info,
+html[data-oldgh-host="gist"] .react-blob-header-edit-and-raw-actions,
+html[data-oldgh-host="gist"] [data-testid="file-header"] {
+  /* !important: on gist.github.com Primer's own stylesheet is live (not blocked),
+     so an equal-specificity native background-color beats us without it. */
+  background: linear-gradient(to bottom, var(--gh-bg-subtle), var(--gh-bg-stripe)) !important;
+  border-bottom: 1px solid var(--gh-border) !important;
+  color: var(--gh-fg) !important;
   font-family: var(--gh-font-sans);
 }
 /* code body */
@@ -4435,6 +4439,247 @@ html[data-oldgh-theme="dark"] .oldgh-issue__subtab .blob-code-deletion { backgro
   box-shadow: none !important;
   background: transparent !important;
   border: 0 !important;
+}
+
+/* ════════════════════════════════════════════════════════════════ */
+/* First-party scraped-content polish: kill the remaining modern      */
+/* Primer tells that bleed through any scraped surface. Scoped to the */
+/* five scrape wrappers. All tokenized for light+dark.                */
+/* ════════════════════════════════════════════════════════════════ */
+
+/* native <select> + modern Select/ActionMenu trigger buttons render as
+   unstyled OS controls / hatched chevrons because Primer CSS is blocked.
+   appearance:none + a clean token caret on real selects; gradient-pill the
+   trigger buttons. This is the fix for the hatched Public-email/Pronouns
+   pickers and any scraped dropdown. */
+.oldgh-account-settings__native select,
+.oldgh-settings__native select,
+.oldgh-section__content select,
+.oldgh-issue__subtab select,
+.oldgh-profile__scraped select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--gh-bg-elev) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23777' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 8px center !important;
+  border: 1px solid var(--gh-border) !important;
+  border-radius: var(--gh-radius) !important;
+  color: var(--gh-fg) !important;
+  padding: 4px 26px 4px 8px !important;
+  font-size: var(--gh-size-md) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
+.oldgh-account-settings__native [class*="prc-Select-"],
+.oldgh-account-settings__native button[aria-haspopup="true"][class*="prc-Button-"],
+.oldgh-settings__native [class*="prc-Select-"],
+.oldgh-settings__native button[aria-haspopup="true"][class*="prc-Button-"],
+.oldgh-section__content [class*="prc-Select-"],
+.oldgh-section__content button[aria-haspopup][class*="prc-Button-"],
+.oldgh-profile__scraped [class*="prc-Select-"],
+.oldgh-profile__scraped button[aria-haspopup][class*="prc-Button-"] {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
+  background-image: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
+  border: 1px solid var(--gh-btn-border) !important;
+  border-radius: var(--gh-radius) !important;
+  color: var(--gh-btn-fg) !important;
+  box-shadow: var(--gh-shadow-inset) !important;
+  padding: 3px 12px !important;
+  font-weight: normal !important;
+}
+
+/* repo-settings feature checkboxes (.form-checkbox .js-toggler-container) leak
+   the JS-toggled green ✓ / red ✗ octicons because Primer JS never runs. Hide
+   only those status glyphs — the real <input> + label stay. */
+.oldgh-settings__native .js-toggler-container .octicon-check,
+.oldgh-settings__native .js-toggler-container .octicon-x,
+.oldgh-settings__native .js-toggler-container > .text-green,
+.oldgh-settings__native .js-toggler-container > .text-red,
+.oldgh-account-settings__native .js-toggler-container .octicon-check,
+.oldgh-account-settings__native .js-toggler-container .octicon-x {
+  display: none !important;
+}
+
+/* native checkbox/radio across scraped surfaces — tint to the link color */
+.oldgh-section__content input[type="checkbox"],
+.oldgh-section__content input[type="radio"],
+.oldgh-issue__subtab input[type="checkbox"],
+.oldgh-issue__subtab input[type="radio"],
+.oldgh-profile__scraped input[type="checkbox"],
+.oldgh-profile__scraped input[type="radio"] {
+  accent-color: var(--gh-link);
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* profile scraped tabs (people/packages/sponsoring/projects fallback) were
+   omitted from the button/counter/input reskin — add them so modern Primer
+   controls don't show through. */
+.oldgh-profile__scraped .btn,
+.oldgh-profile__scraped .Button,
+.oldgh-profile__scraped [class*="prc-Button-"] {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
+  border: 1px solid var(--gh-btn-border) !important;
+  border-radius: var(--gh-radius) !important;
+  color: var(--gh-btn-fg) !important;
+  box-shadow: var(--gh-shadow-inset);
+  padding: 3px 10px !important;
+  font-size: var(--gh-size-md) !important;
+  font-weight: bold;
+}
+.oldgh-profile__scraped .Counter,
+.oldgh-profile__scraped .CounterLabel,
+.oldgh-profile__scraped [class*="prc-CounterLabel"] {
+  background: var(--gh-bg-stripe);
+  border: 1px solid var(--gh-border-faint);
+  border-radius: 10px;
+  color: var(--gh-fg-muted);
+  padding: 1px 7px;
+  font-size: var(--gh-size-xs);
+  font-weight: bold;
+}
+.oldgh-profile__scraped .form-control,
+.oldgh-profile__scraped input.FormControl-input,
+.oldgh-profile__scraped textarea {
+  background: var(--gh-bg-elev) !important;
+  border: 1px solid var(--gh-border) !important;
+  border-radius: var(--gh-radius) !important;
+  color: var(--gh-fg) !important;
+  padding: 4px 8px !important;
+  font-size: var(--gh-size-md) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* modern UnderlineNav draws its active indicator with an orange ::after bar —
+   the single most recognizable modern tell. Kill it, reinstate the 2013 blue
+   underline via box-shadow. */
+.oldgh-section__content .UnderlineNav-item::after,
+.oldgh-issue__subtab .UnderlineNav-item::after,
+.oldgh-profile__scraped .UnderlineNav-item::after,
+.oldgh-account-settings__native .UnderlineNav-item::after,
+.oldgh-settings__native .UnderlineNav-item::after {
+  display: none !important;
+}
+.oldgh-section__content .UnderlineNav-item[aria-current]:not([aria-current="false"]),
+.oldgh-issue__subtab .UnderlineNav-item[aria-current]:not([aria-current="false"]),
+.oldgh-profile__scraped .UnderlineNav-item[aria-current]:not([aria-current="false"]) {
+  box-shadow: inset 0 -2px 0 var(--gh-link) !important;
+  font-weight: bold;
+}
+
+/* Primer empty-state blankslate -> 2013 muted panel */
+.oldgh-section__content .blankslate,
+.oldgh-section__content [class*="prc-Blankslate-Blankslate"],
+.oldgh-issue__subtab .blankslate,
+.oldgh-profile__scraped .blankslate,
+.oldgh-profile__scraped [class*="prc-Blankslate-Blankslate"] {
+  background: var(--gh-bg-subtle) !important;
+  border: 1px solid var(--gh-border) !important;
+  border-radius: var(--gh-radius) !important;
+  box-shadow: none !important;
+  padding: 32px 16px !important;
+  text-align: center;
+  color: var(--gh-fg-muted);
+}
+.oldgh-section__content .blankslate .octicon,
+.oldgh-section__content [class*="prc-Blankslate"] svg,
+.oldgh-profile__scraped .blankslate .octicon {
+  color: var(--gh-fg-faint) !important;
+  fill: var(--gh-fg-faint) !important;
+}
+
+/* Primer SegmentedControl -> 2013 grouped-button (flat track, raised selected) */
+.oldgh-section__content [class*="prc-SegmentedControl"],
+.oldgh-section__content .SegmentedControl,
+.oldgh-profile__scraped [class*="prc-SegmentedControl"],
+.oldgh-profile__scraped .SegmentedControl {
+  background: var(--gh-bg-stripe) !important;
+  border: 1px solid var(--gh-btn-border) !important;
+  border-radius: var(--gh-radius) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+.oldgh-section__content [class*="prc-SegmentedControl"] [aria-current="true"],
+.oldgh-section__content .SegmentedControl-item[aria-current="true"],
+.oldgh-profile__scraped [class*="prc-SegmentedControl"] [aria-current="true"] {
+  background: linear-gradient(to bottom, var(--gh-btn-bg-top), var(--gh-btn-bg-bottom)) !important;
+  box-shadow: var(--gh-shadow-inset) !important;
+  font-weight: bold;
+}
+
+/* dead Primer chrome on a static scrape: tooltips need JS to position,
+   spinners are loaders that never resolve — hide them. */
+.oldgh-section__content tool-tip,
+.oldgh-section__content [class*="prc-Tooltip"],
+.oldgh-section__content [class*="prc-Spinner"],
+.oldgh-section__content .Spinner,
+.oldgh-issue__subtab tool-tip,
+.oldgh-issue__subtab [class*="prc-Tooltip"],
+.oldgh-profile__scraped tool-tip,
+.oldgh-profile__scraped [class*="prc-Tooltip"],
+.oldgh-profile__scraped [class*="prc-Spinner"],
+.oldgh-profile__scraped .Spinner {
+  display: none !important;
+}
+
+/* Primer font-size utility classes do nothing (stylesheet blocked), collapsing
+   scraped headings to body size — map them to the 2013 scale. */
+.oldgh-section__content .f1, .oldgh-profile__scraped .f1 { font-size: 26px; font-weight: 300; }
+.oldgh-section__content .f2, .oldgh-profile__scraped .f2 { font-size: 22px; font-weight: 300; }
+.oldgh-section__content .f3, .oldgh-profile__scraped .f3 { font-size: 18px; font-weight: 300; }
+.oldgh-section__content .f4, .oldgh-profile__scraped .f4 { font-size: 16px; }
+.oldgh-section__content .f5, .oldgh-profile__scraped .f5 { font-size: var(--gh-size-lg); }
+.oldgh-section__content .f6, .oldgh-profile__scraped .f6 { font-size: var(--gh-size-sm); color: var(--gh-fg-muted); }
+.oldgh-section__content .text-bold, .oldgh-section__content .text-semibold,
+.oldgh-profile__scraped .text-bold { font-weight: bold; }
+
+/* Timeline / AvatarStack — keep 2013 square avatars + faint rails */
+.oldgh-issue__subtab .TimelineItem,
+.oldgh-section__content .TimelineItem { border: 0; }
+.oldgh-issue__subtab .TimelineItem-badge,
+.oldgh-section__content .TimelineItem-badge {
+  background: var(--gh-bg-stripe) !important;
+  border: 1px solid var(--gh-border) !important;
+  color: var(--gh-fg-muted) !important;
+  box-shadow: none !important;
+}
+.oldgh-issue__subtab [class*="AvatarStack"] img,
+.oldgh-section__content [class*="AvatarStack"] img,
+.oldgh-profile__scraped [class*="AvatarStack"] img {
+  border-radius: 3px !important;
+  box-shadow: 0 0 0 1px var(--gh-bg-elev) !important;
+}
+
+/* Primer ProgressBar / Breadcrumb */
+.oldgh-section__content [class*="prc-ProgressBar"],
+.oldgh-section__content .Progress,
+.oldgh-profile__scraped .Progress {
+  background: var(--gh-bg-stripe) !important;
+  border: 1px solid var(--gh-border-faint) !important;
+  border-radius: 3px !important;
+  height: 8px !important;
+  overflow: hidden;
+}
+.oldgh-section__content [class*="prc-ProgressBar"] > *,
+.oldgh-section__content .Progress-item,
+.oldgh-profile__scraped .Progress-item {
+  background: var(--gh-btn-primary-bg-bottom) !important;
+}
+.oldgh-section__content .breadcrumb-item,
+.oldgh-profile__scraped .breadcrumb-item { color: var(--gh-fg-muted); }
+.oldgh-section__content .breadcrumb-item-selected,
+.oldgh-profile__scraped .breadcrumb-item-selected { color: var(--gh-fg); font-weight: bold; }
+
+/* light-mode: scraped inline color set via a (blocked) Primer CSS var resolves
+   to nothing — force a readable fg only for those var()-based inline colors so
+   literal-hex swatches (language dots) are untouched. */
+.oldgh-section__content [style*="color: var(--fgColor"],
+.oldgh-section__content [style*="color:var(--fgColor"],
+.oldgh-section__content [style*="color: var(--color-fg"],
+.oldgh-issue__subtab [style*="color: var(--fgColor"],
+.oldgh-profile__scraped [style*="color: var(--fgColor"] {
+  color: var(--gh-fg) !important;
 }
 
 /* ─── Dashboard (2013-style news feed) ─────────────────────────── */
@@ -10743,9 +10988,12 @@ html[data-oldgh-theme="dark"] .oldgh-account-settings__native .Button {
 /* avatar / image previews — match 2013 grey ring */
 .oldgh-account-settings__native .avatar,
 .oldgh-account-settings__native .avatar-user,
+.oldgh-account-settings__native [class*="prc-Avatar-Avatar"],
 .oldgh-settings__native .avatar,
 .oldgh-settings__native .avatar-user {
-  border-radius: 50%;
+  /* 3px-square ring matches every other avatar in the skin (header/profile/
+     issue/repo-list); 2013 never used circular avatars */
+  border-radius: var(--gh-radius);
   border: 1px solid var(--gh-border);
 }
 /* the modern "ORCID" / "Sponsor" gradient buttons inside settings — keep
