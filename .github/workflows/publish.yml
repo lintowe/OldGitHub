@@ -1,0 +1,65 @@
+# Publish OldGitHub to the Chrome Web Store.
+#
+# Triggers when you publish a GitHub Release, or manually via the Actions tab.
+# It builds + zips with `npm run pack` and uploads to the CWS, then submits for
+# review (--auto-publish). Review is NOT instant and can still be rejected.
+#
+# ── ONE-TIME SETUP (manual, by you) ───────────────────────────────────────────
+#   1. Publish the listing manually ONCE — the API can only UPDATE an existing,
+#      already-approved item, not create the first one.
+#   2. Google Cloud: create a project, enable the "Chrome Web Store API", make an
+#      OAuth 2.0 client of type "Desktop app" → gives Client ID + Client Secret.
+#   3. IMPORTANT: set the OAuth consent screen to "In production" (not "Testing"),
+#      otherwise the refresh token silently expires after 7 days.
+#   4. Generate a refresh token once with that client (see chrome-webstore-upload-cli
+#      docs, the `init`/token flow).
+#   5. Add these repository secrets (Settings → Secrets and variables → Actions):
+#        CWS_EXTENSION_ID     the item id from the dev-dashboard URL
+#        CWS_CLIENT_ID        OAuth client id
+#        CWS_CLIENT_SECRET    OAuth client secret
+#        CWS_REFRESH_TOKEN    the refresh token from step 4
+#   6. Bump package.json "version" before tagging — the manifest version must
+#      increase on every publish or the API rejects the upload.
+#
+# NOTE: the chrome-webstore-upload-cli major version below is pinned but UNVERIFIED
+# in this environment — confirm the current version and that it reads the
+# EXTENSION_ID/CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN env vars against its README
+# before relying on this in anger.
+
+name: Publish to Chrome Web Store
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and pack
+        run: npm run pack
+
+      - name: Resolve packed zip path
+        id: zip
+        run: echo "path=$(ls oldgithub-v*.zip | head -n1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload and publish to Chrome Web Store
+        env:
+          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: npx --yes chrome-webstore-upload-cli@3 upload --source "${{ steps.zip.outputs.path }}" --auto-publish
