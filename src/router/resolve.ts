@@ -374,7 +374,10 @@ function matchTopLevel(first: string, pathname: string, search: string): Route |
     case "home":
     case "feed": return { kind: "top-level", subkind: "dashboard", pathname, search, title: "Dashboard" };
     case "notifications": return { kind: "top-level", subkind: "notifications", pathname, search, title: "Notifications" };
-    case "search": return { kind: "top-level", subkind: "search", pathname, search, title: "Search" };
+    case "search": {
+      const q = new URLSearchParams(search).get("q");
+      return { kind: "top-level", subkind: "search", pathname, search, title: q ? `Search · ${q}` : "Search" };
+    }
     case "issues": return { kind: "top-level", subkind: "issues", pathname, search, title: "Your issues" };
     case "pulls": return { kind: "top-level", subkind: "pulls", pathname, search, title: "Your pull requests" };
     case "stars": return { kind: "top-level", subkind: "stars", pathname, search, title: "Your stars" };

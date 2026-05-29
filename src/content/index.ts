@@ -1,4 +1,5 @@
 import { killTurbo, mountRouter } from "@/router";
+import { bindShortcuts } from "@/router/shortcuts";
 import { isLoggedIn } from "@/auth/session";
 import { applyTheme, watchThemeChanges } from "@/theme";
 import { mountHeader } from "@/views/header";
@@ -77,6 +78,7 @@ async function run(): Promise<void> {
   await mountHeader();
   mountFooter();
   mountHovercards();
+  bindShortcuts();
   mountRouter();
 }
 

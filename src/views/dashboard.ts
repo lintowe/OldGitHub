@@ -19,6 +19,21 @@ export async function mountDashboard(): Promise<void> {
   root.className = ROOT_CLASS;
   root.innerHTML = renderShell(view);
   adoptBodyRoot(root);
+  bindRepoFilter(root);
+}
+
+// live client-side filter over the already-rendered "Your Repositories" list
+function bindRepoFilter(root: HTMLElement): void {
+  const input = root.querySelector<HTMLInputElement>(".oldgh-dash__repo-filter-input");
+  if (!input) return;
+  const rows = Array.from(root.querySelectorAll<HTMLElement>(".oldgh-dash__repo-row"));
+  input.addEventListener("input", () => {
+    const q = input.value.trim().toLowerCase();
+    for (const row of rows) {
+      const name = (row.dataset["name"] ?? "").toLowerCase();
+      row.hidden = q !== "" && !name.includes(q);
+    }
+  });
 }
 
 export function unmountDashboard(): void {
@@ -158,7 +173,7 @@ function renderRepoBox(repos: TopRepo[]): string {
         <a href="/new" class="oldgh-btn oldgh-btn--sm" title="New repository">${octicon("plus", { size: 12 })} New</a>
       </div>
       <div class="oldgh-dash__repo-filter">
-        <input type="text" placeholder="Find a repository…" class="oldgh-dash__repo-filter-input" disabled />
+        <input type="text" placeholder="Find a repository…" class="oldgh-dash__repo-filter-input" aria-label="Find a repository" autocomplete="off" />
       </div>
       ${repos.length === 0
         ? `<div class="oldgh-dash__empty-row">No repositories yet.</div>`
@@ -169,7 +184,7 @@ function renderRepoBox(repos: TopRepo[]): string {
 
 function renderRepoRow(r: TopRepo): string {
   return `
-    <li class="oldgh-dash__repo-row">
+    <li class="oldgh-dash__repo-row" data-name="${escapeAttr(r.slug)}">
       ${octicon("repo", { size: 14 })}
       <a href="${escapeAttr(r.href)}">${escapeText(r.slug)}</a>
     </li>
@@ -205,14 +220,12 @@ const PRO_TIPS: string[] = [
   `Use <kbd>g</kbd> then <kbd>c</kbd> on any repository to jump to its Code.`,
   `Use <kbd>g</kbd> then <kbd>w</kbd> on any repository to jump to its Wiki.`,
   `Use <kbd>g</kbd> then <kbd>n</kbd> to jump to your Notifications.`,
-  `Press <kbd>t</kbd> in the file browser to open the file finder.`,
+  `Use <kbd>g</kbd> then <kbd>b</kbd> on any repository to jump to its Branches.`,
   `Use <kbd>s</kbd> or <kbd>/</kbd> from anywhere to focus the search bar.`,
-  `Press <kbd>?</kbd> to see every keyboard shortcut available on this page.`,
   `Hold <kbd>shift</kbd> while clicking a link to open it in a new tab.`,
   `Star a repository to keep it close — your stars live at <a href="/stars">your stars</a>.`,
   `Subscribe to the <a href="https://github.blog" rel="noopener">GitHub Blog</a> for engineering deep-dives.`,
   `Pin up to six repositories on your profile to show off what you're proud of.`,
-  `Use <kbd>l</kbd> on any issue or PR to filter by label.`,
   `Append <code>.diff</code> or <code>.patch</code> to any PR URL for a plain-text view.`,
 ];
 

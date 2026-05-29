@@ -127,6 +127,20 @@ function renderHeaderHtml(me: Me): string {
   `;
 }
 
+// keep the global header search box in sync with the active /search query so
+// it reads like native GitHub (the box holds your query for refining), and
+// clears it off the search page.
+export function syncSearchInput(pathname: string, search: string): void {
+  const input = document.querySelector<HTMLInputElement>(".oldgh-header__search-input");
+  if (!input) return;
+  if (input === document.activeElement) return;
+  if (pathname === "/search") {
+    input.value = new URLSearchParams(search).get("q") ?? "";
+  } else {
+    input.value = "";
+  }
+}
+
 function bindSearchForm(root: HTMLElement): void {
   // on gist.github.com let the browser submit to the absolutized github.com URL
   if (IS_GIST_SUBDOMAIN) return;

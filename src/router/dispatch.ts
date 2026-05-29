@@ -1,6 +1,6 @@
 import { AdapterFailure } from "@/adapters";
 import { mountRepoHeader, unmountRepoHeader, updateActiveTab, prefetchRepoSummary } from "@/views/repo-header";
-import { updateTopNavActive } from "@/views/header";
+import { updateTopNavActive, syncSearchInput } from "@/views/header";
 import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
 import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
 import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
@@ -176,6 +176,7 @@ export async function dispatchRoute(loc: Location | URL): Promise<void> {
     showProgress();
   }
   updateTopNavActive(pathname);
+  syncSearchInput(pathname, search);
   const newTitle = titleForRoute(route, pathname);
   if (newTitle) document.title = newTitle;
 
