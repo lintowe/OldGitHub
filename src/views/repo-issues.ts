@@ -167,11 +167,7 @@ function buildSwappedQuery(currentQuery: string, target: "open" | "closed"): str
   return `is:${target}${cleaned ? " " + cleaned : ""}`;
 }
 
-function formatCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}m`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return new Intl.NumberFormat().format(n);
-}
+import { formatCount } from "@/util/format";
 
 function relativeTimeLink(iso: string, href?: string): string {
   if (!iso) return "";

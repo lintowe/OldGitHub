@@ -225,9 +225,4 @@ async function scrapeRepoLanguages(owner: string, repo: string): Promise<Array<{
   return out.map((e) => ({ name: e.name, bytes: Math.round(e.percent * 100), percent: e.percent }));
 }
 
-export function formatCount(n: number | null): string {
-  if (n == null) return "";
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}m`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
-  return String(n);
-}
+export { formatCount } from "@/util/format";
