@@ -45,11 +45,13 @@ function renderShell(v: WikiView): string {
         </article>
         <aside class="oldgh-wiki__sidebar">
           <div class="oldgh-wiki__pages">
-            <h3>${octicon("list-unordered", { size: 12 })} Pages <span class="oldgh-wiki__pages-count">${v.pages.length}</span></h3>
-            <ul>
+            <h3>${octicon("list-unordered", { size: 12 })} Pages ${v.pages.length > 0 ? `<span class="oldgh-wiki__pages-count">${v.pages.length}</span>` : ""}</h3>
+            ${v.pages.length === 0
+              ? `<p class="oldgh-wiki__pages-empty oldgh-muted">No other pages</p>`
+              : `<ul>
               ${v.pages.slice(0, 60).map((p) => `<li><a href="${escapeAttr(p.href)}">${escapeText(p.title)}</a></li>`).join("")}
             </ul>
-            ${v.pages.length > 60 ? `<p class="oldgh-wiki__pages-more">+${v.pages.length - 60} more pages</p>` : ""}
+            ${v.pages.length > 60 ? `<p class="oldgh-wiki__pages-more">+${v.pages.length - 60} more pages</p>` : ""}`}
           </div>
           <div class="oldgh-wiki__clone">
             <h3>${octicon("repo-clone", { size: 12 })} Clone this wiki</h3>

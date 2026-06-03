@@ -21,7 +21,7 @@ export function renderDiffFile(f: DiffFile): string {
         </span>
       </div>
       ${f.isBinary
-        ? `<div class="oldgh-repo-commit__binary">${escapeText(f.binaryNote ?? "Binary file changed")}</div>`
+        ? `<div class="oldgh-repo-commit__binary">${escapeText(binaryNoteText(f.binaryNote))}</div>`
         : renderHunks(f.hunks)}
     </section>
   `;
@@ -89,6 +89,12 @@ function renderLine(l: DiffLine): string {
     <td class="oldgh-diff__num">${l.new}</td>
     <td class="oldgh-diff__code"><span class="oldgh-diff__sign"> </span>${escapeText(l.text)}</td>
   </tr>`;
+}
+
+// strip git's a/ b/ path prefixes from "Binary files a/x and b/x differ"
+function binaryNoteText(note: string | null): string {
+  if (!note) return "Binary file changed";
+  return note.replace(/(^|\s)[ab]\//g, "$1");
 }
 
 function escapeText(s: string): string {

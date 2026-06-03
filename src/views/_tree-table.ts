@@ -22,7 +22,9 @@ export function renderTreeTable(ctx: TreeTableContext, items: TreeItem[]): strin
       </thead>
       <tbody>
         ${ctx.basePath ? renderUpRow(ctx) : ""}
-        ${sorted.map((it) => renderRow(ctx, it)).join("")}
+        ${sorted.length === 0
+          ? `<tr><td colspan="4" class="oldgh-fg-muted">${ctx.basePath ? "This directory is empty." : "This repository is empty."}</td></tr>`
+          : sorted.map((it) => renderRow(ctx, it)).join("")}
       </tbody>
     </table>
   `;
@@ -76,6 +78,10 @@ export async function hydrateTreeTable(root: HTMLElement, ctx: TreeTableContext)
   } catch (err) {
     if (err instanceof AdapterFailure) {
       console.debug("[oldgh] tree-commit-info failure:", err.message);
+      // keep the right-hand columns from collapsing when hydration fails
+      root.querySelectorAll<HTMLTableCellElement>("[data-msg], [data-age]").forEach((cell) => {
+        cell.innerHTML = `<span class="oldgh-fg-muted">&mdash;</span>`;
+      });
       return;
     }
     throw err;

@@ -87,7 +87,7 @@ async function scrapeDiscussions(owner: string, repo: string, subPath: string, q
     const categoryEl = row.querySelector<HTMLElement>("[data-test-selector='discussion-category-tag'], .DiscussionCategoryAvatar, [class*='discussion-category']");
     const category = categoryEl
       ? {
-          name: categoryEl.textContent?.trim() || "General",
+          name: (categoryEl.textContent?.trim() || "General").replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*/u, "").trim() || "General",
           emoji: extractEmoji(categoryEl),
           color: null,
         }
@@ -237,9 +237,9 @@ function renderCategories(v: DiscussionsView): string {
 function renderItem(d: DiscussionItem): string {
   const stateIcon =
     d.state === "answered"
-      ? `<span class="oldgh-discussions__state oldgh-discussions__state--answered" title="Answered">${octicon("check-circle-fill", { size: 14 })}</span>`
+      ? `<span class="oldgh-discussions__state oldgh-discussions__state--answered" title="Answered">${octicon("check", { size: 14 })}</span>`
       : d.state === "closed"
-        ? `<span class="oldgh-discussions__state oldgh-discussions__state--closed" title="Closed">${octicon("x-circle", { size: 14 })}</span>`
+        ? `<span class="oldgh-discussions__state oldgh-discussions__state--closed" title="Closed">${octicon("circle-slash", { size: 14 })}</span>`
         : `<span class="oldgh-discussions__state oldgh-discussions__state--open" title="Open">${octicon("comment-discussion", { size: 14 })}</span>`;
   return `
     <li class="oldgh-discussions__item">
@@ -257,7 +257,7 @@ function renderItem(d: DiscussionItem): string {
         </div>
       </div>
       ${d.commentCount > 0
-        ? `<span class="oldgh-discussions__comments" title="${d.commentCount} comments">${octicon("comment", { size: 14 })} ${d.commentCount}</span>`
+        ? `<span class="oldgh-discussions__comments" title="${d.commentCount} comment${d.commentCount === 1 ? "" : "s"}">${octicon("comment", { size: 14 })} ${d.commentCount}</span>`
         : ""}
     </li>
   `;

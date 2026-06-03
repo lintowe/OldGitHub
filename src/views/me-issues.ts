@@ -131,7 +131,7 @@ function renderItem(it: MeIssueItem): string {
           <span>#${it.number}</span>
           ${it.author ? `· opened by <a href="/${escapeAttr(it.author.login)}">${escapeText(it.author.login)}</a>` : ""}
           ${it.updatedAt ? `· <span title="${escapeAttr(absoluteTime(it.updatedAt))}">updated ${escapeText(relativeTime(it.updatedAt))}</span>` : ""}
-          ${it.comments ? `· <span>${octicon("comment", { size: 12 })} ${it.comments}</span>` : ""}
+          ${it.comments ? `· <span>${octicon("comment", { size: 12 })} ${formatCount(it.comments)}</span>` : ""}
         </div>
       </div>
     </li>

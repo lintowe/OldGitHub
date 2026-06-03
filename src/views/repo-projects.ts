@@ -10,7 +10,7 @@ type LinkedProject = {
   url: string;
   ownerLogin: string;
   ownerAvatar: string | null;
-  state: "open" | "closed";
+  state: "open" | "closed" | null;
   itemCount: number | null;
 };
 
@@ -71,7 +71,8 @@ async function scrapeProjects(owner: string, repo: string, search: string): Prom
     }
     const stateEl = card.querySelector<HTMLElement>("[data-state], .State");
     const stateText = stateEl?.textContent?.trim().toLowerCase() || "";
-    const state: "open" | "closed" = stateText.includes("closed") ? "closed" : "open";
+    // null when no state element scraped so we don't assert a confident "Open" on closed projects
+    const state: "open" | "closed" | null = stateEl ? (stateText.includes("closed") ? "closed" : "open") : null;
     const itemCountEl = card.querySelector<HTMLElement>("[data-test-selector='item-count'], .Counter");
     const itemCount = itemCountEl ? parseInt((itemCountEl.textContent || "").replace(/\D/g, ""), 10) : NaN;
     const ownerLogin = href.replace(/^\/+/, "").split("/")[0] || owner;
@@ -129,9 +130,11 @@ function renderBody(owner: string, repo: string, projects: LinkedProject[]): str
 }
 
 function renderProjectRow(p: LinkedProject): string {
-  const stateChip = p.state === "open"
-    ? `<span class="oldgh-projects__state oldgh-projects__state--open">${octicon("dot-fill", { size: 11 })} Open</span>`
-    : `<span class="oldgh-projects__state oldgh-projects__state--closed">${octicon("check", { size: 11 })} Closed</span>`;
+  const stateChip = p.state === null
+    ? ""
+    : p.state === "open"
+      ? `<span class="oldgh-projects__state oldgh-projects__state--open">${octicon("primitive-dot", { size: 11 })} Open</span>`
+      : `<span class="oldgh-projects__state oldgh-projects__state--closed">${octicon("check", { size: 11 })} Closed</span>`;
   return `
     <li class="oldgh-projects__row">
       <div class="oldgh-projects__row-icon">${octicon("project", { size: 18 })}</div>

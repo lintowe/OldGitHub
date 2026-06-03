@@ -26,6 +26,7 @@ type CollectionDetail = {
   tagline: string | null;
   description: string | null;
   createdBy: string | null;
+  createdByLogin: string | null;
   repos: CollectionRepo[];
 };
 
@@ -114,6 +115,8 @@ async function fetchCollection(slug: string): Promise<CollectionDetail> {
   const description = descEl?.textContent?.replace(/\s+/g, " ").trim() || null;
   const createdByEl = doc.querySelector<HTMLAnchorElement>("a[data-hovercard-type='user']");
   const createdBy = createdByEl?.textContent?.trim() || null;
+  // a display name can contain spaces, so derive the profile login from the href
+  const createdByLogin = /^\/([\w.-]+)\/?$/.exec(createdByEl?.getAttribute("href") || "")?.[1] || null;
 
   const repos: CollectionRepo[] = [];
   const seen = new Set<string>();
@@ -133,7 +136,9 @@ async function fetchCollection(slug: string): Promise<CollectionDetail> {
     if (card.querySelectorAll("a[href]").length < 2) continue;
     const desc = card.querySelector<HTMLElement>("p.color-fg-muted, p.text-small.color-fg-muted, p")?.textContent?.trim() || null;
     const langEl = card.querySelector<HTMLElement>("[itemprop='programmingLanguage']");
-    const language = langEl?.textContent?.trim() || null;
+    // newer markup drops itemprop and puts the name in the text node after the color dot
+    const dotSibling = card.querySelector<HTMLElement>(".repo-language-color")?.nextSibling?.textContent?.trim();
+    const language = langEl?.textContent?.trim() || dotSibling || null;
     const starsAnchor = card.querySelector<HTMLAnchorElement>(`a[href$="/${owner}/${name}/stargazers"]`);
     const stars = parseShortCount(starsAnchor?.textContent || "");
     // Collection-specific commentary is usually a separate paragraph
@@ -152,7 +157,7 @@ async function fetchCollection(slug: string): Promise<CollectionDetail> {
     if (repos.length >= 60) break;
   }
 
-  return { slug, title, tagline, description, createdBy, repos };
+  return { slug, title, tagline, description, createdBy, createdByLogin, repos };
 }
 
 const RESERVED = new Set([
@@ -240,7 +245,7 @@ function renderDetail(d: CollectionDetail): string {
       <h1>${octicon("bookmark", { size: 24 })} ${escapeText(d.title)}</h1>
       ${d.tagline ? `<p class="oldgh-collections__detail-tagline">${escapeText(d.tagline)}</p>` : ""}
       ${d.description && d.description !== d.tagline ? `<p class="oldgh-collections__detail-desc">${escapeText(d.description.slice(0, 500))}</p>` : ""}
-      ${d.createdBy ? `<p class="oldgh-collections__credit">Curated by <a href="/${escapeAttr(d.createdBy)}">${escapeText(d.createdBy)}</a></p>` : ""}
+      ${d.createdBy ? `<p class="oldgh-collections__credit">Curated by ${d.createdByLogin ? `<a href="/${escapeAttr(d.createdByLogin)}">${escapeText(d.createdBy)}</a>` : escapeText(d.createdBy)}</p>` : ""}
     </header>
     <ul class="oldgh-collections__repo-list">
       ${d.repos.length === 0
@@ -251,6 +256,9 @@ function renderDetail(d: CollectionDetail): string {
 }
 
 function renderRepoRow(r: CollectionRepo): string {
+  const metaItems: string[] = [];
+  if (r.language) metaItems.push(`<li>${escapeText(r.language)}</li>`);
+  if (r.stars !== null) metaItems.push(`<li>${octicon("star", { size: 11 })} ${r.stars.toLocaleString()}</li>`);
   return `
     <li class="oldgh-collections__repo">
       <h3 class="oldgh-collections__repo-title">
@@ -260,10 +268,7 @@ function renderRepoRow(r: CollectionRepo): string {
       </h3>
       ${r.description ? `<p class="oldgh-collections__repo-desc">${escapeText(r.description)}</p>` : ""}
       ${r.blurb ? `<blockquote class="oldgh-collections__blurb">${escapeText(r.blurb)}</blockquote>` : ""}
-      <ul class="oldgh-collections__repo-meta">
-        ${r.language ? `<li>${escapeText(r.language)}</li>` : ""}
-        ${r.stars !== null ? `<li>${octicon("star", { size: 11 })} ${r.stars.toLocaleString()}</li>` : ""}
-      </ul>
+      ${metaItems.length > 0 ? `<ul class="oldgh-collections__repo-meta">${metaItems.join("")}</ul>` : ""}
     </li>
   `;
 }

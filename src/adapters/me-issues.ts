@@ -49,7 +49,7 @@ export async function getMeIssues(kind: MeIssueKind, filter: MeIssueFilter, logi
 
   const url = `${API}/search/issues?q=${encodeURIComponent(q)}&per_page=30`;
   const resp = await fetch(url, {
-    credentials: "omit",
+    credentials: "include",
     headers: { Accept: "application/vnd.github+json" },
   });
   if (!resp.ok) {
@@ -112,6 +112,8 @@ function parseItem(raw: unknown): MeIssueItem | null {
   const repoMatch = /\/repos\/([^/]+)\/([^/]+)$/.exec(repoUrl);
   const repoOwner = repoMatch ? repoMatch[1]! : "";
   const repoName = repoMatch ? repoMatch[2]! : "";
+  // skip items with an unparseable repository_url so the view doesn't render a bare "/" link
+  if (!repoOwner || !repoName) return null;
 
   const labelsRaw = r["labels"];
   const labels: MeIssueItem["labels"] = [];

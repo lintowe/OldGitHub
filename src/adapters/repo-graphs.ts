@@ -199,25 +199,28 @@ const COMMUNITY_LABELS: Record<string, string> = {
   description: "Description",
   readme: "README",
   code_of_conduct: "Code of conduct",
-  code_of_conduct_file: "Code of conduct file",
   contributing: "Contributing",
   license: "License",
   pull_request_template: "Pull request template",
   issue_template: "Issue template",
-  security: "Security policy",
 };
 
 const COMMUNITY_ORDER = [
   "description",
   "readme",
   "code_of_conduct",
-  "code_of_conduct_file",
   "contributing",
   "license",
   "pull_request_template",
   "issue_template",
-  "security",
 ];
+
+// github returns both code_of_conduct (named coc) and code_of_conduct_file (the
+// actual file); treat either as the single code_of_conduct entry to avoid a
+// duplicate row and an inflated present/total count
+const COMMUNITY_ALIASES: Record<string, string[]> = {
+  code_of_conduct: ["code_of_conduct", "code_of_conduct_file"],
+};
 
 export async function getCommunityProfile(owner: string, repo: string): Promise<CommunityView> {
   const resp = await fetch(`${API}/repos/${owner}/${repo}/community/profile`, {
@@ -239,7 +242,15 @@ export async function getCommunityProfile(owner: string, repo: string): Promise<
       files.push({ key, label: COMMUNITY_LABELS[key]!, present: description, url: null, htmlUrl: null });
       continue;
     }
-    const entry = filesObj[key];
+    const aliasKeys = COMMUNITY_ALIASES[key] ?? [key];
+    let entry: unknown = undefined;
+    for (const ak of aliasKeys) {
+      const candidate = filesObj[ak];
+      if (candidate !== null && candidate !== undefined) {
+        entry = candidate;
+        break;
+      }
+    }
     if (entry === null || entry === undefined) {
       files.push({ key, label: COMMUNITY_LABELS[key]!, present: false, url: null, htmlUrl: null });
       continue;

@@ -74,8 +74,10 @@ async function scrapeWatching(): Promise<WatchedRepo[]> {
     const title = (titleEl?.textContent || "").trim() || `${owner}/${name}`;
     if (title.length > 200) continue;
 
-    const descEl = row.querySelector<HTMLElement>("p.color-fg-muted, .text-small.color-fg-muted, p");
-    const description = descEl?.textContent?.trim() || null;
+    const descEl = row.querySelector<HTMLElement>("p.color-fg-muted, .text-small.color-fg-muted");
+    const descText = descEl?.textContent?.trim() || "";
+    // reject watch-status/settings blurbs that leak in as a fake description
+    const description = descText && !WATCH_STATUS_RE.test(descText) ? descText : null;
     const langEl = row.querySelector<HTMLElement>("[itemprop='programmingLanguage']");
     const language = langEl?.textContent?.trim() || null;
     const starsAnchor = row.querySelector<HTMLAnchorElement>(`a[href$="/${owner}/${name}/stargazers"]`);
@@ -116,6 +118,8 @@ const RESERVED = new Set([
   "signup", "new", "import", "gist", "gists", "apps", "sponsors",
   "codespaces", "discussions", "security", "advisories",
 ]);
+
+const WATCH_STATUS_RE = /\b(Watching|Participating|Releases|Ignoring)\b/;
 
 function parseShortCount(s: string): number | null {
   const trimmed = s.replace(/[\s,]/g, "").toLowerCase();
@@ -181,14 +185,14 @@ function renderRow(r: WatchedRepo): string {
           ${r.isPrivate ? `<span class="oldgh-watching__chip">Private</span>` : ""}
         </h3>
         ${r.description ? `<p class="oldgh-watching__desc">${escapeText(r.description)}</p>` : ""}
-        <ul class="oldgh-watching__meta">
+        ${r.language || r.stars !== null || r.forks !== null || r.updatedAt ? `<ul class="oldgh-watching__meta">
           ${r.language ? `<li>${escapeText(r.language)}</li>` : ""}
           ${r.stars !== null ? `<li>${octicon("star", { size: 11 })} ${r.stars.toLocaleString()}</li>` : ""}
           ${r.forks !== null ? `<li>${octicon("repo-forked", { size: 11 })} ${r.forks.toLocaleString()}</li>` : ""}
           ${r.updatedAt ? `<li>Updated <time datetime="${escapeAttr(r.updatedAt)}" title="${escapeAttr(absoluteTime(r.updatedAt))}">${escapeText(relativeTime(r.updatedAt))}</time></li>` : ""}
-        </ul>
+        </ul>` : ""}
       </div>
-      <a class="oldgh-watching__manage" href="/${escapeAttr(r.ownerLogin)}/${escapeAttr(r.repoName)}/subscription">
+      <a class="oldgh-watching__manage" href="/${escapeAttr(r.ownerLogin)}/${escapeAttr(r.repoName)}">
         ${octicon("bell", { size: 12 })}<span>Manage</span>
       </a>
     </li>

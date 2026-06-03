@@ -101,8 +101,11 @@ function renderFeedItem(item: FeedItem): string {
   const headline = item.actor
     ? formatHeadline(item.actor.login, item.headline)
     : escapeText(item.headline);
-  const time = item.occurredAt
-    ? `<time class="oldgh-dash__feed-time" datetime="${escapeAttr(item.occurredAt)}" title="${escapeAttr(absoluteTime(item.occurredAt))}">${escapeText(relativeTime(item.occurredAt))}</time>`
+  // relativeTime returns "" for unparseable datetimes; skip the element so we
+  // never render a visible but empty <time>
+  const rel = item.occurredAt ? relativeTime(item.occurredAt) : "";
+  const time = rel
+    ? `<time class="oldgh-dash__feed-time" datetime="${escapeAttr(item.occurredAt!)}" title="${escapeAttr(absoluteTime(item.occurredAt!))}">${escapeText(rel)}</time>`
     : "";
 
   const title = item.bodyTextLink
@@ -199,12 +202,20 @@ function renderBroadcastBox(items: ChangelogItem[]): string {
         <h3>${octicon("broadcast", { size: 14 })} Latest from GitHub</h3>
       </div>
       <ul class="oldgh-dash__broadcast-list">
-        ${items.map((c) => `
+        ${items.map((c) => {
+          // relativeTime returns "" for unparseable dates; skip the element so we
+          // never render a visible but empty date span
+          const rel = c.date ? relativeTime(c.date) : "";
+          const date = rel
+            ? `<span class="oldgh-dash__broadcast-date" title="${escapeAttr(absoluteTime(c.date!))}">${escapeText(rel)}</span>`
+            : "";
+          return `
           <li>
             <a href="${escapeAttr(c.href)}">${escapeText(c.title)}</a>
-            ${c.date ? `<span class="oldgh-dash__broadcast-date" title="${escapeAttr(absoluteTime(c.date))}">${escapeText(relativeTime(c.date))}</span>` : ""}
+            ${date}
           </li>
-        `).join("")}
+        `;
+        }).join("")}
       </ul>
     </div>
   `;

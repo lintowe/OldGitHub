@@ -34,7 +34,6 @@ function buildSidebar(owner: string, repo: string): SidebarGroup[] {
       label: "Code and automation",
       items: [
         { key: "branches", label: "Branches", icon: "git-branch", path: `${base}/branches` },
-        { key: "tags", label: "Tags", icon: "tag", path: `${base}/tag_protection` },
         { key: "rules", label: "Rules", icon: "law", path: `${base}/rules` },
         { key: "actions", label: "Actions", icon: "play", path: `${base}/actions` },
         { key: "webhooks", label: "Webhooks", icon: "broadcast", path: `${base}/hooks` },
@@ -376,9 +375,38 @@ function cleanScrapedContent(el: Element): void {
     "nav[aria-label='Repo settings sidebar']",
     "nav[aria-label*='settings' i]",
     "nav[item_classes*='repo-menu-item']",
+    // per-option ajax save-status badge (loading spinner + success check + error
+    // x). github shows one state via css/js we block, so all three leak at once
+    ".status-indicator",
   ];
   for (const sel of remove) {
     el.querySelectorAll(sel).forEach((n) => n.remove());
+  }
+  // strip elements GitHub keeps in the DOM but hides via JS — without their
+  // bundle running, every conditional warning shows at once. avatar /
+  // social-preview upload errors, .js-* hide-until-error stubs, [hidden] holdouts
+  const hiddenSelectors = [
+    // a blanket [hidden] strip is too broad — GitHub keeps real, reachable
+    // controls (collapsed sections, dialog bodies, tab panels) behind [hidden]
+    // and reveals them via JS we don't run. only strip the error/flash stubs
+    "[hidden].js-flash-error",
+    "[hidden].flash-error",
+    "[hidden][class*='error']",
+    ".js-avatar-upload-error",
+    ".js-upload-error",
+    ".js-upload-image-error",
+    ".js-flash-error",
+    ".js-conditional-error",
+    ".error-message:not(.is-shown)",
+    "[data-test-selector*='error']:empty",
+  ];
+  for (const sel of hiddenSelectors) {
+    el.querySelectorAll(sel).forEach((n) => {
+      // never strip a hidden node that holds a form/dialog/tabpanel — that's
+      // real content GitHub reveals on interaction, not an error stub
+      if (n.matches("dialog, [role='tabpanel']") || n.querySelector("form, button[type='submit'], input[type='submit']")) return;
+      n.remove();
+    });
   }
   // strip 'Uh oh!' hydration error blocks
   for (const node of Array.from(el.querySelectorAll<HTMLElement>("div, section"))) {

@@ -233,7 +233,7 @@ function renderIssueRow(it: IssueResult): string {
         <div class="oldgh-search__issue-meta">
           ${escapeText(it.repoFullName)} #${it.number} opened ${relativeTimeSpan(it.createdAt)}
           ${it.user ? `by <a href="/${escapeAttr(it.user.login)}">${escapeText(it.user.login)}</a>` : ""}
-          · ${it.commentCount} comment${it.commentCount === 1 ? "" : "s"}
+          ${it.commentCount > 0 ? `· ${it.commentCount} comment${it.commentCount === 1 ? "" : "s"}` : ""}
         </div>
       </div>
     </li>
@@ -278,6 +278,16 @@ function renderCodeResults(summary: SearchSummary, items: CodeResult[], ctx: Sor
   `;
 }
 
+// keep the separator and "committed" verb attached so an unlinked author never leaves a dangling middot
+function commitAuthorSegment(c: CommitResult): string {
+  const author = c.authorLogin
+    ? `<a href="/${escapeAttr(c.authorLogin)}">${escapeText(c.authorLogin)}</a> committed`
+    : "committed";
+  const date = c.date ? relativeTimeSpan(c.date) : "";
+  if (!c.authorLogin && !date) return "";
+  return ` · ${author}${date ? ` ${date}` : ""}`;
+}
+
 function renderCommitResults(summary: SearchSummary, items: CommitResult[], ctx: SortContext): string {
   if (items.length === 0) return renderEmpty(summary);
   return `
@@ -288,8 +298,7 @@ function renderCommitResults(summary: SearchSummary, items: CommitResult[], ctx:
           <div class="oldgh-search__commit-main">
             <a class="oldgh-search__commit-title" href="${c.htmlUrl.replace("https://github.com", "")}">${escapeText(c.messageHeadline)}</a>
             <div class="oldgh-search__commit-meta">
-              ${escapeText(c.repoFullName)} · ${c.authorLogin ? `<a href="/${escapeAttr(c.authorLogin)}">${escapeText(c.authorLogin)}</a> committed ` : ""}
-              ${c.date ? relativeTimeSpan(c.date) : ""}
+              ${escapeText(c.repoFullName)}${commitAuthorSegment(c)}
             </div>
           </div>
           <code class="oldgh-search__sha"><a href="${c.htmlUrl.replace("https://github.com", "")}">${escapeText(c.abbrevSha)}</a></code>

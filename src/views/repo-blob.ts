@@ -69,7 +69,7 @@ function renderBreadcrumb(v: RepoBlobView): string {
 
 function renderFileHeader(v: RepoBlobView): string {
   const lineCount = v.rawLines.length;
-  const byteSize = v.isBinary ? "binary" : formatBytes(v.rawLines.reduce((s, l) => s + l.length + 1, 0));
+  const byteSize = v.isBinary ? "binary" : formatBytes(v.size);
   const lang = v.language ? `<span class="oldgh-repo-blob__lang">${escapeText(v.language)}</span>` : "";
   const raw = v.rawBlobUrl
     ? `<a class="oldgh-btn" href="${escapeAttr(v.rawBlobUrl)}">${octicon("file-binary", { size: 14 })}<span>Raw</span></a>`
@@ -81,19 +81,43 @@ function renderFileHeader(v: RepoBlobView): string {
   const blame = `<a class="oldgh-btn" href="/${v.owner}/${v.repo}/blame/${encodeURIComponent(v.branch)}/${pathSegments(v.path)}">${octicon("versions", { size: 14 })}<span>Blame</span></a>`;
   const history = `<a class="oldgh-btn" href="/${v.owner}/${v.repo}/commits/${encodeURIComponent(v.branch)}/${pathSegments(v.path)}">${octicon("history", { size: 14 })}<span>History</span></a>`;
 
+  // empty text files have no meaningful line/byte counts to show
+  const emptySource = !v.isBinary && isEmptySource(v);
+  const counts = v.isBinary
+    ? `<span>${byteSize}</span>`
+    : emptySource
+      ? ""
+      : `<span>${lineCount} line${lineCount === 1 ? "" : "s"}</span><span class="oldgh-repo-blob__sep">·</span><span>${byteSize}</span>`;
   return `
     <div class="oldgh-repo-blob__file-header">
       <div class="oldgh-repo-blob__meta">
-        ${v.isBinary ? "" : `<span>${lineCount} line${lineCount === 1 ? "" : "s"}</span><span class="oldgh-repo-blob__sep">·</span>`}
-        <span>${byteSize}</span>
-        ${lang ? `<span class="oldgh-repo-blob__sep">·</span>${lang}` : ""}
+        ${counts}
+        ${lang ? `${counts ? `<span class="oldgh-repo-blob__sep">·</span>` : ""}${lang}` : ""}
       </div>
       <div class="oldgh-repo-blob__actions">${raw}${download}${blame}${history}</div>
     </div>
   `;
 }
 
+// a file with no lines, or a single empty line, has no displayable source
+function isEmptySource(v: RepoBlobView): boolean {
+  return v.rawLines.length === 0 || (v.rawLines.length === 1 && v.rawLines[0] === "");
+}
+
 function renderSource(v: RepoBlobView): string {
+  if (isEmptySource(v)) {
+    // a single "" line means the file loaded but is empty; no lines at all
+    // means the content never arrived
+    const empty = v.rawLines.length === 1;
+    const icon = octicon(empty ? "file" : "alert", { size: 32 });
+    const message = empty ? "This file is empty." : "Could not load file contents.";
+    return `
+      <div class="oldgh-repo-blob__empty">
+        ${icon}
+        <p>${escapeText(message)}</p>
+      </div>
+    `;
+  }
   const rows: string[] = [];
   for (let i = 0; i < v.rawLines.length; i++) {
     const n = i + 1;

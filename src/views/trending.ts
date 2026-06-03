@@ -26,7 +26,7 @@ type TrendingDev = {
   login: string;
   name: string | null;
   avatarUrl: string;
-  popRepo: { name: string; description: string | null } | null;
+  popRepo: { name: string; href: string | null; description: string | null } | null;
 };
 
 export async function mountTrending(pathname: string, search: string): Promise<void> {
@@ -108,7 +108,16 @@ async function scrapeTrendingHtml(period: TrendingPeriod, language: string): Pro
       const forksAnchor = row.querySelector<HTMLAnchorElement>(`a[href$="/${owner}/${repoName}/forks"]`);
       const momentumEl = row.querySelector<HTMLElement>(".float-sm-right, .d-inline-block.float-sm-right");
       const momentum = momentumEl?.textContent?.trim() || "";
-      const starsInPeriod = parseShortCount((momentum.match(/^([\d,.]+\s*[km]?)/i)?.[1] ?? "").replace(/[\s,]/g, ""));
+      let starsInPeriod = parseShortCount((momentum.match(/^([\d,.]+\s*[km]?)/i)?.[1] ?? "").replace(/[\s,]/g, ""));
+      // fallback: the momentum count also lives in the textual "N stars today/this
+      // week/month" span next to an octicon-star, which the float-only path misses
+      if (starsInPeriod === null) {
+        const starText =
+          row.querySelector<HTMLElement>("svg.octicon-star")?.parentElement?.textContent?.trim() || momentum;
+        starsInPeriod = parseShortCount(
+          (starText.match(/([\d,.]+\s*[km]?)\s*stars?\s+(?:today|this\s+(?:week|month))/i)?.[1] ?? "").replace(/[\s,]/g, ""),
+        );
+      }
       out.push({
         fullName: `${owner}/${repoName}`,
         ownerLogin: owner,
@@ -166,7 +175,10 @@ async function fetchDevelopers(period: TrendingPeriod): Promise<TrendingDev[]> {
     if (popRepoAnchor) {
       const repoName = popRepoAnchor.textContent?.trim() || "";
       const desc = row.querySelector<HTMLElement>(".f6.color-fg-muted, p.color-fg-muted")?.textContent?.trim() || null;
-      if (repoName) popRepo = { name: repoName, description: desc };
+      // capture the anchor's real href; the popular repo can belong to another
+      // owner/org, so reconstructing /login/name 404s
+      const popRepoHref = popRepoAnchor.getAttribute("href") || null;
+      if (repoName) popRepo = { name: repoName, href: popRepoHref, description: desc };
     }
     out.push({ login, name: nameText && nameText !== login ? nameText : null, avatarUrl, popRepo });
   }
@@ -190,10 +202,10 @@ function renderDevList(devs: TrendingDev[]): string {
               ${d.name ? `<a href="/${escapeAttr(d.login)}"><strong>${escapeText(d.name)}</strong></a>` : ""}
               <a class="oldgh-trending__dev-login" href="/${escapeAttr(d.login)}">${escapeText(d.login)}</a>
             </div>
-            ${d.popRepo ? `
+            ${d.popRepo && d.popRepo.href ? `
               <div class="oldgh-trending__dev-repo">
                 ${octicon("repo", { size: 12 })}
-                <a href="/${escapeAttr(d.login)}/${escapeAttr(d.popRepo.name)}">${escapeText(d.popRepo.name)}</a>
+                <a href="${escapeAttr(d.popRepo.href)}">${escapeText(d.popRepo.name)}</a>
                 ${d.popRepo.description ? `<span class="oldgh-trending__dev-pop-desc">${escapeText(d.popRepo.description)}</span>` : ""}
               </div>
             ` : ""}

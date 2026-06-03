@@ -19,11 +19,19 @@ export function unmountRepoCommit(): void {
 }
 
 function renderShell(c: CommitView): string {
+  // merge commits and --allow-empty serve an empty diff
+  const body = c.files.length === 0
+    ? `<div class="oldgh-repo-commit__empty">${
+        c.parents.length >= 2
+          ? "This is a merge commit; view the individual parents for changes."
+          : "No file changes in this commit."
+      }</div>`
+    : c.files.map((f) => renderDiffFile(f)).join("");
   return `
     <div class="oldgh-page">
       ${renderHeader(c)}
       ${renderDiffSummary(c.files)}
-      ${c.files.map((f) => renderDiffFile(f)).join("")}
+      ${body}
     </div>
   `;
 }
@@ -31,12 +39,17 @@ function renderShell(c: CommitView): string {
 function renderHeader(c: CommitView): string {
   const shortOid = c.oid.slice(0, 7);
   const author = c.authors[0];
+  const authoredHtml = renderAuthor(author);
   const commBy = c.committer && (!author || c.committer.login !== author.login)
-    ? `, committed by <a href="${escapeAttr(c.committer.path)}"><strong>${escapeText(c.committer.displayName)}</strong></a>`
+    ? `committed by <a href="${escapeAttr(c.committer.path)}"><strong>${escapeText(c.committer.displayName)}</strong></a>`
     : "";
+  // join credits without a leading comma and keep "on" only when a credit precedes it
+  const credits = [authoredHtml, commBy].filter(Boolean).join(", ");
+  const time = `<time datetime="${escapeAttr(c.committedDate)}" title="${escapeAttr(absoluteTime(c.committedDate))}">${escapeText(relativeTime(c.committedDate))}</time>`;
+  const byline = credits ? `${credits} on ${time}` : `Committed on ${time}`;
   const parents = c.parents.length > 0
     ? `<div class="oldgh-repo-commit__parents">
-        ${c.parents.length === 2 ? "merge of " : "parent "}${c.parents
+        ${c.parents.length >= 2 ? "merge of " : "parent "}${c.parents
           .map((p) => `<a href="/${escapeAttr(c.owner)}/${escapeAttr(c.repo)}/commit/${escapeAttr(p)}"><code>${escapeText(p.slice(0, 7))}</code></a>`)
           .join(" + ")}
       </div>`
@@ -50,8 +63,7 @@ function renderHeader(c: CommitView): string {
       </div>
       ${c.bodyMessageHtml ? `<div class="oldgh-repo-commit__body markdown-body">${sanitizeBodyHtml(c.bodyMessageHtml)}</div>` : ""}
       <div class="oldgh-repo-commit__meta">
-        ${renderAuthor(author)}${commBy}
-        on <time datetime="${escapeAttr(c.committedDate)}" title="${escapeAttr(absoluteTime(c.committedDate))}">${escapeText(relativeTime(c.committedDate))}</time>
+        ${byline}
       </div>
       ${parents}
     </div>

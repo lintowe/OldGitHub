@@ -19,7 +19,7 @@ type TrendingDev = {
   login: string;
   name: string | null;
   avatarUrl: string;
-  popRepo: { name: string; description: string | null } | null;
+  popRepo: { name: string; href: string | null; description: string | null } | null;
 };
 
 const CURATED_TOPICS: { slug: string; label: string }[] = [
@@ -214,7 +214,10 @@ async function fetchTrendingDevs(): Promise<TrendingDev[]> {
         desc = t;
         break;
       }
-      if (repoName) popRepo = { name: repoName, description: desc };
+      // capture the anchor's real href; the popular repo can belong to another
+      // owner/org, so reconstructing /login/name 404s
+      const popRepoHref = popRepoAnchor.getAttribute("href") || null;
+      if (repoName) popRepo = { name: repoName, href: popRepoHref, description: desc };
     }
     out.push({ login, name: nameText && nameText !== login ? nameText : null, avatarUrl, popRepo });
   }
@@ -267,7 +270,7 @@ function renderDevs(items: TrendingDev[]): string {
             ${d.popRepo ? `
               <div class="oldgh-explore__dev-repo">
                 <span class="oldgh-explore__dev-pop-label">Popular repo</span>
-                <a href="/${escapeAttr(d.login)}/${escapeAttr(d.popRepo.name)}">${escapeText(d.popRepo.name)}</a>
+                <a href="${escapeAttr(d.popRepo.href || `/${d.login}/${d.popRepo.name}`)}">${escapeText(d.popRepo.name)}</a>
                 ${d.popRepo.description ? `<span class="oldgh-explore__dev-pop-desc">${escapeText(d.popRepo.description)}</span>` : ""}
               </div>
             ` : ""}

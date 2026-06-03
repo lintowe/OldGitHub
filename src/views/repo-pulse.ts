@@ -43,7 +43,9 @@ function renderShell(_owner: string, _repo: string): string {
 function renderBody(v: PulseView): string {
   const sinceLabel = formatDate(v.sinceIso);
   const todayLabel = formatDate(new Date().toISOString());
-  const totalPrActivity = v.openedPrs.length + v.closedPrs.length;
+  // header must reconcile with the open/merged split shown below
+  const totalPrActivity = v.openedPrs.length + v.mergedPrs.length;
+  const authorCount = countCommitAuthors(v.commits);
   const totalIssueActivity = v.openedIssues.length + v.closedIssues.length;
   return `
     <header class="oldgh-pulse__header">
@@ -54,8 +56,8 @@ function renderBody(v: PulseView): string {
     <section class="oldgh-pulse__overview">
       <h2>Overview</h2>
       <p class="oldgh-pulse__summary">
-        Excluding merges, <strong>${v.commitAuthors.size}</strong>
-        ${v.commitAuthors.size === 1 ? "author has" : "authors have"} pushed
+        Excluding merges, <strong>${authorCount}</strong>
+        ${authorCount === 1 ? "author has" : "authors have"} pushed
         <strong>${v.commits.length}</strong> ${v.commits.length === 1 ? "commit" : "commits"} this week.
         <strong>${v.openedPrs.length}</strong> pull requests opened,
         <strong>${v.mergedPrs.length}</strong> merged,
@@ -103,7 +105,7 @@ function renderIssueList(title: string, items: PulseIssueRef[]): string {
       <ul>
         ${items.map((it) => `
           <li>
-            <a href="${it.htmlUrl.replace("https://github.com", "")}">${escapeText(it.title)}</a>
+            ${linkOrText(it.htmlUrl, it.title)}
             <span class="oldgh-pulse__sublist-meta">#${it.number} ${it.user ? `· ${escapeText(it.user.login)}` : ""}</span>
           </li>
         `).join("")}
@@ -116,8 +118,8 @@ function renderCommitRow(c: PulseCommitRef): string {
   return `
     <li class="oldgh-pulse__commit">
       ${c.authorAvatar ? `<img src="${escapeAttr(c.authorAvatar)}" width="20" height="20" alt="" />` : ""}
-      <a class="oldgh-pulse__commit-msg" href="${c.htmlUrl.replace("https://github.com", "")}">${escapeText(c.headline)}</a>
-      <code class="oldgh-pulse__commit-sha"><a href="${c.htmlUrl.replace("https://github.com", "")}">${escapeText(c.abbrevSha)}</a></code>
+      ${linkOrText(c.htmlUrl, c.headline, "oldgh-pulse__commit-msg")}
+      <code class="oldgh-pulse__commit-sha">${linkOrText(c.htmlUrl, c.abbrevSha)}</code>
       <span class="oldgh-pulse__commit-meta">
         ${c.authorLogin ? `<a href="/${escapeAttr(c.authorLogin)}">${escapeText(c.authorLogin)}</a>` : ""}
         ${c.date ? `<span title="${escapeAttr(absoluteTime(c.date))}">${escapeText(relativeTime(c.date))}</span>` : ""}
@@ -150,6 +152,25 @@ export function renderInsightsNav(active: "pulse" | "contributors" | "commit-act
       </ul>
     </div>
   `;
+}
+
+// emit an anchor only when the url is present; an empty href would navigate
+// to the current page, so fall back to plain text in that case
+function linkOrText(htmlUrl: string, text: string, className?: string): string {
+  const cls = className ? ` class="${className}"` : "";
+  if (!htmlUrl) return `<span${cls}>${escapeText(text)}</span>`;
+  const href = htmlUrl.replace("https://github.com", "");
+  return `<a${cls} href="${escapeAttr(href)}">${escapeText(text)}</a>`;
+}
+
+// count distinct authors by a stable identity so unlinked (bot/ci/noreply)
+// commits still register an author and the count is never 0 while commits exist
+function countCommitAuthors(commits: PulseCommitRef[]): number {
+  const seen = new Set<string>();
+  for (const c of commits) {
+    seen.add(c.authorLogin || c.authorAvatar || c.sha);
+  }
+  return seen.size;
 }
 
 function formatDate(iso: string): string {

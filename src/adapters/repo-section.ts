@@ -52,12 +52,12 @@ export async function scrapeSection(
 
   cleanScrapedContent(main);
 
-  const inMainH1 = main.querySelector("h1");
-  const titleFromMain = inMainH1?.textContent?.trim() || "";
+  // prefer the explicit fallback when the scraped heading is hidden/generic
+  const titleFromMain = pickScrapedTitle(main);
   const docTitleRaw = doc.querySelector("title")?.textContent?.trim() || "";
   const docTitleClean = docTitleRaw.split("·")[0]?.trim() || "";
   const title = titleFromMain || options.titleFallback || docTitleClean || "Other";
-  if (inMainH1) inMainH1.remove();
+  stripDuplicateHeading(main, title);
 
   return {
     owner,
@@ -66,6 +66,43 @@ export async function scrapeSection(
     contentHtml: main.innerHTML,
     sourceUrl,
   };
+}
+
+const TITLE_BLOCKLIST = [
+  /^Search code, repositories/i,
+  /^Provide feedback$/i,
+  /^Saved searches$/i,
+  /^Search syntax tips/i,
+];
+
+// skip the visually-hidden / generic leading heading modern github injects
+function pickScrapedTitle(el: Element): string | null {
+  const candidates = el.querySelectorAll<HTMLElement>("h1.h2, h1.h3, h1");
+  for (const h of Array.from(candidates)) {
+    if (h.classList.contains("sr-only")) continue;
+    if (h.getAttribute("aria-hidden") === "true") continue;
+    if (h.closest("dialog, modal-dialog, .Overlay--hidden, [hidden]")) continue;
+    const txt = h.textContent?.replace(/\s+/g, " ").trim();
+    if (!txt) continue;
+    if (txt.length > 60) continue;
+    if (TITLE_BLOCKLIST.some((re) => re.test(txt))) continue;
+    return txt;
+  }
+  return null;
+}
+
+// remove the heading whose text became the title, not just the first h1
+function stripDuplicateHeading(el: Element, title: string): void {
+  if (!title) return;
+  const normalize = (s: string): string => s.replace(/\s+/g, " ").trim().toLowerCase();
+  const target = normalize(title);
+  for (const h of Array.from(el.querySelectorAll<HTMLElement>("h1, h2"))) {
+    if (h.classList.contains("sr-only")) continue;
+    if (normalize(h.textContent || "") === target) {
+      h.remove();
+      break;
+    }
+  }
 }
 
 function cleanScrapedContent(el: Element): void {

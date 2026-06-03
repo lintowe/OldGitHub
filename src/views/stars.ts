@@ -14,6 +14,8 @@ type StarredRepo = {
   language: string | null;
   stars: number;
   forks: number;
+  // scraper path can't read star/fork counts, so omit them instead of claiming 0
+  hasCounts: boolean;
   isPrivate: boolean;
   isFork: boolean;
   isArchived: boolean;
@@ -136,6 +138,7 @@ async function scrapeStarredPage(login: string): Promise<StarredRepo[] | null> {
         language: langText,
         stars: 0,
         forks: 0,
+        hasCounts: false,
         isPrivate,
         isFork: false,
         isArchived: false,
@@ -171,8 +174,8 @@ function renderLayout(items: StarredRepo[], ctx: StarsCtx): string {
       <div class="oldgh-stars__sidebox">
         <h3>${octicon("flame", { size: 14 })} Stats</h3>
         <ul class="oldgh-stars__stats">
-          <li><strong>${items.length}</strong> repositories starred</li>
-          <li><strong>${langCounts.size}</strong> languages</li>
+          <li><strong>${items.length}</strong> ${items.length === 1 ? "repository" : "repositories"} starred</li>
+          <li><strong>${langCounts.size}</strong> ${langCounts.size === 1 ? "language" : "languages"}</li>
         </ul>
       </div>
       ${sortedLangs.length > 0 ? `
@@ -208,6 +211,7 @@ function renderLayout(items: StarredRepo[], ctx: StarsCtx): string {
           </select>
         </label>
       </div>
+      ${items.length === 100 ? `<p class="oldgh-stars__notice">${octicon("info", { size: 14 })} Showing the first 100 starred repositories.</p>` : ""}
       ${renderList(filtered)}
     </main>
   `;
@@ -251,6 +255,7 @@ function parseStarred(raw: unknown): StarredRepo | null {
     language: typeof repoObj["language"] === "string" ? (repoObj["language"] as string) : null,
     stars: typeof repoObj["stargazers_count"] === "number" ? (repoObj["stargazers_count"] as number) : 0,
     forks: typeof repoObj["forks_count"] === "number" ? (repoObj["forks_count"] as number) : 0,
+    hasCounts: true,
     isPrivate: repoObj["private"] === true,
     isFork: repoObj["fork"] === true,
     isArchived: repoObj["archived"] === true,
@@ -287,8 +292,8 @@ function renderRow(r: StarredRepo): string {
       ${r.topics.length > 0 ? `<p class="oldgh-stars__topics">${r.topics.slice(0, 6).map((t) => `<a class="oldgh-search__topic" href="/topics/${escapeAttr(t)}">${escapeText(t)}</a>`).join(" ")}</p>` : ""}
       <ul class="oldgh-stars__meta">
         ${r.language ? `<li><span class="oldgh-search__lang-dot" style="background:${languageColor(r.language)}"></span>${escapeText(r.language)}</li>` : ""}
-        <li>${octicon("star", { size: 12 })} ${formatCount(r.stars)}</li>
-        <li>${octicon("repo-forked", { size: 12 })} ${formatCount(r.forks)}</li>
+        ${r.hasCounts ? `<li>${octicon("star", { size: 12 })} ${formatCount(r.stars)}</li>` : ""}
+        ${r.hasCounts ? `<li>${octicon("repo-forked", { size: 12 })} ${formatCount(r.forks)}</li>` : ""}
         ${r.starredAt ? `<li>Starred ${escapeText(formatDate(r.starredAt))}</li>` : ""}
         ${r.updatedAt ? `<li>Updated ${escapeText(formatDate(r.updatedAt))}</li>` : ""}
       </ul>

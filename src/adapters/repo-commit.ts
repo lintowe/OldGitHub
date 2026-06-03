@@ -84,7 +84,7 @@ async function fetchCommitMeta(
     bodyMessageHtml: typeof commit["bodyMessageHtml"] === "string" ? (commit["bodyMessageHtml"] as string) : null,
     authors: readPersonArray(commit["authors"]),
     committer: readPerson(commit["committer"]),
-    parents: readStringArray(commit["parents"]),
+    parents: readParents(commit["parents"]),
   };
 }
 
@@ -130,6 +130,20 @@ function readPerson(raw: unknown): PersonRef | null {
 function readStringArray(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter((x): x is string => typeof x === "string");
+}
+
+function readParents(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const out: string[] = [];
+  for (const entry of raw) {
+    // parents may be bare oid strings or objects like {oid,url}
+    if (typeof entry === "string") {
+      out.push(entry);
+    } else if (entry && typeof entry === "object" && typeof (entry as Record<string, unknown>)["oid"] === "string") {
+      out.push((entry as Record<string, unknown>)["oid"] as string);
+    }
+  }
+  return out;
 }
 
 function stripHtml(html: string): string {

@@ -179,7 +179,7 @@ async function fetchSecurityView(owner: string, repo: string): Promise<SecurityV
     {
       key: "security-policy",
       title: "Security policy",
-      icon: "shield-check",
+      icon: "shield",
       status: securityFile ? "enabled" : "needs-setup",
       description: securityFile
         ? `Define how users should report security vulnerabilities for this repository. Current policy: ${securityFile.name || "SECURITY.md"}.`
@@ -207,7 +207,7 @@ async function fetchSecurityView(owner: string, repo: string): Promise<SecurityV
     {
       key: "dependabot",
       title: "Dependabot alerts",
-      icon: "package-dependents",
+      icon: "package",
       status: "configurable",
       description: "Get notified when one of your dependencies has a known vulnerability. Pair with auto-updates to keep things patched.",
       action: { label: "Configure Dependabot", href: `/${owner}/${repo}/security/dependabot` },
@@ -271,7 +271,7 @@ function renderOverview(v: SecurityView): string {
   const enabledCount = v.features.filter((f) => f.status === "enabled").length;
   return `
     <div class="oldgh-security__hero">
-      <div class="oldgh-security__hero-icon">${octicon("shield-check", { size: 32 })}</div>
+      <div class="oldgh-security__hero-icon">${octicon("shield", { size: 32 })}</div>
       <div class="oldgh-security__hero-text">
         <h2>Security and analysis</h2>
         <p>${enabledCount > 0
@@ -288,7 +288,7 @@ function renderOverview(v: SecurityView): string {
 function renderFeature(f: SecurityCard): string {
   const statusChip = f.status === "enabled"
     ? `<span class="oldgh-security__status oldgh-security__status--on">${octicon("check", { size: 12 })} Enabled</span>`
-    : `<span class="oldgh-security__status oldgh-security__status--off">${octicon("dot", { size: 12 })} Not configured</span>`;
+    : `<span class="oldgh-security__status oldgh-security__status--off">${octicon("primitive-dot", { size: 12 })} Not configured</span>`;
   return `
     <li class="oldgh-security__feature">
       <div class="oldgh-security__feature-icon">${octicon(f.icon, { size: 18 })}</div>

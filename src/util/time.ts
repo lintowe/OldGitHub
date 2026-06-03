@@ -24,6 +24,7 @@ export function relativeTime(iso: string, now: Date = new Date()): string {
   };
 
   const { n, unit } = pick();
+  if (n === 0) return "just now";
   const plural = n === 1 ? unit : `${unit}s`;
   return future ? `in ${n} ${plural}` : `${n} ${plural} ago`;
 }

@@ -110,7 +110,7 @@ export async function searchRepositories(query: string, sort: string, order: Sea
 }
 
 export async function searchIssues(query: string, sort: string, order: SearchOrder, pullOnly: boolean): Promise<{ summary: SearchSummary; items: IssueResult[] }> {
-  const effective = pullOnly ? `${query} type:pr` : query;
+  const effective = pullOnly ? `${query} type:pr` : `${query} type:issue`;
   const data = await rawSearch("issues", effective, sort, order);
   const items = readArray(data["items"]).map(parseIssueResult).filter((r): r is IssueResult => r !== null);
   return summaryAnd<IssueResult>(query, pullOnly ? "pullrequests" : "issues", data, items);

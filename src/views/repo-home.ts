@@ -117,7 +117,7 @@ function renderLatestRelease(owner: string, repo: string, rel: LatestRelease): s
       ${octicon("tag", { size: 16 })}
       <span class="oldgh-release-callout__label">Latest release</span>
       <a class="oldgh-release-callout__tag" href="${escapeAttr(releaseHref)}">${escapeText(rel.tag)}</a>
-      <a class="oldgh-release-callout__name" href="${escapeAttr(releaseHref)}" title="${escapeAttr(rel.name)}">${escapeText(rel.name)}</a>
+      ${rel.name && rel.name !== rel.tag ? `<a class="oldgh-release-callout__name" href="${escapeAttr(releaseHref)}" title="${escapeAttr(rel.name)}">${escapeText(rel.name)}</a>` : ""}
       ${pre}
       ${time}
       ${download}
@@ -285,7 +285,7 @@ function renderLatestCommit(ctx: { owner: string; repo: string }, c: LatestCommi
     <div class="oldgh-latest-commit">
       ${avatar}
       ${author}
-      <a class="oldgh-latest-commit__message" href="${escapeAttr(commitUrl)}" title="${escapeAttr(c.message)}">${escapeText(c.message)}</a>
+      <a class="oldgh-latest-commit__message" href="${escapeAttr(commitUrl)}" title="${escapeAttr(c.message)}">${escapeText(c.message) || "(no commit message)"}</a>
       <a class="oldgh-latest-commit__sha" href="${escapeAttr(commitUrl)}" title="${escapeAttr(c.sha)}"><code>${escapeText(c.sha.slice(0, 7))}</code></a>
       ${time}
     </div>
@@ -338,7 +338,7 @@ function renderShell(o: RepoOverview): string {
 
 function renderNumbersBar(o: RepoOverview): string {
   const commits = o.commitCount
-    ? `<li class="oldgh-repo-numbers__item"><a href="/${o.owner}/${o.repo}/commits/${escapeAttr(o.branch)}">${octicon("history", { size: 16 })}<span class="oldgh-repo-numbers__num">${escapeText(o.commitCount)}</span> <span class="oldgh-repo-numbers__label">commits</span></a></li>`
+    ? `<li class="oldgh-repo-numbers__item"><a href="/${o.owner}/${o.repo}/commits/${escapeAttr(o.branch)}">${octicon("history", { size: 16 })}<span class="oldgh-repo-numbers__num">${escapeText(o.commitCount)}</span> <span class="oldgh-repo-numbers__label">${o.commitCount === "1" ? "commit" : "commits"}</span></a></li>`
     : "";
   // branches / releases / contributors counts fill in via hydrateRepoNumbers;
   // they start with a thin placeholder and each drops out if its fetch fails.

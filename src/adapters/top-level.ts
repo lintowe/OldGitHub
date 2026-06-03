@@ -98,6 +98,11 @@ function cleanScraped(el: Element): void {
     "#repository-container-header",
     ".pagehead",
     ".UnderlineNav.js-repo-nav",
+    ".js-pjax-loader-bar",
+    ".flash",
+    "[aria-label*='error' i][role='alert']",
+    "[data-component='error-boundary']",
+    ".js-error-boundary",
     "script",
     "style",
     "iframe",
@@ -106,6 +111,13 @@ function cleanScraped(el: Element): void {
   ];
   for (const sel of removeSelectors) {
     el.querySelectorAll(sel).forEach((n) => n.remove());
+  }
+  // remove "Uh oh!" hydration error panels that lack a specific class
+  for (const node of Array.from(el.querySelectorAll<HTMLElement>("div, section"))) {
+    const text = (node.textContent || "").trim();
+    if (text.startsWith("Uh oh!") && text.includes("error") && node.children.length < 10) {
+      node.remove();
+    }
   }
   for (const h of Array.from(el.querySelectorAll<HTMLElement>("h1"))) {
     const txt = (h.textContent || "").replace(/\s+/g, " ").trim();

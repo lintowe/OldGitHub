@@ -13,8 +13,6 @@ type TopicMeta = {
   description: string | null;
   createdBy: string | null;
   released: string | null;
-  url: string | null;
-  wikipediaUrl: string | null;
   featured: boolean;
   curated: boolean;
 };
@@ -53,15 +51,15 @@ export async function mountTopic(pathname: string, search: string): Promise<void
   const sort = params.get("s") ?? params.get("sort") ?? "stars";
   const order = params.get("o") ?? params.get("order") ?? "desc";
 
-  const [meta, repos] = await Promise.all([
+  const [meta, repoResult] = await Promise.all([
     fetchTopicMeta(slug).catch(() => null),
-    fetchTopicRepos(slug, sort, order).catch(() => [] as TopicRepo[]),
+    fetchTopicRepos(slug, sort, order).catch(() => ({ repos: [] as TopicRepo[], totalCount: 0 })),
   ]);
 
   const heroSlot = root.querySelector<HTMLElement>(".oldgh-topic__hero");
   if (heroSlot) heroSlot.innerHTML = renderHero(slug, meta);
   const reposSlot = root.querySelector<HTMLElement>(".oldgh-topic__repos");
-  if (reposSlot) reposSlot.innerHTML = renderRepos(repos);
+  if (reposSlot) reposSlot.innerHTML = renderRepos(repoResult.repos, repoResult.totalCount);
   bindSort(root);
 }
 
@@ -91,14 +89,12 @@ async function fetchTopicMeta(slug: string): Promise<TopicMeta | null> {
     description: typeof item["description"] === "string" ? (item["description"] as string) : null,
     createdBy: typeof item["created_by"] === "string" ? (item["created_by"] as string) : null,
     released: typeof item["released"] === "string" ? (item["released"] as string) : null,
-    url: typeof item["url"] === "string" ? (item["url"] as string) : null,
-    wikipediaUrl: typeof item["repository_url"] === "string" ? (item["repository_url"] as string) : null,
     featured: item["featured"] === true,
     curated: item["curated"] === true,
   };
 }
 
-async function fetchTopicRepos(slug: string, sort: string, order: string): Promise<TopicRepo[]> {
+async function fetchTopicRepos(slug: string, sort: string, order: string): Promise<{ repos: TopicRepo[]; totalCount: number }> {
   const params = new URLSearchParams({
     q: `topic:${slug}`,
     per_page: "30",
@@ -109,10 +105,13 @@ async function fetchTopicRepos(slug: string, sort: string, order: string): Promi
     credentials: "omit",
     headers: { Accept: "application/vnd.github.mercy-preview+json" },
   });
-  if (!resp.ok) return [];
+  if (!resp.ok) return { repos: [], totalCount: 0 };
   const data = (await resp.json()) as Record<string, unknown>;
   const items = Array.isArray(data["items"]) ? (data["items"] as unknown[]) : [];
-  return items.map(parseRepo).filter((r): r is TopicRepo => r !== null);
+  const repos = items.map(parseRepo).filter((r): r is TopicRepo => r !== null);
+  // search api total_count is the real match count, not the capped per_page page
+  const totalCount = typeof data["total_count"] === "number" ? (data["total_count"] as number) : repos.length;
+  return { repos, totalCount };
 }
 
 function parseRepo(raw: unknown): TopicRepo | null {
@@ -179,13 +178,11 @@ function renderMeta(meta: TopicMeta | null): string {
   const bits: string[] = [];
   if (meta.createdBy) bits.push(`Created by <strong>${escapeText(meta.createdBy)}</strong>`);
   if (meta.released) bits.push(`Released <strong>${escapeText(meta.released)}</strong>`);
-  if (meta.url) bits.push(`<a href="${escapeAttr(meta.url)}" rel="noreferrer">${octicon("link", { size: 12 })} Website</a>`);
-  if (meta.wikipediaUrl) bits.push(`<a href="${escapeAttr(meta.wikipediaUrl)}" rel="noreferrer">${octicon("book", { size: 12 })} Wikipedia</a>`);
   if (bits.length === 0) return "";
   return `<ul class="oldgh-topic__meta">${bits.map((b) => `<li>${b}</li>`).join("")}</ul>`;
 }
 
-function renderRepos(items: TopicRepo[]): string {
+function renderRepos(items: TopicRepo[], totalCount: number): string {
   if (items.length === 0) {
     return `
       <div class="oldgh-topic__empty">
@@ -198,7 +195,7 @@ function renderRepos(items: TopicRepo[]): string {
   const sort = params.get("s") ?? "stars";
   return `
     <div class="oldgh-topic__bar">
-      <div class="oldgh-topic__count"><strong>${items.length}+</strong> repositories</div>
+      <div class="oldgh-topic__count"><strong>${formatCount(totalCount)}</strong> repositories</div>
       <label class="oldgh-topic__sort">
         <span>Sort:</span>
         <select data-oldgh-topic-sort>

@@ -22,8 +22,8 @@ function buildSidebar(): SidebarGroup[] {
       items: [
         { key: "profile", label: "Public profile", icon: "person", path: "/settings/profile" },
         { key: "account", label: "Account", icon: "gear", path: "/settings/admin" },
-        { key: "appearance", label: "Appearance", icon: "sun", path: "/settings/appearance" },
-        { key: "accessibility", label: "Accessibility", icon: "accessibility", path: "/settings/accessibility" },
+        { key: "appearance", label: "Appearance", icon: "paintcan", path: "/settings/appearance" },
+        { key: "accessibility", label: "Accessibility", icon: "eye", path: "/settings/accessibility" },
         { key: "notifications", label: "Notifications", icon: "bell", path: "/settings/notifications" },
       ],
     },
@@ -37,15 +37,15 @@ function buildSidebar(): SidebarGroup[] {
         { key: "keys", label: "SSH and GPG keys", icon: "key", path: "/settings/keys" },
         { key: "organizations", label: "Organizations", icon: "organization", path: "/settings/organizations" },
         { key: "enterprises", label: "Enterprises", icon: "law", path: "/settings/enterprises" },
-        { key: "moderation", label: "Moderation", icon: "no-entry", path: "/settings/interaction_limits" },
+        { key: "moderation", label: "Moderation", icon: "stop", path: "/settings/interaction_limits" },
       ],
     },
     {
       label: "Code, planning, and automation",
       items: [
         { key: "repositories", label: "Repositories", icon: "repo", path: "/settings/repositories" },
-        { key: "codespaces", label: "Codespaces", icon: "codespaces", path: "/settings/codespaces" },
-        { key: "copilot", label: "Copilot", icon: "copilot", path: "/settings/copilot" },
+        { key: "codespaces", label: "Codespaces", icon: "terminal", path: "/settings/codespaces" },
+        { key: "copilot", label: "Copilot", icon: "hubot", path: "/settings/copilot" },
         { key: "packages", label: "Packages", icon: "package", path: "/settings/packages" },
         { key: "pages", label: "Pages", icon: "book", path: "/settings/pages" },
         { key: "replies", label: "Saved replies", icon: "comment-discussion", path: "/settings/replies" },
@@ -54,7 +54,7 @@ function buildSidebar(): SidebarGroup[] {
     {
       label: "Integrations",
       items: [
-        { key: "applications", label: "Applications", icon: "apps", path: "/settings/apps/authorizations" },
+        { key: "applications", label: "Applications", icon: "plug", path: "/settings/apps/authorizations" },
         { key: "developer_settings", label: "Developer settings", icon: "code", path: "/settings/developers" },
       ],
     },
@@ -166,6 +166,9 @@ function cleanScrapedContent(el: Element): void {
     "nav[aria-label*='settings' i]",
     "nav[aria-label='User account menu']",
     "nav[aria-label='Account menu']",
+    // per-option ajax save-status badge (loading spinner + success check + error
+    // x). github shows one state via css/js we block, so all three leak at once
+    ".status-indicator",
   ];
   for (const sel of remove) {
     el.querySelectorAll(sel).forEach((n) => n.remove());

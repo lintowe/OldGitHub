@@ -15,7 +15,7 @@ export async function mountNotifications(search: string): Promise<void> {
 
   const root = document.createElement("div");
   root.className = ROOT_CLASS;
-  root.innerHTML = renderShell(view);
+  root.innerHTML = renderShell(view, search);
   adoptBodyRoot(root);
 }
 
@@ -23,7 +23,13 @@ export function unmountNotifications(): void {
   removeAllBodyRoots();
 }
 
-function renderShell(v: NotificationsView): string {
+function renderShell(v: NotificationsView, search: string): string {
+  // a non-empty query string means a filter or search is applied, not the default inbox
+  const isFiltered = search.trim().length > 0 || v.filters.some((f) => f.isActive && !isDefaultFilter(f.href));
+  const emptyIcon = isFiltered ? "search" : "check";
+  const emptyCopy = isFiltered
+    ? "No notifications match this filter."
+    : "No new notifications. You're all caught up.";
   return `
     <div class="oldgh-page oldgh-notif">
       <header class="oldgh-notif__header">
@@ -31,7 +37,7 @@ function renderShell(v: NotificationsView): string {
         <div class="oldgh-notif__counts">
           <span class="oldgh-notif__count">${v.totalUnread} unread</span>
           <span class="oldgh-notif__count-sep">·</span>
-          <span class="oldgh-notif__count">${v.totalShown} total</span>
+          <span class="oldgh-notif__count">${v.totalShown} shown</span>
         </div>
       </header>
       <div class="oldgh-notif__layout">
@@ -41,12 +47,17 @@ function renderShell(v: NotificationsView): string {
         </aside>
         <main class="oldgh-notif__main">
           ${v.groups.length === 0
-            ? `<div class="oldgh-notif__empty">${octicon("check", { size: 22 })} <p>No new notifications. You're all caught up.</p></div>`
+            ? `<div class="oldgh-notif__empty">${octicon(emptyIcon, { size: 22 })} <p>${escapeText(emptyCopy)}</p></div>`
             : v.groups.map(renderRepoGroup).join("")}
         </main>
       </div>
     </div>
   `;
+}
+
+function isDefaultFilter(href: string): boolean {
+  // the default inbox has no extra query, so any /notifications path without a query is non-filtering
+  return !href.includes("?");
 }
 
 function renderFiltersBox(v: NotificationsView): string {

@@ -1,4 +1,5 @@
 import { octicon } from "@/icons";
+import { formatCount } from "@/util/format";
 import { fetchApi } from "@/adapters/rate-limit";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
@@ -71,7 +72,7 @@ function parseTopics(data: Record<string, unknown>, isFeatured: boolean): Topic[
       shortDescription: typeof t["short_description"] === "string" ? t["short_description"] : null,
       featured: t["featured"] === true || isFeatured,
       curated: t["curated"] === true,
-      repoCount: null as number | null,
+      repoCount: typeof t["repository_count"] === "number" ? t["repository_count"] : null,
     };
   }).filter((t): t is Topic => t !== null);
 }
@@ -128,16 +129,18 @@ function renderContent(featured: Topic[], popular: Topic[]): string {
 
 function renderCard(t: Topic): string {
   const label = t.displayName || t.name;
+  const badges = [
+    t.featured ? `<span class="oldgh-topics-index__badge oldgh-topics-index__badge--featured">${octicon("star", { size: 10 })} Featured</span>` : "",
+    t.curated && !t.featured ? `<span class="oldgh-topics-index__badge">${octicon("checklist", { size: 10 })} Curated</span>` : "",
+    t.repoCount != null ? `<span class="oldgh-topics-index__badge">${octicon("repo", { size: 10 })} ${formatCount(t.repoCount)} ${t.repoCount === 1 ? "repository" : "repositories"}</span>` : "",
+  ].join("");
   return `
     <li class="oldgh-topics-index__card">
       <a class="oldgh-topics-index__card-link" href="/topics/${escapeAttr(t.name)}">
         <h3 class="oldgh-topics-index__card-name">${escapeText(label)}</h3>
         <code class="oldgh-topics-index__card-slug">${escapeText(t.name)}</code>
         ${t.shortDescription ? `<p class="oldgh-topics-index__card-desc">${escapeText(t.shortDescription)}</p>` : ""}
-        <div class="oldgh-topics-index__card-footer">
-          ${t.featured ? `<span class="oldgh-topics-index__badge oldgh-topics-index__badge--featured">${octicon("star", { size: 10 })} Featured</span>` : ""}
-          ${t.curated && !t.featured ? `<span class="oldgh-topics-index__badge">${octicon("checklist", { size: 10 })} Curated</span>` : ""}
-        </div>
+        ${badges ? `<div class="oldgh-topics-index__card-footer">${badges}</div>` : ""}
       </a>
     </li>
   `;

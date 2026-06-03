@@ -3803,7 +3803,8 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
   height: 11px !important;
 }
 .oldgh-actions__run-status--success { background: var(--gh-state-open); }
-.oldgh-actions__run-status--failure { background: var(--gh-state-closed); }
+.oldgh-actions__run-status--failure,
+.oldgh-actions__run-status--timed_out { background: var(--gh-state-closed); }
 .oldgh-actions__run-status--in_progress,
 .oldgh-actions__run-status--queued,
 .oldgh-actions__run-status--pending { background: #cc8500; }
@@ -3811,6 +3812,7 @@ html[data-oldgh-theme="dark"] .oldgh-actions__wf--selected {
 .oldgh-actions__run-status--skipped { background: var(--gh-fg-muted); }
 .oldgh-actions__run-status--action_required { background: #d29922; }
 .oldgh-actions__run-status--neutral,
+.oldgh-actions__run-status--stale,
 .oldgh-actions__run-status--unknown { background: var(--gh-fg-muted); }
 .oldgh-actions__run-body {
   flex: 1;

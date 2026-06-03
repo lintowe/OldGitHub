@@ -287,6 +287,8 @@ function renderDiffPatch(patch: string): string {
       continue;
     }
     if (line.startsWith("---") || line.startsWith("+++")) continue;
+    // git's "\ No newline at end of file" marker is not a content line
+    if (line.startsWith("\\")) continue;
     rows.push(`<tr class="oldgh-diff__ctx"><td class="oldgh-diff__num">${oldNum}</td><td class="oldgh-diff__num">${newNum}</td><td class="oldgh-diff__code">${escapeText(line)}</td></tr>`);
     oldNum++;
     newNum++;
@@ -326,6 +328,7 @@ function renderPullCommitRow(owner: string, repo: string, c: PullCommit): string
   const avatar = c.authorAvatarUrl
     ? `<img class="oldgh-pr-commits__avatar" src="${escapeAttr(c.authorAvatarUrl)}" width="20" height="20" alt="" />`
     : "";
+  const committed = relativeTimeLink(c.committerDate);
   return `
     <li class="oldgh-pr-commits__row">
       <div class="oldgh-pr-commits__main">
@@ -333,7 +336,7 @@ function renderPullCommitRow(owner: string, repo: string, c: PullCommit): string
         <div class="oldgh-pr-commits__byline">
           ${avatar}
           ${authorLink}
-          committed ${relativeTimeLink(c.committerDate)}
+          ${committed ? `committed ${committed}` : ""}
         </div>
       </div>
       <div class="oldgh-pr-commits__meta">
@@ -353,6 +356,7 @@ function renderPullChecks(checks: CheckRun[]): string {
       ${counts.success > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--success">${counts.success} passed</span>` : ""}
       ${counts.failure > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--failure">${counts.failure} failing</span>` : ""}
       ${counts.skipped > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--neutral">${counts.skipped} skipped</span>` : ""}
+      ${counts.cancelled > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--neutral">${counts.cancelled} cancelled</span>` : ""}
       ${counts.pending > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--pending">${counts.pending} pending</span>` : ""}
       ${counts.other > 0 ? `<span class="oldgh-pr-checks__pill oldgh-pr-checks__pill--neutral">${counts.other} other</span>` : ""}
     </div>
@@ -424,16 +428,17 @@ function checkDuration(c: CheckRun): string | null {
   return `${min}m ${rest}s`;
 }
 
-function countChecks(checks: CheckRun[]): { success: number; failure: number; skipped: number; pending: number; other: number } {
-  let success = 0, failure = 0, skipped = 0, pending = 0, other = 0;
+function countChecks(checks: CheckRun[]): { success: number; failure: number; skipped: number; cancelled: number; pending: number; other: number } {
+  let success = 0, failure = 0, skipped = 0, cancelled = 0, pending = 0, other = 0;
   for (const c of checks) {
     if (c.status !== "completed") { pending++; continue; }
     if (c.conclusion === "success") success++;
     else if (c.conclusion === "failure" || c.conclusion === "timed_out" || c.conclusion === "action_required") failure++;
-    else if (c.conclusion === "skipped" || c.conclusion === "cancelled") skipped++;
+    else if (c.conclusion === "skipped") skipped++;
+    else if (c.conclusion === "cancelled") cancelled++;
     else other++;
   }
-  return { success, failure, skipped, pending, other };
+  return { success, failure, skipped, cancelled, pending, other };
 }
 
 function groupBy<T, K>(items: T[], keyFn: (t: T) => K): Map<K, T[]> {
@@ -708,6 +713,21 @@ function renderEvent(e: Extract<TimelineNode, { kind: "event" }>): string {
       icon = "git-pull-request";
       line = `<a href="/${escapeAttr(actor)}">${escapeText(actor)}</a> marked this as ready for review ${when}`;
       break;
+    case "PullRequestReview": {
+      // bodyless reviews arrive here; reviews with a body become comment nodes
+      const state = (e.toState || "").toLowerCase();
+      if (state === "approved") {
+        icon = "check";
+        line = `<a href="/${escapeAttr(actor)}">${escapeText(actor)}</a> approved these changes ${when}`;
+      } else if (state === "changes_requested") {
+        icon = "request-changes";
+        line = `<a href="/${escapeAttr(actor)}">${escapeText(actor)}</a> requested changes ${when}`;
+      } else {
+        icon = "eye";
+        line = `<a href="/${escapeAttr(actor)}">${escapeText(actor)}</a> reviewed ${when}`;
+      }
+      break;
+    }
     case "SubscribedEvent":
     case "UnsubscribedEvent":
     case "MentionedEvent":
@@ -787,7 +807,12 @@ function sanitizeBodyHtml(html: string): string {
 }
 
 function labelTextColor(hex: string): string {
-  const m = /^#?([\da-f]{6})$/i.exec(hex);
+  // expand 3-digit shorthand (ccc) to 6 digits before luminance calc
+  const short = /^#?([\da-f]{3})$/i.exec(hex);
+  const normalized = short && short[1]
+    ? short[1].split("").map((ch) => ch + ch).join("")
+    : hex;
+  const m = /^#?([\da-f]{6})$/i.exec(normalized);
   if (!m || !m[1]) return "#fff";
   const n = parseInt(m[1], 16);
   const r = (n >> 16) & 0xff;

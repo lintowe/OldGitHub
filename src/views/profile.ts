@@ -483,7 +483,7 @@ function buildLine(
       return { icon: "tag", line: `${escapeText(verb)} ${link} in ${repoLink} ${when}` };
     }
     case "PublicEvent":
-      return { icon: "unlock", line: `Made ${repoLink} public ${when}` };
+      return { icon: "repo", line: `Made ${repoLink} public ${when}` };
     case "MemberEvent": {
       const member = payload["member"] && typeof payload["member"] === "object" ? (payload["member"] as Record<string, unknown>) : null;
       const memberLogin = member && typeof member["login"] === "string" ? (member["login"] as string) : "";
@@ -643,7 +643,7 @@ function renderStarItem(raw: unknown): string {
         ${lang ? `<span>${langDot}${escapeText(lang)}</span>` : ""}
         <span>${octicon("star", { size: 12 })}${formatNum(stars)}</span>
         <span>${octicon("repo-forked", { size: 12 })}${formatNum(forks)}</span>
-        ${updated ? `<span>updated <span title="${escapeAttr(updated)}">${escapeText(relativeTime(updated))}</span></span>` : ""}
+        ${updated ? `<span>updated <span title="${escapeAttr(absoluteTime(updated))}">${escapeText(relativeTime(updated))}</span></span>` : ""}
       </p>
     </li>
   `;
@@ -692,7 +692,7 @@ function renderTabBody(v: ProfileView, tab: string): string {
   if (v.kind === "org") {
     return `
       ${v.pinned.length > 0 ? renderPinned(v) : ""}
-      <div class="oldgh-profile__org-readme-slot"></div>
+      <div class="oldgh-profile__org-readme-slot">${v.pinned.length === 0 ? renderOrgEmptyState(v) : ""}</div>
     `;
   }
   return `
@@ -700,6 +700,23 @@ function renderTabBody(v: ProfileView, tab: string): string {
     ${v.pinned.length > 0 ? renderPinned(v) : ""}
     ${renderContributions(v)}
     <div class="oldgh-profile__activity-slot"></div>
+  `;
+}
+
+// shown when an org overview has neither pinned repos nor a .github profile
+// readme, so the main column never renders empty. replaced wholesale by
+// hydrateOrgReadme when a readme is found
+function renderOrgEmptyState(v: ProfileView): string {
+  const links: string[] = [];
+  links.push(`<a href="/${escapeAttr(v.login)}?tab=repositories">${octicon("repo", { size: 14 })}<span>Repositories${v.repoCountHint != null ? ` (${escapeText(String(v.repoCountHint))})` : ""}</span></a>`);
+  links.push(`<a href="/${escapeAttr(v.login)}?tab=people">${octicon("organization", { size: 14 })}<span>People</span></a>`);
+  return `
+    <section class="oldgh-profile__org-empty oldgh-profile__empty">
+      ${octicon("organization", { size: 40 })}
+      <h3 class="oldgh-profile__section-title">${escapeText(v.displayName)}</h3>
+      <p class="oldgh-profile__muted">This organization hasn't pinned any repositories or published a profile README yet.</p>
+      <p class="oldgh-profile__org-empty-links">${links.join("")}</p>
+    </section>
   `;
 }
 
@@ -981,7 +998,7 @@ function renderPackageRow(p: { name: string; href: string; registry: string | nu
 function packageRegistryIcon(registry: string | null): string {
   switch (registry) {
     case "npm": return octicon("package", { size: 18 });
-    case "container": case "docker": return octicon("container", { size: 18 });
+    case "container": case "docker": return octicon("package", { size: 18 });
     case "rubygems": return octicon("ruby", { size: 18 });
     case "maven": return octicon("file-binary", { size: 18 });
     case "nuget": return octicon("file-binary", { size: 18 });
@@ -1111,7 +1128,7 @@ function renderProjectsFromFrame(frame: Element, login: string): string {
               ${p.description ? `<p class="oldgh-user-projects__desc">${escapeText(p.description)}</p>` : ""}
               <div class="oldgh-user-projects__meta">
                 <span class="oldgh-user-projects__status oldgh-user-projects__status--${p.status}">${p.status === "open" ? "Open" : "Closed"}</span>
-                ${p.itemCount !== null ? `<span>${p.itemCount} items</span>` : ""}
+                ${p.itemCount !== null ? `<span>${p.itemCount} item${p.itemCount === 1 ? "" : "s"}</span>` : ""}
               </div>
             </div>
           </li>

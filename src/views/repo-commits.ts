@@ -27,7 +27,9 @@ function renderShell(v: CommitsView): string {
   return `
     <div class="oldgh-page">
       ${renderHeader(v)}
-      ${v.groups.map((g) => renderGroup(v, g)).join("")}
+      ${v.groups.length === 0
+        ? `<div class="oldgh-repo-commits__group"><p class="oldgh-fg-muted">No commits found.</p></div>`
+        : v.groups.map((g) => renderGroup(v, g)).join("")}
       ${renderPagination(v)}
     </div>
   `;
@@ -45,6 +47,7 @@ function renderHeader(v: CommitsView): string {
 }
 
 function renderGroup(v: CommitsView, g: { title: string; commits: CommitEntry[] }): string {
+  if (g.commits.length === 0) return "";
   return `
     <section class="oldgh-repo-commits__group">
       <h3 class="oldgh-repo-commits__group-title">Commits on ${escapeText(g.title)}</h3>
@@ -70,9 +73,7 @@ function renderCommit(v: CommitsView, c: CommitEntry): string {
       <div class="oldgh-repo-commits__body">
         <p class="oldgh-repo-commits__msg">${messageHtml}</p>
         <p class="oldgh-repo-commits__meta">
-          ${renderAuthors(c.authors)}
-          committed
-          <a href="${escapeAttr(c.url)}" title="${escapeAttr(absoluteTime(c.committedDate))}">${escapeText(relativeTime(c.committedDate))}</a>
+          ${renderMeta(c)}
         </p>
       </div>
       <div class="oldgh-repo-commits__actions">
@@ -83,18 +84,24 @@ function renderCommit(v: CommitsView, c: CommitEntry): string {
   `;
 }
 
+function renderMeta(c: CommitEntry): string {
+  const committedLink = `<a href="${escapeAttr(c.url)}" title="${escapeAttr(absoluteTime(c.committedDate))}">${escapeText(relativeTime(c.committedDate))}</a>`;
+  const primaryLogin = c.authors[0]?.login;
+  // distinct committer gets the classic "authored ... and X committed ..." wording
+  if (c.committer && c.authors.length > 0 && c.committer.login !== primaryLogin) {
+    const authoredLink = `<a href="${escapeAttr(c.url)}" title="${escapeAttr(absoluteTime(c.authoredDate))}">${escapeText(relativeTime(c.authoredDate))}</a>`;
+    return `${renderAuthors(c.authors)} authored ${authoredLink} and ${renderPerson(c.committer)} committed ${committedLink}`;
+  }
+  return `${renderAuthors(c.authors)} committed ${committedLink}`;
+}
+
+function renderPerson(p: PersonRef): string {
+  return `<a class="oldgh-repo-commits__author" href="${escapeAttr(p.path)}"><strong>${escapeText(p.displayName)}</strong></a>`;
+}
+
 function renderAuthors(authors: PersonRef[]): string {
   if (authors.length === 0) return "";
-  if (authors.length === 1) {
-    const a = authors[0]!;
-    return `<a class="oldgh-repo-commits__author" href="${escapeAttr(a.path)}"><strong>${escapeText(a.displayName)}</strong></a>`;
-  }
-  return authors
-    .map(
-      (a) =>
-        `<a class="oldgh-repo-commits__author" href="${escapeAttr(a.path)}"><strong>${escapeText(a.displayName)}</strong></a>`,
-    )
-    .join(" and ");
+  return authors.map(renderPerson).join(" and ");
 }
 
 function renderPagination(v: CommitsView): string {

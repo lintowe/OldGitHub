@@ -274,7 +274,7 @@ function renderAssets(r: Release): string {
   if (all.length === 0) return "";
   return `
     <details class="oldgh-releases__assets" open>
-      <summary>Assets <span class="oldgh-releases__asset-count">${r.assets.length} file${r.assets.length === 1 ? "" : "s"}${sourceAssets.length ? ` + source` : ""}</span></summary>
+      <summary>Assets <span class="oldgh-releases__asset-count">${r.assets.length === 0 ? "Source code" : `${r.assets.length} file${r.assets.length === 1 ? "" : "s"}${sourceAssets.length ? " + source" : ""}`}</span></summary>
       <ul>
         ${all.map((a) => `
           <li class="oldgh-releases__asset">

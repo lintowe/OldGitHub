@@ -1,5 +1,6 @@
 import { octicon } from "@/icons";
 import { getCompare, type CompareView } from "@/adapters/repo-compare";
+import type { DiffFile } from "@/util/diff";
 import { renderDiffFile, renderDiffSummary } from "./_diff-table";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
@@ -22,10 +23,22 @@ function renderShell(v: CompareView): string {
   return `
     <div class="oldgh-page">
       ${renderHeader(v)}
-      ${renderDiffSummary(v.files)}
-      ${v.files.map((f) => renderDiffFile(f)).join("")}
+      ${v.files.length === 0
+        ? `<div class="oldgh-repo-compare__empty"><p>There isn't anything to compare.</p><p class="oldgh-fg-muted">${escapeText(v.base)} and ${escapeText(v.head)} are identical.</p></div>`
+        : `${renderDiffSummary(v.files)}${v.files.map((f) => renderFileWithLargeDiff(f)).join("")}`}
     </div>
   `;
+}
+
+// github omits the patch for large files, leaving empty hunks; show a placeholder body
+function renderFileWithLargeDiff(f: DiffFile): string {
+  const html = renderDiffFile(f);
+  const isLargeDiff = f.hunks.length === 0 && !f.isBinary && (f.additions > 0 || f.deletions > 0);
+  if (!isLargeDiff) return html;
+  const placeholder = `<div class="oldgh-repo-commit__binary">${octicon("file", { size: 14 })} Large diff not shown</div>`;
+  const closeIdx = html.lastIndexOf("</section>");
+  if (closeIdx < 0) return html;
+  return html.slice(0, closeIdx) + placeholder + html.slice(closeIdx);
 }
 
 function renderHeader(v: CompareView): string {

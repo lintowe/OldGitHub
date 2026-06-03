@@ -75,16 +75,23 @@ function renderSearch(v: IssueListView, kind: "issues" | "pulls"): string {
 }
 
 function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): string {
+  // not_planned (rest) and NOT_PLANNED (graphql) both mean the issue was closed as skipped
+  const notPlanned = (r.stateReason || "").toUpperCase() === "NOT_PLANNED";
   const stateIcon = r.state === "OPEN"
-    ? octicon(kind === "pulls" ? "git-pull-request" : "issue-opened", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--open" })
+    ? (r.isDraft
+      ? octicon("git-pull-request", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--draft" })
+      : octicon(kind === "pulls" ? "git-pull-request" : "issue-opened", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--open" }))
     : (kind === "pulls" && r.merged
       ? octicon("git-merge", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--merged" })
       : (kind === "pulls"
         ? octicon("git-pull-request", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--closed" })
-        : octicon("issue-closed", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--closed" })));
+        : (notPlanned
+          ? octicon("circle-slash", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--not-planned" })
+          : octicon("issue-closed", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--closed" }))));
 
+  const labelState = /\bis:closed\b/i.test(v.rawQuery || "") ? "is:closed" : "is:open";
   const labels = r.labels.length > 0
-    ? `<span class="oldgh-issues__labels">${r.labels.map((l) => `<a class="oldgh-issues__label" href="/${v.owner}/${v.repo}/${kind}?q=is:open+label:${encodeURIComponent('"' + l.name + '"')}" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(emojify(l.name))}</a>`).join("")}</span>`
+    ? `<span class="oldgh-issues__labels">${r.labels.map((l) => `<a class="oldgh-issues__label" href="/${v.owner}/${v.repo}/${kind}?q=${labelState}+label:${encodeURIComponent('"' + l.name + '"')}" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(emojify(l.name))}</a>`).join("")}</span>`
     : "";
 
   const author = r.author
@@ -112,7 +119,7 @@ function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): str
       <span class="oldgh-issues__state">${stateIcon}</span>
       <div class="oldgh-issues__body">
         <h3 class="oldgh-issues__title">
-          <a href="${escapeAttr(href)}">${sanitizeTitleHtml(r.titleHtml)}</a>
+          <a href="${escapeAttr(href)}">${emojify(sanitizeTitleHtml(r.titleHtml))}</a>
           ${labels}
         </h3>
         <p class="oldgh-issues__meta">

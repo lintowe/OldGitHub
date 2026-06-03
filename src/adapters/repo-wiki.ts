@@ -50,6 +50,8 @@ export async function getWiki(owner: string, repo: string, page: string): Promis
     const href = a.getAttribute("href") || "";
     const title = a.textContent?.trim() || "";
     if (!title || !href || href.startsWith("#") || seen.has(href)) continue;
+    // reject custom-sidebar in-page fragment links like /owner/repo/wiki#about
+    if (href.includes("#")) continue;
     if (!href.includes("/wiki")) continue;
     seen.add(href);
     pages.push({ title, href });

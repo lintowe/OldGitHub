@@ -58,8 +58,7 @@ function renderRunHeader(r: RunDetail, owner: string, repo: string): string {
         <span class="oldgh-actions-run__status oldgh-actions-run__status--${r.status}" title="${escapeAttr(statusLabel(r.status))}">${statusIcon(r.status, 18)}</span>
         <h1 class="oldgh-actions-run__title">
           <span class="oldgh-actions-run__workflow">${titleLink}</span>
-          <span class="oldgh-actions-run__separator">·</span>
-          <span class="oldgh-actions-run__display">${escapeText(r.displayTitle)}</span>
+          ${r.displayTitle && r.displayTitle !== r.workflowName ? `<span class="oldgh-actions-run__separator">·</span><span class="oldgh-actions-run__display">${escapeText(r.displayTitle)}</span>` : ""}
           ${r.runNumber ? `<span class="oldgh-actions-run__run-num">#${r.runNumber}</span>` : ""}
         </h1>
       </div>
@@ -74,7 +73,7 @@ function renderRunHeader(r: RunDetail, owner: string, repo: string): string {
               ${escapeText(r.triggeringActor.login)}
             </a>
             ${r.event ? `triggered via ${escapeText(prettyEvent(r.event))}` : ""}
-            ${r.startedAt ? `<span title="${escapeAttr(absoluteTime(r.startedAt))}">${escapeText(relativeTime(r.startedAt))}</span>` : ""}
+            ${r.startedAt && relativeTime(r.startedAt) ? `<span title="${escapeAttr(absoluteTime(r.startedAt))}">${escapeText(relativeTime(r.startedAt))}</span>` : ""}
           </span>
         ` : ""}
         ${r.runAttempt && r.runAttempt > 1 ? `<span class="oldgh-actions-run__meta-item">attempt #${r.runAttempt}</span>` : ""}

@@ -89,6 +89,7 @@ export type RepoBlobView = {
   displayName: string;
   language: string | null;
   rawLines: string[];
+  size: number;
   rawBlobUrl: string | null;
   truncated: boolean;
   isBinary: boolean;
@@ -132,7 +133,7 @@ export async function getRepoBlob(owner: string, repo: string, refAndPath: strin
     if (decoded === null) {
       isBinary = true;
     } else {
-      rawLines = decoded.split("\n");
+      rawLines = splitLines(decoded);
     }
   } else if (encoding === "none" || size > 1_000_000) {
     truncated = true;
@@ -141,7 +142,7 @@ export async function getRepoBlob(owner: string, repo: string, refAndPath: strin
         const r = await fetch(rawBlobUrl, { credentials: "omit" });
         if (r.ok) {
           const text = await r.text();
-          rawLines = text.split("\n");
+          rawLines = splitLines(text);
           truncated = false;
         }
       } catch {
@@ -158,6 +159,7 @@ export async function getRepoBlob(owner: string, repo: string, refAndPath: strin
     displayName,
     language,
     rawLines,
+    size,
     rawBlobUrl,
     truncated,
     isBinary,
@@ -185,6 +187,7 @@ async function loadBlobViaScrape(owner: string, repo: string, branch: string, pa
       displayName: pathBasename(path),
       language: guessLanguage(path),
       rawLines: [],
+      size: 0,
       rawBlobUrl: rawUrl,
       truncated: false,
       isBinary: true,
@@ -194,7 +197,8 @@ async function loadBlobViaScrape(owner: string, repo: string, branch: string, pa
     owner, repo, branch, path,
     displayName: pathBasename(path),
     language: guessLanguage(path),
-    rawLines: proxy.text.split("\n"),
+    rawLines: splitLines(proxy.text),
+    size: new TextEncoder().encode(proxy.text).length,
     rawBlobUrl: rawUrl,
     truncated: false,
     isBinary: false,
@@ -297,6 +301,14 @@ function guessLanguage(path: string): string | null {
 function pathBasename(p: string): string {
   const i = p.lastIndexOf("/");
   return i >= 0 ? p.slice(i + 1) : p;
+}
+
+// split into lines but drop the phantom trailing element produced by a file's
+// final newline so the line count and rendered rows don't gain a blank tail
+function splitLines(text: string): string[] {
+  const lines = text.split("\n");
+  if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+  return lines;
 }
 
 export async function getRepoOverview(owner: string, repo: string): Promise<RepoOverview> {

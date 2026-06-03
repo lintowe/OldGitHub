@@ -255,27 +255,35 @@ async function renderMilestones(owner: string, repo: string, state: string, page
           <span><strong>${pct}%</strong> complete</span>
           <span>${open} open</span>
           <span>${closed} closed</span>
-          ${due ? `<span>Due by ${escapeText(absoluteTime(due).split(" ")[0] ?? "")}</span>` : ""}
+          ${due ? `<span>Due by ${escapeText(dueByLabel(due))}</span>` : ""}
         </div>
       </li>
     `;
   }).join("");
-  return `${switcher}<ul class="oldgh-repo-list__list">${rows}</ul>${pagerHtml(owner, repo, "milestones", page, data.length === 30)}`;
+  return `${switcher}<ul class="oldgh-repo-list__list">${rows}</ul>${pagerHtml(owner, repo, "milestones", page, data.length === 30, validState)}`;
 }
 
-function pagerHtml(owner: string, repo: string, kind: string, page: number, hasMore: boolean): string {
+function pagerHtml(owner: string, repo: string, kind: string, page: number, hasMore: boolean, state?: string): string {
   if (page <= 1 && !hasMore) return "";
+  // milestones default to open when state is absent, so carry the closed tab across pages
+  const stateQuery = kind === "milestones" && state === "closed" ? "&state=closed" : "";
   return `
     <nav class="oldgh-repo-list__pager">
-      ${page > 1 ? `<a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/${escapeAttr(kind)}?page=${page - 1}">‹ Newer</a>` : "<span></span>"}
+      ${page > 1 ? `<a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/${escapeAttr(kind)}?page=${page - 1}${stateQuery}">‹ Newer</a>` : "<span></span>"}
       <span>Page ${page}</span>
-      ${hasMore ? `<a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/${escapeAttr(kind)}?page=${page + 1}">Older ›</a>` : "<span></span>"}
+      ${hasMore ? `<a href="/${escapeAttr(owner)}/${escapeAttr(repo)}/${escapeAttr(kind)}?page=${page + 1}${stateQuery}">Older ›</a>` : "<span></span>"}
     </nav>
   `;
 }
 
 function emptyHtml(msg: string): string {
   return `<div class="oldgh-repo-list__empty">${escapeText(msg)}</div>`;
+}
+
+function dueByLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 }
 
 import { formatCount } from "@/util/format";

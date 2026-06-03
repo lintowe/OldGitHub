@@ -48,6 +48,17 @@ export async function mountMarketplace(_pathname: string, search: string): Promi
   root.innerHTML = renderShell(type, category);
   adoptBodyRoot(root);
 
+  // the un-scrapeable empty-state offers a "show native" escape hatch; wire it
+  // up the same way dispatch.ts does for its own fallback bodies
+  root.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest("[data-oldgh-show-native]")) {
+      e.preventDefault();
+      document.documentElement.removeAttribute("data-oldgh-mounted");
+      document.querySelectorAll(".oldgh-body-root").forEach((n) => n.remove());
+    }
+  });
+
   try {
     const view = await scrapeMarketplace(type, category);
     const mainSlot = root.querySelector<HTMLElement>(".oldgh-marketplace__main");
@@ -167,7 +178,8 @@ function extractItems(scope: Element): MarketItem[] {
     const iconBg = bgMatch?.[1]?.trim() ?? null;
 
     const verified = !!card.querySelector("svg.octicon-verified, [aria-label*='Verified']");
-    const pricingEl = card.querySelector<HTMLElement>("[data-testid*='pricing'], [class*='pricing'], .color-fg-success");
+    // .color-fg-success is too generic (verified label, "Free"/"Installed" share it) so it gets dropped to avoid mislabeling pricing
+    const pricingEl = card.querySelector<HTMLElement>("[data-testid*='pricing'], [class*='pricing']");
     const pricing = pricingEl?.textContent?.replace(/\s+/g, " ").trim() || null;
     const categoryEl = card.querySelector<HTMLElement>("[data-testid*='category'], [class*='category']");
     const category = categoryEl?.textContent?.replace(/\s+/g, " ").trim() || null;
@@ -252,8 +264,8 @@ function renderMain(v: MarketView): string {
   if (v.sections.length === 0) {
     return `
       <div class="oldgh-marketplace__empty">
-        <p>This filter is rendered client-side by GitHub and couldn't be scraped.</p>
-        <p><a href="javascript:void(0)" data-oldgh-show-native>Show GitHub's native Marketplace page instead</a>.</p>
+        <p>We couldn't render this Marketplace view in the classic layout.</p>
+        <p><a href="javascript:void(0)" data-oldgh-show-native>Show GitHub's Marketplace page instead</a>.</p>
       </div>
     `;
   }
@@ -309,7 +321,7 @@ function renderRail(v: MarketView, activeCategory: string): string {
           ${activeCategory ? `<li><a href="/marketplace">${octicon("x", { size: 12 })} Clear filter</a></li>` : ""}
           ${v.categories.map((c) => `
             <li class="${c.slug === activeCategory ? "is-active" : ""}">
-              <a href="${escapeAttr(c.href)}">${escapeText(c.label)}${c.count !== null ? `<span class="oldgh-marketplace__cat-count">${c.count}</span>` : ""}</a>
+              <a href="${escapeAttr(c.href)}">${escapeText(c.label)}${c.count !== null ? `<span class="oldgh-marketplace__cat-count">${c.count.toLocaleString()}</span>` : ""}</a>
             </li>
           `).join("")}
         </ul>

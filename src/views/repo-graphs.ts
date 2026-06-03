@@ -279,7 +279,7 @@ function renderCommunity(owner: string, repo: string, v: CommunityView): string 
 function renderCommunityRow(owner: string, repo: string, f: CommunityFile): string {
   const icon = f.present
     ? `<span class="oldgh-community__check oldgh-community__check--on">${octicon("check", { size: 14 })}</span>`
-    : `<span class="oldgh-community__check oldgh-community__check--off">${octicon("dot", { size: 14 })}</span>`;
+    : `<span class="oldgh-community__check oldgh-community__check--off">${octicon("primitive-dot", { size: 14 })}</span>`;
   const setupHref = communitySetupHref(owner, repo, f.key);
   const link = f.htmlUrl
     ? `<a class="oldgh-community__link" href="${f.htmlUrl.replace("https://github.com", "")}">${escapeText(f.label)}</a>`

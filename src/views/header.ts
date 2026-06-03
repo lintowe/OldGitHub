@@ -229,7 +229,7 @@ async function startNotificationPolling(root: HTMLElement): Promise<void> {
       consecutiveFailures = 0;
       if (count > 0) {
         badge.hidden = false;
-        badge.textContent = String(count);
+        badge.textContent = count > 99 ? "99+" : String(count);
       } else {
         badge.hidden = true;
         badge.textContent = "";

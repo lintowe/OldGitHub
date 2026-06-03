@@ -33,10 +33,10 @@ function renderShell(v: ActionsView): string {
         </aside>
         <div class="oldgh-actions__main">
           <header class="oldgh-actions__header">
-            ${v.selectedWorkflowName ? `
-              <h2>${escapeText(v.selectedWorkflowName)}</h2>
+            ${v.selectedWorkflowFilePath ? `
+              <h2>${escapeText(v.selectedWorkflowName || basename(v.selectedWorkflowFilePath))}</h2>
               <p class="oldgh-actions__sub">
-                ${v.selectedWorkflowFilePath ? `<a href="/${escapeAttr(v.owner)}/${escapeAttr(v.repo)}/blob/HEAD/${escapeAttr(v.selectedWorkflowFilePath)}"><code>${escapeText(v.selectedWorkflowFilePath)}</code></a> · ` : ""}
+                <a href="/${escapeAttr(v.owner)}/${escapeAttr(v.repo)}/blob/HEAD/${escapeAttr(v.selectedWorkflowFilePath)}"><code>${escapeText(v.selectedWorkflowFilePath)}</code></a> ·
                 ${formatCount(v.totalCount)} workflow ${v.totalCount === 1 ? "run" : "runs"}
               </p>
             ` : `
@@ -95,6 +95,12 @@ function statusIcon(s: WorkflowRun["status"]): string {
 
 function formatCount(n: number): string {
   return new Intl.NumberFormat().format(n);
+}
+
+function basename(path: string): string {
+  const trimmed = path.replace(/\/+$/, "");
+  const idx = trimmed.lastIndexOf("/");
+  return idx === -1 ? trimmed : trimmed.slice(idx + 1);
 }
 
 function escapeText(s: string): string {
