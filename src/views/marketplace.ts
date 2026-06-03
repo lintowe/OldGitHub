@@ -213,9 +213,11 @@ function extractCategories(doc: Document): MarketCategory[] {
     if (seen.has(slug)) continue;
     const label = a.textContent?.replace(/\s+/g, " ").trim() || slug;
     if (!label || label.length > 64) continue;
-    const countMatch = /\(([\d,]+)\)/.exec(label);
-    const count = countMatch ? parseInt(countMatch[1]!.replace(/,/g, ""), 10) : null;
-    const cleanLabel = label.replace(/\s*\(\d[\d,]*\)\s*$/, "");
+    // derive count and label from one trailing match so "CI (2) tools (123)" keeps the right count
+    const tail = /\s*\((\d[\d,]*)\)\s*$/.exec(label);
+    const count = tail ? parseInt(tail[1]!.replace(/,/g, ""), 10) : null;
+    const cleanLabel = tail ? label.slice(0, tail.index).trim() : label;
+    if (!cleanLabel) continue;
     seen.add(slug);
     out.push({
       slug,

@@ -309,11 +309,11 @@ function renderPullCommits(owner: string, repo: string, commits: PullCommit[]): 
   }
   const sections: string[] = [];
   for (const [day, list] of groups) {
-    const label = day ? formatDateHeading(day) : "Commits";
+    const heading = day ? `Commits on ${escapeText(formatDateHeading(day))}` : "Commits";
     const rows = list.map((c) => renderPullCommitRow(owner, repo, c)).join("");
     sections.push(`
       <div class="oldgh-pr-commits__group">
-        <h3 class="oldgh-pr-commits__day">Commits on ${escapeText(label)}</h3>
+        <h3 class="oldgh-pr-commits__day">${heading}</h3>
         <ul class="oldgh-pr-commits__list">${rows}</ul>
       </div>
     `);
@@ -551,7 +551,7 @@ function renderStateBadge(v: IssueDetail | PullDetail, isPull: boolean): string 
     if (v.state === "CLOSED") {
       cls = "oldgh-issue__state oldgh-issue__state--closed";
       icon = "issue-closed";
-      label = v.stateReason === "NOT_PLANNED" ? "Closed (not planned)" : "Closed";
+      label = (v.stateReason || "").toUpperCase() === "NOT_PLANNED" ? "Closed (not planned)" : "Closed";
     }
   }
   return `<span class="${cls}">${octicon(icon, { size: 14 })}<span>${label}</span></span>`;
@@ -676,7 +676,7 @@ function renderEvent(e: Extract<TimelineNode, { kind: "event" }>): string {
       break;
     case "ClosedEvent":
       icon = "issue-closed";
-      line = `<a href="/${escapeAttr(actor)}">${escapeText(actor)}</a> closed this ${e.toState && e.toState !== "COMPLETED" ? `as ${escapeText(e.toState.toLowerCase())}` : ""} ${when}`;
+      line = `<a href="/${escapeAttr(actor)}">${escapeText(actor)}</a> closed this ${e.toState && (e.toState || "").toUpperCase() !== "COMPLETED" ? `as ${escapeText(e.toState.toLowerCase())}` : ""} ${when}`;
       break;
     case "ReopenedEvent":
       icon = "issue-reopened";

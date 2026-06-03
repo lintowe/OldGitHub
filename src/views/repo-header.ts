@@ -116,7 +116,7 @@ function renderRepoHeaderHtml(s: RepoSummary, activeTab: TabKey): string {
     ? `<p class="oldgh-repo-header__description">${descBits.join(" ")}</p>`
     : "";
   const archivedBadge = s.isArchived
-    ? ` <span class="oldgh-repo-header__archived" title="This repository is archived">Public archive</span>`
+    ? ` <span class="oldgh-repo-header__archived" title="This repository is archived">${s.isPrivate ? "Private" : "Public"} archive</span>`
     : "";
   const archivedBanner = s.isArchived
     ? `<div class="oldgh-repo-header__archive-banner">${octicon("archive", { size: 16 })}<span>This repository has been archived by the owner. It is now read-only.</span></div>`

@@ -94,7 +94,10 @@ function renderShell(): string {
 function renderContent(featured: Topic[], popular: Topic[]): string {
   // Deduplicate: popular without the featured ones
   const featuredNames = new Set(featured.map((t) => t.name));
-  const rest = popular.filter((t) => !featuredNames.has(t.name));
+  // strip featured so curated-section cards label as Curated (is:featured is capped at 30)
+  const rest = popular
+    .filter((t) => !featuredNames.has(t.name))
+    .map((t) => ({ ...t, featured: false }));
 
   const sections: string[] = [];
 

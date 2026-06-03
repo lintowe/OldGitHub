@@ -14,10 +14,23 @@ export function relativeTime(iso: string, now: Date = new Date()): string {
   const abs = Math.abs(diff);
 
   const pick = (): { n: number; unit: string } => {
-    if (abs < MIN) return { n: Math.round(abs / SEC), unit: "second" };
-    if (abs < HOUR) return { n: Math.round(abs / MIN), unit: "minute" };
-    if (abs < DAY) return { n: Math.round(abs / HOUR), unit: "hour" };
-    if (abs < WEEK) return { n: Math.round(abs / DAY), unit: "day" };
+    // rounding the lower unit can hit the next divisor (e.g. 60s), promote so it reads as 1 of the next unit
+    if (abs < MIN) {
+      const n = Math.round(abs / SEC);
+      return n === 60 ? { n: 1, unit: "minute" } : { n, unit: "second" };
+    }
+    if (abs < HOUR) {
+      const n = Math.round(abs / MIN);
+      return n === 60 ? { n: 1, unit: "hour" } : { n, unit: "minute" };
+    }
+    if (abs < DAY) {
+      const n = Math.round(abs / HOUR);
+      return n === 24 ? { n: 1, unit: "day" } : { n, unit: "hour" };
+    }
+    if (abs < WEEK) {
+      const n = Math.round(abs / DAY);
+      return n === 7 ? { n: 1, unit: "week" } : { n, unit: "day" };
+    }
     if (abs < MONTH) return { n: Math.round(abs / WEEK), unit: "week" };
     if (abs < YEAR) return { n: Math.round(abs / MONTH), unit: "month" };
     return { n: Math.round(abs / YEAR), unit: "year" };

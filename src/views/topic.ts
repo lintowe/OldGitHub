@@ -192,10 +192,10 @@ function renderRepos(items: TopicRepo[], totalCount: number): string {
     `;
   }
   const params = new URLSearchParams(window.location.search);
-  const sort = params.get("s") ?? "stars";
+  const sort = params.get("s") ?? params.get("sort") ?? "stars";
   return `
     <div class="oldgh-topic__bar">
-      <div class="oldgh-topic__count"><strong>${formatCount(totalCount)}</strong> repositories</div>
+      <div class="oldgh-topic__count"><strong>${formatCount(totalCount)}</strong> ${totalCount === 1 ? "repository" : "repositories"}</div>
       <label class="oldgh-topic__sort">
         <span>Sort:</span>
         <select data-oldgh-topic-sort>

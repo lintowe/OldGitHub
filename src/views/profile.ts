@@ -883,7 +883,8 @@ function renderPeopleFromFrame(frame: Element): string {
       const locEl = card.querySelector("[itemprop='homeLocation'], li[itemprop='homeLocation'] span");
       if (locEl) location = (locEl.textContent || "").trim() || null;
     }
-    people.push({ login, name, avatarUrl, bio, location });
+    // github puts the username in the name slot when there is no display name
+    people.push({ login, name: name && name !== login ? name : null, avatarUrl, bio, location });
   }
   if (people.length === 0) {
     return `<div class="oldgh-profile__empty"><p class="oldgh-profile__muted">No users to show.</p></div>`;
@@ -1083,7 +1084,7 @@ function renderProjectsFromFrame(frame: Element, login: string): string {
   const seen = new Set<number>();
   for (const a of Array.from(frame.querySelectorAll<HTMLAnchorElement>("a[href*='/projects/']"))) {
     const href = a.getAttribute("href") || "";
-    const m = new RegExp(`^/${login}/projects/(\\d+)`).exec(href) || /^\/users\/[\w.-]+\/projects\/(\d+)/.exec(href);
+    const m = new RegExp(`^/${login}/projects/(\\d+)`).exec(href) || /^\/users\/[\w.-]+\/projects\/(\d+)/.exec(href) || new RegExp(`^/orgs/${login}/projects/(\\d+)`).exec(href);
     if (!m) continue;
     const num = parseInt(m[1]!, 10);
     if (seen.has(num)) continue;
@@ -1106,7 +1107,7 @@ function renderProjectsFromFrame(frame: Element, login: string): string {
         <div class="oldgh-user-projects__empty">
           ${octicon("project", { size: 40 })}
           <h2>No projects yet.</h2>
-          <p>User-level projects let @${escapeText(login)} plan personal work across repositories — roadmaps, todo boards, and so on.</p>
+          <p>Projects let @${escapeText(login)} plan work across repositories — roadmaps, todo boards, and so on.</p>
         </div>
       </section>
     `;

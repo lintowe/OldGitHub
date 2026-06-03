@@ -158,7 +158,7 @@ type StarsCtx = { login: string; sort: string; direction: string; languageFilter
 
 function renderLayout(items: StarredRepo[], ctx: StarsCtx): string {
   const filtered = ctx.languageFilter
-    ? items.filter((r) => (r.language || "").toLowerCase() === ctx.languageFilter.toLowerCase())
+    ? items.filter((r) => (r.language || "Unknown").toLowerCase() === ctx.languageFilter.toLowerCase())
     : items;
   const langCounts = new Map<string, number>();
   for (const it of items) {
@@ -212,7 +212,7 @@ function renderLayout(items: StarredRepo[], ctx: StarsCtx): string {
         </label>
       </div>
       ${items.length === 100 ? `<p class="oldgh-stars__notice">${octicon("info", { size: 14 })} Showing the first 100 starred repositories.</p>` : ""}
-      ${renderList(filtered)}
+      ${renderList(filtered, !!ctx.languageFilter)}
     </main>
   `;
 }
@@ -266,9 +266,10 @@ function parseStarred(raw: unknown): StarredRepo | null {
   };
 }
 
-function renderList(items: StarredRepo[]): string {
+function renderList(items: StarredRepo[], isFiltered: boolean): string {
   if (items.length === 0) {
-    return `<p class="oldgh-stars__empty">${octicon("star", { size: 36 })} No starred repositories yet.</p>`;
+    const msg = isFiltered ? "No starred repositories match this language." : "No starred repositories yet.";
+    return `<p class="oldgh-stars__empty">${octicon("star", { size: 36 })} ${msg}</p>`;
   }
   return `
     <ul class="oldgh-stars__list">

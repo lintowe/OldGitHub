@@ -59,10 +59,10 @@ function renderBody(v: PulseView): string {
         Excluding merges, <strong>${authorCount}</strong>
         ${authorCount === 1 ? "author has" : "authors have"} pushed
         <strong>${v.commits.length}</strong> ${v.commits.length === 1 ? "commit" : "commits"} this week.
-        <strong>${v.openedPrs.length}</strong> pull requests opened,
+        <strong>${v.openedPrs.length}</strong> ${v.openedPrs.length === 1 ? "pull request" : "pull requests"} opened,
         <strong>${v.mergedPrs.length}</strong> merged,
-        <strong>${v.openedIssues.length}</strong> issues opened,
-        <strong>${v.closedIssues.length}</strong> issues closed.
+        <strong>${v.openedIssues.length}</strong> ${v.openedIssues.length === 1 ? "issue" : "issues"} opened,
+        <strong>${v.closedIssues.length}</strong> ${v.closedIssues.length === 1 ? "issue" : "issues"} closed.
       </p>
     </section>
 

@@ -74,7 +74,9 @@ async function scrapeProjects(owner: string, repo: string, search: string): Prom
     // null when no state element scraped so we don't assert a confident "Open" on closed projects
     const state: "open" | "closed" | null = stateEl ? (stateText.includes("closed") ? "closed" : "open") : null;
     const itemCountEl = card.querySelector<HTMLElement>("[data-test-selector='item-count'], .Counter");
-    const itemCount = itemCountEl ? parseInt((itemCountEl.textContent || "").replace(/\D/g, ""), 10) : NaN;
+    const countText = (itemCountEl?.textContent || "").trim();
+    // abbreviated/overflow counters ("1.2k", "999+") aren't exact, so drop the count rather than show a wrong number
+    const itemCount = itemCountEl && !/[km+]/i.test(countText) ? parseInt(countText.replace(/,/g, ""), 10) : NaN;
     const ownerLogin = href.replace(/^\/+/, "").split("/")[0] || owner;
     projects.push({
       number: num,

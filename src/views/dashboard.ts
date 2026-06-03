@@ -118,9 +118,14 @@ function renderFeedItem(item: FeedItem): string {
     ? `<ul class="oldgh-dash__repo-cards">${item.repoCards.map(renderRepoCard).join("")}</ul>`
     : "";
 
+  // skip the tooltip for the default UNKNOWN card type so it never reads title="unknown"
+  const iconTitle = item.cardType !== "UNKNOWN"
+    ? ` title="${escapeAttr(item.cardType.toLowerCase().replace(/_/g, " "))}"`
+    : "";
+
   return `
     <li class="oldgh-dash__feed-item">
-      <span class="oldgh-dash__feed-icon" title="${escapeAttr(item.cardType.toLowerCase().replace(/_/g, " "))}">${octicon(icon, { size: 22 })}</span>
+      <span class="oldgh-dash__feed-icon"${iconTitle}>${octicon(icon, { size: 22 })}</span>
       <div class="oldgh-dash__feed-body-wrap">
         <div class="oldgh-dash__feed-headline">
           ${avatar}

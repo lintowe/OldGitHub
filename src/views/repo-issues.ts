@@ -89,7 +89,7 @@ function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): str
           ? octicon("circle-slash", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--not-planned" })
           : octicon("issue-closed", { size: 16, className: "oldgh-issues__state-icon oldgh-issues__state-icon--closed" }))));
 
-  const labelState = /\bis:closed\b/i.test(v.rawQuery || "") ? "is:closed" : "is:open";
+  const labelState = /\bis:closed\b/i.test(v.query) ? "is:closed" : "is:open";
   const labels = r.labels.length > 0
     ? `<span class="oldgh-issues__labels">${r.labels.map((l) => `<a class="oldgh-issues__label" href="/${v.owner}/${v.repo}/${kind}?q=${labelState}+label:${encodeURIComponent('"' + l.name + '"')}" style="background:#${escapeAttr(l.color)};color:${labelTextColor(l.color)};">${escapeText(emojify(l.name))}</a>`).join("")}</span>`
     : "";

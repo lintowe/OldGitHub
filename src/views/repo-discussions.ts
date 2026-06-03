@@ -87,7 +87,7 @@ async function scrapeDiscussions(owner: string, repo: string, subPath: string, q
     const categoryEl = row.querySelector<HTMLElement>("[data-test-selector='discussion-category-tag'], .DiscussionCategoryAvatar, [class*='discussion-category']");
     const category = categoryEl
       ? {
-          name: (categoryEl.textContent?.trim() || "General").replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*/u, "").trim() || "General",
+          name: (categoryEl.textContent?.trim() || "General").replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF}]+\s*/u, "").trim() || "General",
           emoji: extractEmoji(categoryEl),
           color: null,
         }
@@ -134,7 +134,7 @@ async function scrapeDiscussions(owner: string, repo: string, subPath: string, q
     const name = a.textContent?.trim() || slug;
     if (!name || name.length > 64) continue;
     categories.push({
-      name: name.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*/u, ""),
+      name: name.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF}]+\s*/u, ""),
       slug,
       emoji: extractEmoji(a),
       description: null,

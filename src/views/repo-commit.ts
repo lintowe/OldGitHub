@@ -46,7 +46,9 @@ function renderHeader(c: CommitView): string {
   // join credits without a leading comma and keep "on" only when a credit precedes it
   const credits = [authoredHtml, commBy].filter(Boolean).join(", ");
   const time = `<time datetime="${escapeAttr(c.committedDate)}" title="${escapeAttr(absoluteTime(c.committedDate))}">${escapeText(relativeTime(c.committedDate))}</time>`;
-  const byline = credits ? `${credits} on ${time}` : `Committed on ${time}`;
+  // capitalize when the committer leads, to match the "Committed on" fallback
+  const leadingCredits = !authoredHtml && commBy ? `C${commBy.slice(1)}` : credits;
+  const byline = credits ? `${leadingCredits} on ${time}` : `Committed on ${time}`;
   const parents = c.parents.length > 0
     ? `<div class="oldgh-repo-commit__parents">
         ${c.parents.length >= 2 ? "merge of " : "parent "}${c.parents

@@ -485,6 +485,10 @@ function bindBranchPicker(root: HTMLElement, ctx: { owner: string; repo: string;
       // focus after the toggle paint so the input is actually visible
       window.setTimeout(() => input.focus(), 0);
     }
+    // clear stale filter visibility from a prior open so the full list shows
+    list?.querySelectorAll<HTMLElement>("li[data-name]").forEach((li) => {
+      li.hidden = false;
+    });
     void loadBranches(list, ctx);
   });
 

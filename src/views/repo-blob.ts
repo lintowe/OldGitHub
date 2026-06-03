@@ -142,10 +142,11 @@ function renderBinary(v: RepoBlobView): string {
 }
 
 function renderTruncated(v: RepoBlobView): string {
+  // when truncated content has no lines, skip renderSource to avoid stacking its empty-state error under the notice
   return `
     <div class="oldgh-repo-blob__truncated">
       <p>This file has been truncated. ${v.rawBlobUrl ? `<a href="${escapeAttr(v.rawBlobUrl)}">View raw</a>.` : ""}</p>
-      ${renderSource(v)}
+      ${isEmptySource(v) ? "" : renderSource(v)}
     </div>
   `;
 }

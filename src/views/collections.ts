@@ -134,7 +134,8 @@ async function fetchCollection(slug: string): Promise<CollectionDetail> {
     if (!card) continue;
     if (!card.querySelector(`a[href$="/${owner}/${name}"], a[href*="${owner}/${name}/stargazers"]`)) continue;
     if (card.querySelectorAll("a[href]").length < 2) continue;
-    const desc = card.querySelector<HTMLElement>("p.color-fg-muted, p.text-small.color-fg-muted, p")?.textContent?.trim() || null;
+    // normalize whitespace like blurb so the desc !== blurb dedup guard matches
+    const desc = card.querySelector<HTMLElement>("p.color-fg-muted, p.text-small.color-fg-muted, p")?.textContent?.replace(/\s+/g, " ").trim() || null;
     const langEl = card.querySelector<HTMLElement>("[itemprop='programmingLanguage']");
     // newer markup drops itemprop and puts the name in the text node after the color dot
     const dotSibling = card.querySelector<HTMLElement>(".repo-language-color")?.nextSibling?.textContent?.trim();

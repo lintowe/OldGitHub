@@ -308,7 +308,7 @@ function renderRow(r: TrendingRepo, rank: number): string {
     ? `<li><span class="oldgh-search__lang-dot" style="background:${r.languageColor || languageColor(r.language)}"></span>${escapeText(r.language)}</li>`
     : "";
   const periodLine = r.starsInPeriod && r.starsInPeriod > 0
-    ? `<li class="oldgh-trending__momentum">${octicon("star", { size: 12 })} ${formatCount(r.starsInPeriod)} stars this period</li>`
+    ? `<li class="oldgh-trending__momentum">${octicon("star", { size: 12 })} ${formatCount(r.starsInPeriod)} star${r.starsInPeriod === 1 ? "" : "s"} this period</li>`
     : r.createdAt
       ? `<li>Created ${escapeText(formatDate(r.createdAt))}</li>`
       : "";

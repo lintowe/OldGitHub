@@ -245,8 +245,11 @@ function renderShell(number: number): string {
 function renderBody(d: DiscussionDetail, comments: DiscussionComment[]): string {
   const stateBadge = renderStateBadge(d);
   const opener = renderOpener(d);
-  const topLevel = comments.filter((c) => c.parentId == null);
-  const replies = comments.filter((c) => c.parentId != null);
+  const answerComment = findAnswerComment(d, comments);
+  // the answer renders in its own card, so drop it from the flat list to avoid showing it twice
+  const listed = answerComment ? comments.filter((c) => c.id !== answerComment.id) : comments;
+  const topLevel = listed.filter((c) => c.parentId == null);
+  const replies = listed.filter((c) => c.parentId != null);
   const repliesByParent = new Map<number, DiscussionComment[]>();
   for (const r of replies) {
     if (r.parentId == null) continue;
@@ -254,7 +257,6 @@ function renderBody(d: DiscussionDetail, comments: DiscussionComment[]): string 
     list.push(r);
     repliesByParent.set(r.parentId, list);
   }
-  const answerComment = findAnswerComment(d, comments);
   return `
     <div class="oldgh-page oldgh-discussion">
       <header class="oldgh-discussion__header">

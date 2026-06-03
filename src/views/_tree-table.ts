@@ -87,17 +87,22 @@ export async function hydrateTreeTable(root: HTMLElement, ctx: TreeTableContext)
     throw err;
   }
 
+  const placeholder = `<span class="oldgh-fg-muted">&mdash;</span>`;
   root.querySelectorAll<HTMLTableRowElement>("tr[data-key]").forEach((row) => {
     const key = row.dataset["key"];
     if (!key) return;
     const ci = info[key];
-    if (!ci) return;
     const msgCell = row.querySelector<HTMLTableCellElement>("[data-msg]");
     const ageCell = row.querySelector<HTMLTableCellElement>("[data-age]");
-    if (msgCell) msgCell.innerHTML = sanitizeBodyHtml(ci.shortMessageHtmlLink);
+    // omitted or empty commit-info rows get the same placeholder as a full hydration failure
+    if (msgCell) msgCell.innerHTML = ci?.shortMessageHtmlLink ? sanitizeBodyHtml(ci.shortMessageHtmlLink) : placeholder;
     if (ageCell) {
-      ageCell.textContent = relativeTime(ci.date);
-      ageCell.title = absoluteTime(ci.date);
+      if (ci?.date) {
+        ageCell.textContent = relativeTime(ci.date);
+        ageCell.title = absoluteTime(ci.date);
+      } else {
+        ageCell.innerHTML = placeholder;
+      }
     }
   });
 }

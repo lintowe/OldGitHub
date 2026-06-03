@@ -24,12 +24,14 @@ export function unmountRepoCommits(): void {
 }
 
 function renderShell(v: CommitsView): string {
+  // renderGroup drops groups whose commits all failed to parse, so check the rendered body, not group count
+  const body = v.groups.map((g) => renderGroup(v, g)).join("");
   return `
     <div class="oldgh-page">
       ${renderHeader(v)}
-      ${v.groups.length === 0
-        ? `<div class="oldgh-repo-commits__group"><p class="oldgh-fg-muted">No commits found.</p></div>`
-        : v.groups.map((g) => renderGroup(v, g)).join("")}
+      ${body.trim()
+        ? body
+        : `<div class="oldgh-repo-commits__group"><p class="oldgh-fg-muted">No commits found.</p></div>`}
       ${renderPagination(v)}
     </div>
   `;
@@ -92,7 +94,9 @@ function renderMeta(c: CommitEntry): string {
     const authoredLink = `<a href="${escapeAttr(c.url)}" title="${escapeAttr(absoluteTime(c.authoredDate))}">${escapeText(relativeTime(c.authoredDate))}</a>`;
     return `${renderAuthors(c.authors)} authored ${authoredLink} and ${renderPerson(c.committer)} committed ${committedLink}`;
   }
-  return `${renderAuthors(c.authors)} committed ${committedLink}`;
+  // an unlinked email author yields no authors; fall back to the committer so the actor is never blank
+  const actor = c.authors.length > 0 ? renderAuthors(c.authors) : c.committer ? renderPerson(c.committer) : "";
+  return `${actor} committed ${committedLink}`;
 }
 
 function renderPerson(p: PersonRef): string {

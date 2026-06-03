@@ -130,7 +130,7 @@ function renderSparkline(weeks: Array<{ ts: number; commits: number }>): string 
   const tail = weeks.slice(-52);
   const max = Math.max(1, ...tail.map((w) => w.commits));
   const bars = tail
-    .map((w) => `<span class="oldgh-spark-bar" style="height:${Math.max(2, Math.round((w.commits / max) * 24))}px" title="${w.commits} commits week of ${new Date(w.ts * 1000).toISOString().slice(0, 10)}"></span>`)
+    .map((w) => `<span class="oldgh-spark-bar" style="height:${Math.max(2, Math.round((w.commits / max) * 24))}px" title="${w.commits} ${w.commits === 1 ? "commit" : "commits"} week of ${new Date(w.ts * 1000).toISOString().slice(0, 10)}"></span>`)
     .join("");
   return `<div class="oldgh-spark">${bars}</div>`;
 }
@@ -149,7 +149,7 @@ function renderCommitActivity(v: CommitActivityView): string {
     <header class="oldgh-graphs__header">
       <h1>Commit activity</h1>
       <p class="oldgh-graphs__sub">
-        <strong>${total.toLocaleString()}</strong> commits over the last 52 weeks
+        <strong>${total.toLocaleString()}</strong> ${total === 1 ? "commit" : "commits"} over the last 52 weeks
         · average <strong>${avg}</strong> per week
       </p>
     </header>
@@ -164,7 +164,7 @@ function renderCommitActivity(v: CommitActivityView): string {
 
 function renderActivityChart(weeks: CommitActivityView["weeks"], max: number): string {
   const bars = weeks
-    .map((w) => `<span class="oldgh-activity-bar" style="height:${Math.max(2, Math.round((w.total / max) * 110))}px" title="${w.total} commits — week of ${formatWeek(w.ts)}"></span>`)
+    .map((w) => `<span class="oldgh-activity-bar" style="height:${Math.max(2, Math.round((w.total / max) * 110))}px" title="${w.total} ${w.total === 1 ? "commit" : "commits"} — week of ${formatWeek(w.ts)}"></span>`)
     .join("");
   return `<div class="oldgh-activity-chart">${bars}</div>`;
 }
@@ -178,7 +178,7 @@ function renderWeekRow(w: CommitActivityView["weeks"][number]): string {
   return `
     <li class="oldgh-graphs__week-row">
       <span class="oldgh-graphs__week-date">Week of ${escapeText(formatWeek(w.ts))}</span>
-      <span class="oldgh-graphs__week-count">${w.total} commits</span>
+      <span class="oldgh-graphs__week-count">${w.total} ${w.total === 1 ? "commit" : "commits"}</span>
       <div class="oldgh-week-days">${days}</div>
     </li>
   `;
@@ -282,7 +282,7 @@ function renderCommunityRow(owner: string, repo: string, f: CommunityFile): stri
     : `<span class="oldgh-community__check oldgh-community__check--off">${octicon("primitive-dot", { size: 14 })}</span>`;
   const setupHref = communitySetupHref(owner, repo, f.key);
   const link = f.htmlUrl
-    ? `<a class="oldgh-community__link" href="${f.htmlUrl.replace("https://github.com", "")}">${escapeText(f.label)}</a>`
+    ? `<a class="oldgh-community__link" href="${escapeAttr(f.htmlUrl.replace("https://github.com", ""))}">${escapeText(f.label)}</a>`
     : `<span class="oldgh-community__label">${escapeText(f.label)}</span>`;
   return `
     <li class="oldgh-community__row ${f.present ? "is-present" : "is-missing"}">

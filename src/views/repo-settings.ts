@@ -68,7 +68,8 @@ function activeKeyFor(subPath: string): string {
   switch (first) {
     case "access": case "collaboration": return "access";
     case "branches": return "branches";
-    case "tag_protection": case "tags": return "tags";
+    // github folded tag protection into rules
+    case "tag_protection": case "tags": return "rules";
     case "rules": case "rule": return "rules";
     case "actions": return "actions";
     case "hooks": return "webhooks";

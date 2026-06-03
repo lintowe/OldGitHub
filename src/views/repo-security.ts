@@ -99,7 +99,7 @@ function parseAdvisory(raw: unknown): Advisory | null {
           packageName: pkg && typeof pkg["name"] === "string" ? (pkg["name"] as string) : null,
         };
       })
-      .filter((v): v is { ecosystem: string | null; packageName: string | null } => v !== null),
+      .filter((v): v is { ecosystem: string | null; packageName: string | null } => v !== null && (v.ecosystem !== null || v.packageName !== null)),
   };
 }
 
@@ -142,7 +142,7 @@ function renderAdvisoryRow(a: Advisory): string {
           ${a.publishedAt ? `<time datetime="${escapeAttr(a.publishedAt)}">${escapeText(formatDate(a.publishedAt))}</time>` : ""}
         </div>
         ${a.vulnerabilities.length > 0
-          ? `<ul class="oldgh-advisories__packages">${a.vulnerabilities.slice(0, 6).map((v) => `<li><code>${escapeText((v.ecosystem || "") + (v.packageName ? `: ${v.packageName}` : ""))}</code></li>`).join("")}</ul>`
+          ? `<ul class="oldgh-advisories__packages">${a.vulnerabilities.slice(0, 6).map((v) => `<li><code>${escapeText(v.ecosystem ? v.ecosystem + (v.packageName ? `: ${v.packageName}` : "") : (v.packageName || ""))}</code></li>`).join("")}</ul>`
           : ""}
       </div>
     </li>
@@ -260,7 +260,7 @@ function renderShell(owner: string, repo: string, subkind: "overview" | "advisor
           </ul>
         </aside>
         <main class="oldgh-security__main">
-          <div class="oldgh-security__loading">Loading security overview&hellip;</div>
+          <div class="oldgh-security__loading">Loading ${subkind === "advisories" ? "advisories" : "security overview"}&hellip;</div>
         </main>
       </div>
     </div>
