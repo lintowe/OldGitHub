@@ -1,43 +1,8 @@
 import { AdapterFailure } from "@/adapters";
 import { mountRepoHeader, unmountRepoHeader, updateActiveTab, prefetchRepoSummary } from "@/views/repo-header";
 import { updateTopNavActive, syncSearchInput } from "@/views/header";
-import { mountRepoHome, unmountRepoHome } from "@/views/repo-home";
-import { mountRepoTree, unmountRepoTree } from "@/views/repo-tree";
-import { mountRepoBlob, unmountRepoBlob } from "@/views/repo-blob";
-import { mountRepoCommits, unmountRepoCommits } from "@/views/repo-commits";
-import { mountRepoCommit, unmountRepoCommit } from "@/views/repo-commit";
-import { mountRepoCompare, unmountRepoCompare } from "@/views/repo-compare";
-import { mountRepoIssues, unmountRepoIssues } from "@/views/repo-issues";
-import { mountRepoIssue, unmountRepoIssue } from "@/views/repo-issue";
-import { mountRepoWiki, unmountRepoWiki } from "@/views/repo-wiki";
-import { mountRepoActions, unmountRepoActions } from "@/views/repo-actions";
-import { mountRepoActionsRun, unmountRepoActionsRun } from "@/views/repo-actions-run";
-import { mountRepoSection, unmountRepoSection } from "@/views/repo-section";
-import { mountRepoPulse, unmountRepoPulse } from "@/views/repo-pulse";
-import { mountRepoGraphs, unmountRepoGraphs } from "@/views/repo-graphs";
-import { mountRepoReleases, unmountRepoReleases } from "@/views/repo-releases";
-import { mountRepoList, unmountRepoList, type RepoListKind } from "@/views/repo-lists";
-import { mountRepoDiscussion, unmountRepoDiscussion } from "@/views/repo-discussion";
-import { mountTopLevel, unmountTopLevel, type TopLevelKind } from "@/views/top-level";
-import { mountDashboard, unmountDashboard } from "@/views/dashboard";
-import { mountNotifications, unmountNotifications } from "@/views/notifications";
-import { mountSearch, unmountSearch } from "@/views/search";
-import { mountStars, unmountStars } from "@/views/stars";
-import { mountTrending, unmountTrending } from "@/views/trending";
-import { mountExplore, unmountExplore } from "@/views/explore";
-import { mountTopic, unmountTopic } from "@/views/topic";
-import { mountRepoProjects, unmountRepoProjects } from "@/views/repo-projects";
-import { mountRepoSecurity, unmountRepoSecurity } from "@/views/repo-security";
-import { mountRepoSettings, unmountRepoSettings } from "@/views/repo-settings";
-import { mountAccountSettings, unmountAccountSettings } from "@/views/account-settings";
-import { mountRepoDiscussions, unmountRepoDiscussions } from "@/views/repo-discussions";
-import { mountMarketplace, unmountMarketplace } from "@/views/marketplace";
-import { mountCollections, unmountCollections } from "@/views/collections";
-import { mountSponsors, unmountSponsors } from "@/views/sponsors";
-import { mountWatching, unmountWatching } from "@/views/watching";
-import { mountTopics, unmountTopics } from "@/views/topics";
-import { mountMeIssues, unmountMeIssues } from "@/views/me-issues";
-import { mountProfile, unmountProfile } from "@/views/profile";
+import type { RepoListKind } from "@/views/repo-lists";
+import type { TopLevelKind } from "@/views/top-level";
 import { removeAllBodyRoots } from "@/views/_body";
 import { resolveRoute, type Route } from "./resolve";
 
@@ -410,92 +375,92 @@ async function applyBodyState(target: BodyState): Promise<void> {
   // calls removeAllBodyRoots so we don't end up with stale content.
   bodyState = { kind: "none" };
   if (target.kind === "home") {
-    await mountRepoHome(target.owner, target.repo);
+    await (await import("@/views/repo-home")).mountRepoHome(target.owner, target.repo);
     bodyState = target;
     return;
   }
   if (target.kind === "tree") {
-    await mountRepoTree(target.owner, target.repo, target.refAndPath);
+    await (await import("@/views/repo-tree")).mountRepoTree(target.owner, target.repo, target.refAndPath);
     bodyState = target;
     return;
   }
   if (target.kind === "blob") {
-    await mountRepoBlob(target.owner, target.repo, target.refAndPath);
+    await (await import("@/views/repo-blob")).mountRepoBlob(target.owner, target.repo, target.refAndPath);
     bodyState = target;
     return;
   }
   if (target.kind === "commits") {
-    await mountRepoCommits(target.owner, target.repo, target.refAndPath, target.query);
+    await (await import("@/views/repo-commits")).mountRepoCommits(target.owner, target.repo, target.refAndPath, target.query);
     bodyState = target;
     return;
   }
   if (target.kind === "commit") {
-    await mountRepoCommit(target.owner, target.repo, target.sha);
+    await (await import("@/views/repo-commit")).mountRepoCommit(target.owner, target.repo, target.sha);
     bodyState = target;
     return;
   }
   if (target.kind === "compare") {
-    await mountRepoCompare(target.owner, target.repo, target.range);
+    await (await import("@/views/repo-compare")).mountRepoCompare(target.owner, target.repo, target.range);
     bodyState = target;
     return;
   }
   if (target.kind === "issues") {
-    await mountRepoIssues(target.owner, target.repo, target.query, target.subkind);
+    await (await import("@/views/repo-issues")).mountRepoIssues(target.owner, target.repo, target.query, target.subkind);
     bodyState = target;
     return;
   }
   if (target.kind === "issue") {
-    await mountRepoIssue(target.owner, target.repo, target.number, target.subkind, target.tab);
+    await (await import("@/views/repo-issue")).mountRepoIssue(target.owner, target.repo, target.number, target.subkind, target.tab);
     bodyState = target;
     return;
   }
   if (target.kind === "wiki") {
-    await mountRepoWiki(target.owner, target.repo, target.page);
+    await (await import("@/views/repo-wiki")).mountRepoWiki(target.owner, target.repo, target.page);
     bodyState = target;
     return;
   }
   if (target.kind === "actions") {
-    await mountRepoActions(target.owner, target.repo, target.query, target.workflowPath);
+    await (await import("@/views/repo-actions")).mountRepoActions(target.owner, target.repo, target.query, target.workflowPath);
     bodyState = target;
     return;
   }
   if (target.kind === "actions-run") {
-    await mountRepoActionsRun(target.owner, target.repo, target.runId);
+    await (await import("@/views/repo-actions-run")).mountRepoActionsRun(target.owner, target.repo, target.runId);
     bodyState = target;
     return;
   }
   if (target.kind === "pulse") {
-    await mountRepoPulse(target.owner, target.repo);
+    await (await import("@/views/repo-pulse")).mountRepoPulse(target.owner, target.repo);
     bodyState = target;
     return;
   }
   if (target.kind === "graphs") {
-    await mountRepoGraphs(target.owner, target.repo, target.subkind);
+    await (await import("@/views/repo-graphs")).mountRepoGraphs(target.owner, target.repo, target.subkind);
     bodyState = target;
     return;
   }
   if (target.kind === "projects") {
-    await mountRepoProjects(target.owner, target.repo, target.query);
+    await (await import("@/views/repo-projects")).mountRepoProjects(target.owner, target.repo, target.query);
     bodyState = target;
     return;
   }
   if (target.kind === "security") {
-    await mountRepoSecurity(target.owner, target.repo, target.subkind === "advisories" ? "advisories" : "overview");
+    await (await import("@/views/repo-security")).mountRepoSecurity(target.owner, target.repo, target.subkind === "advisories" ? "advisories" : "overview");
     bodyState = target;
     return;
   }
   if (target.kind === "discussions") {
-    await mountRepoDiscussions(target.owner, target.repo, target.subPath, target.query);
+    await (await import("@/views/repo-discussions")).mountRepoDiscussions(target.owner, target.repo, target.subPath, target.query);
     bodyState = target;
     return;
   }
   if (target.kind === "discussion") {
-    await mountRepoDiscussion(target.owner, target.repo, target.number);
+    await (await import("@/views/repo-discussion")).mountRepoDiscussion(target.owner, target.repo, target.number);
     bodyState = target;
     return;
   }
   if (target.kind === "settings") {
-    await mountRepoSettings(target.owner, target.repo, target.subPath);
+    await (await import("@/views/repo-settings")).mountRepoSettings(target.owner, target.repo, target.subPath);
     bodyState = target;
     return;
   }
@@ -503,72 +468,72 @@ async function applyBodyState(target: BodyState): Promise<void> {
     const prefix = `/${target.owner}/${target.repo}`;
     const subPath = target.pathname.startsWith(prefix) ? target.pathname.slice(prefix.length) : target.pathname;
     if (subPath === "/releases" || subPath.startsWith("/releases?") || subPath === "/releases/") {
-      await mountRepoReleases(target.owner, target.repo, target.search);
+      await (await import("@/views/repo-releases")).mountRepoReleases(target.owner, target.repo, target.search);
       bodyState = target;
       return;
     }
     if (subPath.startsWith("/releases/latest")) {
-      await mountRepoReleases(target.owner, target.repo, "");
+      await (await import("@/views/repo-releases")).mountRepoReleases(target.owner, target.repo, "");
       bodyState = target;
       return;
     }
     if (subPath.startsWith("/releases/tag/")) {
       const tag = decodeURIComponent(subPath.slice("/releases/tag/".length).split("/")[0] ?? "");
       if (tag) {
-        await mountRepoReleases(target.owner, target.repo, "", tag);
+        await (await import("@/views/repo-releases")).mountRepoReleases(target.owner, target.repo, "", tag);
         bodyState = target;
         return;
       }
     }
     const listMatch = matchRepoList(subPath);
     if (listMatch) {
-      await mountRepoList(target.owner, target.repo, listMatch, target.search);
+      await (await import("@/views/repo-lists")).mountRepoList(target.owner, target.repo, listMatch, target.search);
       bodyState = target;
       return;
     }
     const full = subPath + (target.search ? "?" + target.search : "");
-    await mountRepoSection(target.owner, target.repo, "other", full || "/", target.title);
+    await (await import("@/views/repo-section")).mountRepoSection(target.owner, target.repo, "other", full || "/", target.title);
     bodyState = target;
     return;
   }
   if (target.kind === "profile") {
-    await mountProfile(target.login, target.tab, target.query);
+    await (await import("@/views/profile")).mountProfile(target.login, target.tab, target.query);
     bodyState = target;
     return;
   }
   if (target.kind === "top-level") {
     if (target.subkind === "dashboard") {
-      await mountDashboard();
+      await (await import("@/views/dashboard")).mountDashboard();
     } else if (target.subkind === "notifications") {
-      await mountNotifications(target.search);
+      await (await import("@/views/notifications")).mountNotifications(target.search);
     } else if (target.subkind === "search") {
-      await mountSearch(target.pathname, target.search);
+      await (await import("@/views/search")).mountSearch(target.pathname, target.search);
     } else if (target.subkind === "stars") {
-      await mountStars(target.pathname, target.search);
+      await (await import("@/views/stars")).mountStars(target.pathname, target.search);
     } else if (target.subkind === "trending") {
-      await mountTrending(target.pathname, target.search);
+      await (await import("@/views/trending")).mountTrending(target.pathname, target.search);
     } else if (target.subkind === "explore") {
-      await mountExplore();
+      await (await import("@/views/explore")).mountExplore();
     } else if (target.subkind === "topic") {
-      await mountTopic(target.pathname, target.search);
+      await (await import("@/views/topic")).mountTopic(target.pathname, target.search);
     } else if (target.subkind === "marketplace") {
-      await mountMarketplace(target.pathname, target.search);
+      await (await import("@/views/marketplace")).mountMarketplace(target.pathname, target.search);
     } else if (target.subkind === "collections") {
-      await mountCollections(target.pathname);
+      await (await import("@/views/collections")).mountCollections(target.pathname);
     } else if (target.subkind === "sponsors") {
-      await mountSponsors(target.pathname, target.search);
+      await (await import("@/views/sponsors")).mountSponsors(target.pathname, target.search);
     } else if (target.subkind === "watching") {
-      await mountWatching(target.pathname, target.search);
+      await (await import("@/views/watching")).mountWatching(target.pathname, target.search);
     } else if (target.subkind === "topics") {
-      await mountTopics(target.pathname, target.search);
+      await (await import("@/views/topics")).mountTopics(target.pathname, target.search);
     } else if (target.subkind === "issues") {
-      await mountMeIssues("issue", target.pathname, target.search);
+      await (await import("@/views/me-issues")).mountMeIssues("issue", target.pathname, target.search);
     } else if (target.subkind === "pulls") {
-      await mountMeIssues("pull", target.pathname, target.search);
+      await (await import("@/views/me-issues")).mountMeIssues("pull", target.pathname, target.search);
     } else if (target.subkind === "settings") {
-      await mountAccountSettings(target.pathname);
+      await (await import("@/views/account-settings")).mountAccountSettings(target.pathname);
     } else {
-      await mountTopLevel(target.subkind, target.pathname, target.search, target.title);
+      await (await import("@/views/top-level")).mountTopLevel(target.subkind, target.pathname, target.search, target.title);
     }
     bodyState = target;
     return;
@@ -644,43 +609,7 @@ function sameBody(a: BodyState, b: BodyState): boolean {
 }
 
 function unmountBody(): void {
-  unmountRepoHome();
-  unmountRepoTree();
-  unmountRepoBlob();
-  unmountRepoCommits();
-  unmountRepoCommit();
-  unmountRepoCompare();
-  unmountRepoIssues();
-  unmountRepoIssue();
-  unmountRepoWiki();
-  unmountRepoActions();
-  unmountRepoActionsRun();
-  unmountRepoSection();
-  unmountRepoPulse();
-  unmountRepoGraphs();
-  unmountRepoReleases();
-  unmountRepoList();
-  unmountRepoDiscussion();
-  unmountTopLevel();
-  unmountDashboard();
-  unmountNotifications();
-  unmountSearch();
-  unmountStars();
-  unmountTrending();
-  unmountExplore();
-  unmountTopic();
-  unmountRepoProjects();
-  unmountRepoSecurity();
-  unmountRepoSettings();
-  unmountAccountSettings();
-  unmountRepoDiscussions();
-  unmountMarketplace();
-  unmountCollections();
-  unmountSponsors();
-  unmountWatching();
-  unmountTopics();
-  unmountMeIssues();
-  unmountProfile();
+  removeAllBodyRoots();
 }
 
 function insertBeforeFooter(el: HTMLElement): void {
