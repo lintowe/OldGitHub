@@ -1,4 +1,5 @@
 import { isFullyCoveredUrl } from "@/router/resolve";
+import { allowedProxyUrl, readProxyText } from "./proxy-policy";
 
 const ResourceType = chrome.declarativeNetRequest.ResourceType;
 const RuleActionType = chrome.declarativeNetRequest.RuleActionType;
@@ -223,13 +224,16 @@ type ProxyFetchResult =
   | { ok: false; status: number; error?: string };
 
 async function proxyFetch(url: string, credentials: "include" | "omit"): Promise<ProxyFetchResult> {
+  const allowedUrl = allowedProxyUrl(url, credentials);
+  if (!allowedUrl) return { ok: false, status: 400, error: "raw file URL rejected" };
   try {
-    const r = await fetch(url, { credentials, redirect: "follow" });
+    const r = await fetch(allowedUrl, { credentials, redirect: "follow" });
     if (!r.ok) return { ok: false, status: r.status };
     const contentType = r.headers.get("content-type") || "";
-    const text = await r.text();
+    const text = await readProxyText(r);
     return { ok: true, status: r.status, contentType, text };
   } catch (e) {
-    return { ok: false, status: 0, error: String(e) };
+    const tooLarge = e instanceof RangeError;
+    return { ok: false, status: tooLarge ? 413 : 0, error: String(e) };
   }
 }
