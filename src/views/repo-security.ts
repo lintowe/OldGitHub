@@ -1,4 +1,5 @@
 import { octicon } from "@/icons";
+import { fetchApi } from "@/adapters/rate-limit";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
 const ROOT_CLASS = "oldgh-repo-security";
@@ -58,7 +59,7 @@ type Advisory = {
 };
 
 async function fetchAdvisories(owner: string, repo: string): Promise<Advisory[]> {
-  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/security-advisories?per_page=30`, {
+  const resp = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/security-advisories?per_page=30`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
@@ -161,7 +162,7 @@ export function unmountRepoSecurity(): void {
 
 async function fetchSecurityView(owner: string, repo: string): Promise<SecurityView> {
   // Pull community profile to learn if there's a security policy file.
-  const community = await fetch(`https://api.github.com/repos/${owner}/${repo}/community/profile`, {
+  const community = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/community/profile`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });

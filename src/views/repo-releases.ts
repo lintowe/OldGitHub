@@ -1,5 +1,6 @@
 import { octicon } from "@/icons";
 import { AdapterFailure } from "@/adapters";
+import { fetchApi } from "@/adapters/rate-limit";
 import { absoluteTime, relativeTime } from "@/util/time";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
@@ -109,7 +110,7 @@ export function unmountRepoReleases(): void {
 }
 
 async function fetchReleases(owner: string, repo: string, page: number): Promise<unknown[]> {
-  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases?per_page=30&page=${page}`, {
+  const resp = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/releases?per_page=30&page=${page}`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github.html+json" },
   });
@@ -122,7 +123,7 @@ async function fetchReleases(owner: string, repo: string, page: number): Promise
 
 async function fetchLatest(owner: string, repo: string): Promise<Record<string, unknown> | null> {
   try {
-    const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
+    const resp = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
@@ -178,7 +179,7 @@ function parseAsset(raw: unknown): ReleaseAsset | null {
 }
 
 async function fetchTagRelease(owner: string, repo: string, tag: string): Promise<unknown> {
-  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/tags/${encodeURIComponent(tag)}`, {
+  const resp = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/releases/tags/${encodeURIComponent(tag)}`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github.html+json" },
   });

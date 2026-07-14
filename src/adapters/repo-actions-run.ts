@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi } from "./rate-limit";
 import type { WorkflowRunStatus } from "./repo-actions";
 
 export type RunDetail = {
@@ -63,11 +64,11 @@ const API = "https://api.github.com";
 
 export async function getRunPage(owner: string, repo: string, runId: string): Promise<RunPage> {
   const [runResp, jobsResp] = await Promise.all([
-    fetch(`${API}/repos/${owner}/${repo}/actions/runs/${encodeURIComponent(runId)}`, {
+    fetchApi(`${API}/repos/${owner}/${repo}/actions/runs/${encodeURIComponent(runId)}`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     }),
-    fetch(`${API}/repos/${owner}/${repo}/actions/runs/${encodeURIComponent(runId)}/jobs?per_page=100`, {
+    fetchApi(`${API}/repos/${owner}/${repo}/actions/runs/${encodeURIComponent(runId)}/jobs?per_page=100`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     }),

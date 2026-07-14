@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi } from "./rate-limit";
 import { parseUnifiedDiff, type DiffFile } from "@/util/diff";
 
 export type CompareView = {
@@ -13,7 +14,7 @@ export type CompareView = {
 export async function getCompare(owner: string, repo: string, range: string): Promise<CompareView> {
   const { base, head, threeDot } = parseRange(range);
   const basehead = `${encodeURIComponent(base)}...${encodeURIComponent(head)}`;
-  const resp = await fetch(
+  const resp = await fetchApi(
     `https://api.github.com/repos/${owner}/${repo}/compare/${basehead}`,
     { credentials: "omit", headers: { Accept: "application/vnd.github+json" } },
   );

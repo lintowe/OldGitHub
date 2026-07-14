@@ -1,4 +1,5 @@
 import { octicon } from "@/icons";
+import { fetchApi } from "@/adapters/rate-limit";
 import { languageColor } from "@/util/language-color";
 
 const SHOW_DELAY = 350;
@@ -239,7 +240,7 @@ async function fetchUser(login: string): Promise<UserCard | null> {
   if (cached) return cached;
   const p = (async (): Promise<UserCard | null> => {
     try {
-      const r = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}`, {
+      const r = await fetchApi(`https://api.github.com/users/${encodeURIComponent(login)}`, {
         credentials: "omit",
         headers: { Accept: "application/vnd.github+json" },
       });
@@ -277,7 +278,7 @@ async function fetchRepo(owner: string, repo: string): Promise<RepoCard | null> 
   if (cached) return cached;
   const p = (async (): Promise<RepoCard | null> => {
     try {
-      const r = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, {
+      const r = await fetchApi(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, {
         credentials: "omit",
         headers: { Accept: "application/vnd.github+json" },
       });
@@ -314,7 +315,7 @@ async function fetchIssue(owner: string, repo: string, number: number): Promise<
   if (cached) return cached;
   const p = (async (): Promise<IssueCard | null> => {
     try {
-      const r = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${number}`, {
+      const r = await fetchApi(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${number}`, {
         credentials: "omit",
         headers: { Accept: "application/vnd.github.html+json" },
       });

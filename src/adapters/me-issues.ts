@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi } from "./rate-limit";
 
 export type MeIssueKind = "issue" | "pull";
 export type MeIssueFilter = "created" | "assigned" | "mentioned" | "review-requested";
@@ -48,8 +49,8 @@ export async function getMeIssues(kind: MeIssueKind, filter: MeIssueFilter, logi
   const q = `is:open ${typeClause} archived:false ${filterClause} sort:updated-desc`;
 
   const url = `${API}/search/issues?q=${encodeURIComponent(q)}&per_page=30`;
-  const resp = await fetch(url, {
-    credentials: "include",
+  const resp = await fetchApi(url, {
+    credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
   if (!resp.ok) {

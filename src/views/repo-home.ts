@@ -1,6 +1,7 @@
 import { octicon } from "@/icons";
 import { getRepoOverview, type RepoOverview } from "@/adapters/repo-overview";
 import { getRepoLanguages } from "@/adapters/repo";
+import { fetchApi } from "@/adapters/rate-limit";
 import { languageColor, canonicalLanguageName } from "@/util/language-color";
 import { absoluteTime, relativeTime } from "@/util/time";
 import { hydrateTreeTable, renderTreeTable } from "./_tree-table";
@@ -57,7 +58,7 @@ async function hydrateLatestRelease(root: HTMLElement, owner: string, repo: stri
   const slot = root.querySelector<HTMLElement>(".oldgh-repo-home__release-slot");
   if (!slot) return;
   try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
+    const res = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
@@ -185,7 +186,7 @@ async function hydrateRepoNumbers(root: HTMLElement, owner: string, repo: string
 
 async function fetchCount(url: string): Promise<number | null> {
   try {
-    const res = await fetch(url, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
+    const res = await fetchApi(url, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
     if (!res.ok) return null;
     const link = res.headers.get("Link") || res.headers.get("link");
     if (link) {
@@ -232,7 +233,7 @@ async function hydrateLatestCommit(
     // omit, not include: api.github.com returns Access-Control-Allow-Origin:*,
     // which the browser rejects for a credentialed request — include throws on
     // every repo. anon works for public repos; private repos just skip the ribbon.
-    const res = await fetch(url, { credentials: "omit" });
+    const res = await fetchApi(url, { credentials: "omit" });
     if (!res.ok) return;
     const arr = (await res.json()) as unknown;
     if (!Array.isArray(arr) || arr.length === 0) return;
@@ -518,7 +519,7 @@ async function loadBranches(list: HTMLUListElement | null, ctx: { owner: string;
     try {
       // omit, not include — api.github.com sends ACAO:* which fails a
       // credentialed CORS request; include threw and the picker never loaded
-      const res = await fetch(`https://api.github.com/repos/${ctx.owner}/${ctx.repo}/branches?per_page=100`, { credentials: "omit" });
+      const res = await fetchApi(`https://api.github.com/repos/${ctx.owner}/${ctx.repo}/branches?per_page=100`, { credentials: "omit" });
       if (!res.ok) throw new Error(`branches ${res.status}`);
       const data = await res.json() as Array<{ name: string }>;
       names = data.map((b) => b.name);

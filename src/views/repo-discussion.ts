@@ -1,5 +1,6 @@
 import { octicon } from "@/icons";
 import { AdapterFailure } from "@/adapters";
+import { fetchApi } from "@/adapters/rate-limit";
 import { absoluteTime, relativeTime } from "@/util/time";
 import { emojify } from "@/util/emoji";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
@@ -129,7 +130,7 @@ export function unmountRepoDiscussion(): void {
 }
 
 async function fetchDiscussion(owner: string, repo: string, number: number): Promise<DiscussionDetail> {
-  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/discussions/${number}`, {
+  const resp = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/discussions/${number}`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github.html+json" },
   });
@@ -144,7 +145,7 @@ async function fetchComments(owner: string, repo: string, number: number): Promi
   let attempts = 0;
   while (url && attempts < 5) {
     attempts++;
-    const resp = await fetch(url, { credentials: "omit", headers: { Accept: "application/vnd.github.html+json" } });
+    const resp = await fetchApi(url, { credentials: "omit", headers: { Accept: "application/vnd.github.html+json" } });
     if (!resp.ok) break;
     const arr = (await resp.json()) as unknown;
     if (!Array.isArray(arr)) break;

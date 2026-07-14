@@ -1,5 +1,6 @@
 import { octicon } from "@/icons";
 import { AdapterFailure } from "@/adapters";
+import { fetchApi } from "@/adapters/rate-limit";
 import { absoluteTime, relativeTime } from "@/util/time";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 
@@ -65,7 +66,7 @@ function renderShell(kind: RepoListKind): string {
 }
 
 async function fetchPage(url: string): Promise<unknown[]> {
-  const resp = await fetch(url, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
+  const resp = await fetchApi(url, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
   if (!resp.ok) throw new AdapterFailure("repoList", `${url} responded ${resp.status}`);
   const data = (await resp.json()) as unknown;
   return Array.isArray(data) ? data : [];
@@ -155,7 +156,7 @@ async function renderForks(owner: string, repo: string, page: number): Promise<s
 }
 
 async function renderStargazers(owner: string, repo: string, page: number): Promise<string> {
-  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/stargazers?per_page=60&page=${page}`, {
+  const resp = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/stargazers?per_page=60&page=${page}`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github.star+json" },
   });

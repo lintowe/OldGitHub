@@ -172,7 +172,7 @@ async function scrapeRepoSummary(owner: string, repo: string): Promise<RepoSumma
 
 export async function getRepoLanguages(owner: string, repo: string): Promise<Array<{ name: string; bytes: number; percent: number }>> {
   // try the anonymous API first — fastest path for public repos
-  const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, {
+  const resp = await fetchApi(`https://api.github.com/repos/${owner}/${repo}/languages`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });

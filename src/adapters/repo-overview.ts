@@ -229,7 +229,7 @@ async function resolveBranchAndPath(owner: string, repo: string, refAndPath: str
   }
   try {
     const refsUrl = `https://api.github.com/repos/${owner}/${repo}/git/matching-refs/heads/${encodeURIComponent(decodeURIComponent(segs[0]!))}`;
-    const r = await fetch(refsUrl, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
+    const r = await fetchApi(refsUrl, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
     if (r.ok) {
       const refs = (await r.json()) as Array<{ ref?: string }>;
       const names = refs.map((x) => (x.ref || "").replace(/^refs\/heads\//, "")).filter(Boolean);
@@ -350,14 +350,14 @@ export async function getRepoOverview(owner: string, repo: string): Promise<Repo
 // the quick-setup instructions name the right branch.
 async function detectEmptyRepo(owner: string, repo: string): Promise<{ branch: string } | null> {
   try {
-    const res = await fetch(
+    const res = await fetchApi(
       `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`,
       { credentials: "omit", headers: { Accept: "application/vnd.github+json" } },
     );
     if (res.status !== 409) return null;
     let branch = "main";
     try {
-      const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+      const repoRes = await fetchApi(`https://api.github.com/repos/${owner}/${repo}`, {
         credentials: "omit",
         headers: { Accept: "application/vnd.github+json" },
       });

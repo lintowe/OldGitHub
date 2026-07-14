@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi } from "./rate-limit";
 
 export type WorkflowRunStatus = "success" | "failure" | "pending" | "queued" | "in_progress" | "cancelled" | "skipped" | "neutral" | "action_required" | "timed_out" | "stale" | "unknown";
 
@@ -44,7 +45,7 @@ export async function getActions(owner: string, repo: string, query: string, wor
   const queryWorkflowId = params.get("workflow") ?? "";
   const page = Math.max(1, parseInt(params.get("page") ?? "1", 10) || 1);
 
-  const workflowsResp = await fetch(`${API}/repos/${owner}/${repo}/actions/workflows?per_page=100`, {
+  const workflowsResp = await fetchApi(`${API}/repos/${owner}/${repo}/actions/workflows?per_page=100`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
@@ -92,7 +93,7 @@ export async function getActions(owner: string, repo: string, query: string, wor
   const runsPath = workflowId
     ? `/repos/${owner}/${repo}/actions/workflows/${encodeURIComponent(workflowId)}/runs`
     : `/repos/${owner}/${repo}/actions/runs`;
-  const runsResp = await fetch(`${API}${runsPath}?per_page=30&page=${page}`, {
+  const runsResp = await fetchApi(`${API}${runsPath}?per_page=30&page=${page}`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });

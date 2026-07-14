@@ -261,11 +261,11 @@ async function getCounts(owner: string, repo: string, kind: "issues" | "pulls"):
   const typeClause = kind === "pulls" ? "type:pr" : "type:issue";
   const repoClause = `repo:${owner}/${repo}`;
   const [openRes, closedRes] = await Promise.allSettled([
-    fetch(`${API}/search/issues?q=${encodeURIComponent(`${typeClause} ${repoClause} is:open`)}&per_page=1`, {
+    fetchApi(`${API}/search/issues?q=${encodeURIComponent(`${typeClause} ${repoClause} is:open`)}&per_page=1`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     }),
-    fetch(`${API}/search/issues?q=${encodeURIComponent(`${typeClause} ${repoClause} is:closed`)}&per_page=1`, {
+    fetchApi(`${API}/search/issues?q=${encodeURIComponent(`${typeClause} ${repoClause} is:closed`)}&per_page=1`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     }),

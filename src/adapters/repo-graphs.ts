@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi } from "./rate-limit";
 
 const API = "https://api.github.com";
 
@@ -47,7 +48,7 @@ export type CodeFrequencyView = {
 
 export async function getRepoCommitActivity(owner: string, repo: string): Promise<CommitActivityView> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const resp = await fetch(`${API}/repos/${owner}/${repo}/stats/commit_activity`, {
+    const resp = await fetchApi(`${API}/repos/${owner}/${repo}/stats/commit_activity`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
@@ -79,7 +80,7 @@ export async function getRepoCommitActivity(owner: string, repo: string): Promis
 
 export async function getRepoCodeFrequency(owner: string, repo: string): Promise<CodeFrequencyView> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const resp = await fetch(`${API}/repos/${owner}/${repo}/stats/code_frequency`, {
+    const resp = await fetchApi(`${API}/repos/${owner}/${repo}/stats/code_frequency`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
@@ -111,7 +112,7 @@ export async function getRepoCodeFrequency(owner: string, repo: string): Promise
 export async function getRepoContributors(owner: string, repo: string): Promise<ContributorsView> {
   // 202 = stats are being computed. Retry up to 3 times with backoff.
   for (let attempt = 0; attempt < 3; attempt++) {
-    const resp = await fetch(`${API}/repos/${owner}/${repo}/stats/contributors`, {
+    const resp = await fetchApi(`${API}/repos/${owner}/${repo}/stats/contributors`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
@@ -223,7 +224,7 @@ const COMMUNITY_ALIASES: Record<string, string[]> = {
 };
 
 export async function getCommunityProfile(owner: string, repo: string): Promise<CommunityView> {
-  const resp = await fetch(`${API}/repos/${owner}/${repo}/community/profile`, {
+  const resp = await fetchApi(`${API}/repos/${owner}/${repo}/community/profile`, {
     credentials: "omit",
     headers: { Accept: "application/vnd.github+json" },
   });
@@ -290,11 +291,11 @@ export type NetworkView = {
 
 export async function getRepoForks(owner: string, repo: string): Promise<NetworkView> {
   const [parentResp, forksResp] = await Promise.all([
-    fetch(`${API}/repos/${owner}/${repo}`, {
+    fetchApi(`${API}/repos/${owner}/${repo}`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     }),
-    fetch(`${API}/repos/${owner}/${repo}/forks?per_page=50&sort=newest`, {
+    fetchApi(`${API}/repos/${owner}/${repo}/forks?per_page=50&sort=newest`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     }),

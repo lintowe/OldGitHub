@@ -1,6 +1,7 @@
 import { octicon } from "@/icons";
 import { adoptBodyRoot, removeAllBodyRoots } from "./_body";
 import { currentUserLogin } from "@/auth/session";
+import { fetchApi } from "@/adapters/rate-limit";
 import { languageColor } from "@/util/language-color";
 
 const ROOT_CLASS = "oldgh-stars";
@@ -59,7 +60,7 @@ export async function mountStars(pathname: string, search: string): Promise<void
   adoptBodyRoot(root);
 
   try {
-    const resp = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}/starred?per_page=100&sort=${encodeURIComponent(sort)}&direction=${encodeURIComponent(direction)}`, {
+    const resp = await fetchApi(`https://api.github.com/users/${encodeURIComponent(login)}/starred?per_page=100&sort=${encodeURIComponent(sort)}&direction=${encodeURIComponent(direction)}`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github.star+json" },
     });

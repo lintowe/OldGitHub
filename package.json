@@ -19,7 +19,7 @@
     "dev:reload": "node scripts/dev-reload.mjs",
     "build": "vite build",
     "pack": "npm run build && node scripts/pack.mjs",
-    "test": "node scripts/test-routes.mjs",
+    "test": "node scripts/test-routes.mjs && node scripts/test-rate-limit.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

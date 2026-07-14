@@ -1,14 +1,12 @@
-// Simple session-level rate-limit tracker. When an unauth API request comes
-// back 403/429, set a "blocked until" timestamp; adapters can call
-// isApiRateLimited() to skip the API and go straight to a scrape fallback
-// instead of hammering the rate-limit endpoint over and over.
-
 let blockedUntil = 0;
-
 const RATE_LIMIT_PAUSE_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 30_000;
+const MAX_CACHE_ENTRIES = 100;
+const responseCache = new Map<string, { response: Response; expires: number }>();
+const inflight = new Map<string, Promise<Response>>();
 
-export function noteApiRateLimited(): void {
-  blockedUntil = Date.now() + RATE_LIMIT_PAUSE_MS;
+export function noteApiRateLimited(until = Date.now() + RATE_LIMIT_PAUSE_MS): void {
+  blockedUntil = Math.max(blockedUntil, until);
 }
 
 export function isApiRateLimited(): boolean {
@@ -19,13 +17,71 @@ export function clearRateLimit(): void {
   blockedUntil = 0;
 }
 
+export function clearApiCache(): void {
+  responseCache.clear();
+}
+
 export async function fetchApi(url: string, init?: RequestInit): Promise<Response> {
-  const resp = await fetch(url, init);
-  if (resp.status === 403 || resp.status === 429) {
-    const remaining = resp.headers.get("x-ratelimit-remaining");
-    if (remaining === "0" || resp.status === 429) {
-      noteApiRateLimited();
+  const method = init?.method?.toUpperCase() ?? "GET";
+  const bypassCache = method !== "GET" || init?.cache === "no-store" || init?.cache === "no-cache" || init?.cache === "reload";
+  const key = bypassCache ? null : cacheKey(url, init);
+  const cached = key ? responseCache.get(key) : undefined;
+  if (cached && cached.expires > Date.now()) return cached.response.clone();
+  if (cached && key) responseCache.delete(key);
+
+  const pending = key ? inflight.get(key) : undefined;
+  if (pending) return (await pending).clone();
+  if (isApiRateLimited()) {
+    const retryAfter = Math.max(1, Math.ceil((blockedUntil - Date.now()) / 1000));
+    return new Response(null, {
+      status: 429,
+      statusText: "GitHub API rate limit",
+      headers: { "retry-after": String(retryAfter), "x-ratelimit-remaining": "0" },
+    });
+  }
+
+  const request = fetch(url, init).then((response) => {
+    trackRateLimit(response);
+    if (key && response.ok) {
+      responseCache.set(key, { response: response.clone(), expires: Date.now() + CACHE_TTL_MS });
+      trimCache();
+    }
+    return response;
+  });
+  if (key) {
+    inflight.set(key, request);
+    void request.then(() => inflight.delete(key), () => inflight.delete(key));
+  }
+  return (await request).clone();
+}
+
+function cacheKey(url: string, init: RequestInit | undefined): string {
+  const headers = new Headers(init?.headers);
+  return `${url}\n${headers.get("accept") ?? ""}\n${headers.get("x-github-api-version") ?? ""}`;
+}
+
+function trackRateLimit(response: Response): void {
+  const remaining = response.headers.get("x-ratelimit-remaining");
+  if (response.status !== 429 && remaining !== "0") return;
+
+  const retryAfter = response.headers.get("retry-after");
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+    const retryAt = Number.isFinite(seconds) ? Date.now() + seconds * 1000 : Date.parse(retryAfter);
+    if (Number.isFinite(retryAt)) {
+      noteApiRateLimited(retryAt + 1000);
+      return;
     }
   }
-  return resp;
+
+  const reset = Number(response.headers.get("x-ratelimit-reset"));
+  noteApiRateLimited(Number.isFinite(reset) && reset > 0 ? reset * 1000 + 1000 : undefined);
+}
+
+function trimCache(): void {
+  while (responseCache.size > MAX_CACHE_ENTRIES) {
+    const oldest = responseCache.keys().next().value;
+    if (oldest === undefined) return;
+    responseCache.delete(oldest);
+  }
 }

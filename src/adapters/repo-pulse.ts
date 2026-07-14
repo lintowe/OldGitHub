@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi } from "./rate-limit";
 
 const API = "https://api.github.com";
 
@@ -87,7 +88,7 @@ export async function getRepoPulse(owner: string, repo: string): Promise<PulseVi
 }
 
 async function apiFetch(path: string): Promise<unknown[] | null> {
-  const resp = await fetch(`${API}${path}`, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
+  const resp = await fetchApi(`${API}${path}`, { credentials: "omit", headers: { Accept: "application/vnd.github+json" } });
   if (!resp.ok) {
     if (resp.status === 404 || resp.status === 403) return [];
     throw new AdapterFailure("getRepoPulse", `${path} responded ${resp.status}`);

@@ -1,4 +1,5 @@
 import { AdapterFailure } from "./index";
+import { fetchApi } from "./rate-limit";
 
 export type IssueState = "OPEN" | "CLOSED";
 export type PullState = "OPEN" | "CLOSED" | "MERGED";
@@ -153,7 +154,7 @@ export async function getPullChecks(owner: string, repo: string, number: number)
   if (!sha) {
     throw new AdapterFailure("getPullChecks", "head sha missing");
   }
-  const resp = await fetch(`${API}/repos/${owner}/${repo}/commits/${sha}/check-runs?per_page=100`, {
+  const resp = await fetchApi(`${API}/repos/${owner}/${repo}/commits/${sha}/check-runs?per_page=100`, {
     credentials: "omit",
     headers: { Accept: HTML_ACCEPT },
   });
@@ -272,7 +273,7 @@ export async function getPull(owner: string, repo: string, number: number): Prom
 }
 
 async function apiFetch(path: string): Promise<unknown | null> {
-  const resp = await fetch(`${API}${path}`, {
+  const resp = await fetchApi(`${API}${path}`, {
     credentials: "omit",
     headers: { Accept: HTML_ACCEPT },
   });
@@ -290,7 +291,7 @@ async function apiFetchAll(path: string): Promise<unknown[]> {
   const out: unknown[] = [];
   let url = `${API}${path}?per_page=100`;
   for (let i = 0; i < 5; i++) {
-    const resp = await fetch(url, {
+    const resp = await fetchApi(url, {
       credentials: "omit",
       headers: { Accept: HTML_ACCEPT },
     });

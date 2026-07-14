@@ -1,5 +1,6 @@
 import { octicon } from "@/icons";
 import { AdapterFailure } from "@/adapters";
+import { fetchApi } from "@/adapters/rate-limit";
 import { getProfile, type PinnedRepo, type ProfileView } from "@/adapters/profile";
 import { getProfileRepos, type ProfileReposView, type RepoListItem } from "@/adapters/profile-repos";
 import { absoluteTime, relativeTime } from "@/util/time";
@@ -295,9 +296,8 @@ async function hydrateActivity(root: HTMLElement, login: string): Promise<void> 
   const slot = root.querySelector<HTMLElement>(".oldgh-profile__activity-slot");
   if (!slot) return;
   try {
-    const resp = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}/events/public?per_page=30`, {
+    const resp = await fetchApi(`https://api.github.com/users/${encodeURIComponent(login)}/events/public?per_page=30`, {
       credentials: "omit",
-      cache: "no-cache",
       headers: { Accept: "application/vnd.github+json" },
     });
     if (!resp.ok) return;
@@ -522,7 +522,7 @@ async function hydrateStars(root: HTMLElement, login: string): Promise<void> {
   const container = root.querySelector<HTMLElement>(".oldgh-profile__scraped");
   if (!container) return;
   try {
-    const resp = await fetch(`https://api.github.com/users/${encodeURIComponent(login)}/starred?per_page=30`, {
+    const resp = await fetchApi(`https://api.github.com/users/${encodeURIComponent(login)}/starred?per_page=30`, {
       credentials: "omit",
       headers: { Accept: "application/vnd.github+json" },
     });
@@ -725,9 +725,8 @@ async function hydrateOrgReadme(root: HTMLElement, login: string): Promise<void>
   if (!slot) return;
   const url = `https://api.github.com/repos/${encodeURIComponent(login)}/.github/readme`;
   try {
-    const htmlResp = await fetch(url, {
+    const htmlResp = await fetchApi(url, {
       credentials: "omit",
-      cache: "no-cache",
       headers: { Accept: "application/vnd.github.html" },
     });
     if (!htmlResp.ok) return;
@@ -751,9 +750,8 @@ async function hydrateProfileReadme(root: HTMLElement, login: string): Promise<v
   if (!slot) return;
   const url = `https://api.github.com/repos/${encodeURIComponent(login)}/${encodeURIComponent(login)}/readme`;
   try {
-    const htmlResp = await fetch(url, {
+    const htmlResp = await fetchApi(url, {
       credentials: "omit",
-      cache: "no-cache",
       headers: { Accept: "application/vnd.github.html" },
     });
     if (htmlResp.ok) {
