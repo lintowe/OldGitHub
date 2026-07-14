@@ -37,4 +37,4 @@ The dev build adds `http://localhost:7878/*` plus a background poller that reloa
 
 ## License
 
-MIT.
+MIT. See the [privacy policy](PRIVACY.md) for the data OldGitHub handles inside the browser.
