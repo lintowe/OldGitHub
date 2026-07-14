@@ -46,8 +46,8 @@ export default defineConfig(({ mode }) => ({
   plugins: [extensionManifest(mode === "development" ? "development" : "production")],
   build: {
     target: "chrome110",
-    minify: false,
-    sourcemap: true,
+    minify: mode === "production",
+    sourcemap: mode === "development",
     emptyOutDir: true,
     rolldownOptions: {
       input: {
