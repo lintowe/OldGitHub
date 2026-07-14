@@ -194,7 +194,7 @@ export function resolveRoute(pathname: string, search: string): Route {
     return { kind: "repo-blob", owner, repo, refAndPath };
   }
 
-  if (segs[2] === "commits" && segs.length >= 4) {
+  if (segs[2] === "commits" && segs.length >= 3) {
     const refAndPath = segs.slice(3).join("/");
     return { kind: "repo-commits", owner, repo, refAndPath, query: search };
   }
