@@ -115,7 +115,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 // dev auto-reload: poll the dev server build-stamp; reload extension when it changes.
 // tree-shaken out of production builds — never runs against the user's machine.
-if (import.meta.env.DEV) {
+if (import.meta.env.MODE === "development") {
   const DEV_URL = "http://localhost:7878/build-id";
   const QUIESCE_MS = 4_000;
   // chrome auto-disables an extension that calls runtime.reload() too rapidly

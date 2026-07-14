@@ -5,6 +5,9 @@
   "description": "Restore the 2012-2013 GitHub layout as a Chrome extension.",
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "build:icons": "node scripts/build-icons.mjs",
     "build:ext-icons": "node scripts/build-extension-icons.mjs",
@@ -24,10 +27,9 @@
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "@samrum/vite-plugin-web-extension": "5.1.1",
     "@types/chrome": "^0.0.270",
     "sharp": "^0.34.5",
     "typescript": "5.4.5",
-    "vite": "5.4.21"
+    "vite": "8.1.4"
   }
 }
