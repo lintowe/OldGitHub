@@ -1,7 +1,7 @@
 export function isLoggedIn(): boolean {
   if (/(?:^|;\s*)logged_in=yes(?:;|$)/.test(document.cookie)) return true;
   if (/(?:^|;\s*)dotcom_user=/.test(document.cookie)) return true;
-  if (document.querySelector('meta[name="user-login"]')) return true;
+  if (document.querySelector<HTMLMetaElement>('meta[name="user-login"]')?.content.trim()) return true;
   return false;
 }
 
