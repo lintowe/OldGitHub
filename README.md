@@ -11,7 +11,7 @@ Re-skins `github.com` (and the gist subdomain header) in the classic 2013 interf
 
 ## Install
 
-Once published, link from the Chrome Web Store will go here. Until then:
+[Install OldGitHub from the Chrome Web Store](https://chromewebstore.google.com/detail/oldgithub/fngbdioldibhjiefnjlilndhmgpanhck), or build it locally:
 
 ```sh
 npm install && npm run build
