@@ -32,4 +32,4 @@ OldGitHub does not send data to the developer, advertisers, data brokers, or any
 
 OldGitHub uses data only to provide its single purpose: displaying GitHub in the 2013-era interface. Its use of data complies with the Chrome Web Store User Data Policy, including the Limited Use requirements.
 
-Questions can be filed at https://github.com/lintowe/OldGitHub/issues.
+Questions can be filed at https://github.com/zeo/OldGitHub/issues.
