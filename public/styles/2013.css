@@ -3340,6 +3340,7 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
 }
 .oldgh-issue__comment-card {
   flex: 1;
+  min-width: 0;
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
   background: var(--gh-bg-elev);
@@ -3397,15 +3398,18 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   color: var(--gh-fg-muted);
 }
 .oldgh-issue__body {
+  min-width: 0;
   padding: 14px;
   line-height: 1.6;
   color: var(--gh-fg);
   font-size: var(--gh-size-sm);
   word-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 .oldgh-issue__body p { margin: 0 0 12px; }
 .oldgh-issue__body p:last-child { margin-bottom: 0; }
 .oldgh-issue__body pre {
+  max-width: 100%;
   background: var(--gh-bg-stripe);
   border: 1px solid var(--gh-border);
   border-radius: var(--gh-radius);
@@ -3430,6 +3434,9 @@ html[data-oldgh-theme="dark"] .oldgh-profile__contribs-graph td.day[data-level="
   color: var(--gh-fg-muted);
 }
 .oldgh-issue__body table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
   border-collapse: collapse;
   margin: 0 0 12px;
 }
@@ -11890,4 +11897,38 @@ html[data-oldgh="active"] .oldgh-btn[aria-disabled="true"]:hover {
 }
 html[data-oldgh-theme="dark"] .oldgh-tabs__link:not([aria-current="page"]):hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+@media (max-width: 800px) {
+  .oldgh-header {
+    gap: 8px;
+    padding: 0 10px;
+  }
+  .oldgh-header__search {
+    min-width: 0;
+    flex-basis: 220px;
+  }
+  .oldgh-header__nav {
+    display: none;
+  }
+  .oldgh-repo-header__actions {
+    flex-wrap: wrap;
+  }
+  .oldgh-repo-tabs {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .oldgh-repo-tabs .oldgh-tabs {
+    width: max-content;
+    min-width: 100%;
+  }
+  .oldgh-issue__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .oldgh-issue__sidebar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
 }
