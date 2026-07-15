@@ -405,7 +405,7 @@ function renderCommentBlock(c: CommentBlockArgs): string {
     : "";
   return `
     <article class="oldgh-issue__comment ${c.cls}">
-      <a class="oldgh-issue__avatar" href="/${escapeAttr(c.login)}">
+      <a class="oldgh-issue__avatar" href="/${escapeAttr(c.login)}" aria-label="View ${escapeAttr(c.login)}'s profile">
         <img src="${escapeAttr(c.avatar)}" alt="" width="44" height="44" />
       </a>
       <div class="oldgh-issue__comment-card">

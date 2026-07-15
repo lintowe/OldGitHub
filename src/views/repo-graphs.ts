@@ -106,7 +106,7 @@ function renderContributor(c: ContributorEntry, rank: number, maxCommits: number
   return `
     <li class="oldgh-graphs__contrib">
       <span class="oldgh-graphs__rank">#${rank}</span>
-      <a class="oldgh-graphs__avatar" href="/${escapeAttr(c.login)}">
+      <a class="oldgh-graphs__avatar" href="/${escapeAttr(c.login)}" aria-label="View ${escapeAttr(c.login)}'s profile">
         <img src="${escapeAttr(c.avatarUrl)}" width="40" height="40" alt="" />
       </a>
       <div class="oldgh-graphs__contrib-main">
@@ -345,7 +345,7 @@ function renderNetwork(v: NetworkView): string {
 function renderNetworkRow(f: NetworkFork): string {
   return `
     <li class="oldgh-network__row">
-      <a class="oldgh-network__avatar" href="/${escapeAttr(f.ownerLogin)}">
+      <a class="oldgh-network__avatar" href="/${escapeAttr(f.ownerLogin)}" aria-label="View ${escapeAttr(f.ownerLogin)}'s profile">
         <img src="${escapeAttr(f.ownerAvatar)}" width="32" height="32" alt="" />
       </a>
       <div class="oldgh-network__main">

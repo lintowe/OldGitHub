@@ -169,7 +169,7 @@ function renderList(items: WatchedRepo[]): string {
 function renderRow(r: WatchedRepo): string {
   return `
     <li class="oldgh-watching__row">
-      <a class="oldgh-watching__avatar" href="/${escapeAttr(r.ownerLogin)}">
+      <a class="oldgh-watching__avatar" href="/${escapeAttr(r.ownerLogin)}" aria-label="View ${escapeAttr(r.ownerLogin)}'s profile">
         <img src="${escapeAttr(r.ownerAvatar)}" width="32" height="32" alt="" />
       </a>
       <div class="oldgh-watching__main">

@@ -247,7 +247,7 @@ function renderUserResults(summary: SearchSummary, items: UserResult[], ctx: Sor
     <ul class="oldgh-search__list oldgh-search__list--users">
       ${items.map((u) => `
         <li class="oldgh-search__row oldgh-search__row--user">
-          <a href="/${escapeAttr(u.login)}" class="oldgh-search__user-avatar">
+          <a href="/${escapeAttr(u.login)}" class="oldgh-search__user-avatar" aria-label="View ${escapeAttr(u.login)}'s profile">
             <img src="${escapeAttr(u.avatarUrl)}" width="48" height="48" alt="" />
           </a>
           <div class="oldgh-search__user-main">

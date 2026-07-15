@@ -194,7 +194,7 @@ function renderDevList(devs: TrendingDev[]): string {
       ${devs.map((d, i) => `
         <li class="oldgh-trending__dev-row">
           <span class="oldgh-trending__rank">#${i + 1}</span>
-          <a class="oldgh-trending__dev-avatar" href="/${escapeAttr(d.login)}">
+          <a class="oldgh-trending__dev-avatar" href="/${escapeAttr(d.login)}" aria-label="View ${escapeAttr(d.login)}'s profile">
             <img src="${escapeAttr(d.avatarUrl)}" width="48" height="48" alt="" />
           </a>
           <div class="oldgh-trending__dev-main">

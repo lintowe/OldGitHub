@@ -115,7 +115,7 @@ function renderGrid(items: Sponsorable[]): string {
 function renderCard(s: Sponsorable): string {
   return `
     <li class="oldgh-sponsors__card">
-      <a class="oldgh-sponsors__avatar" href="${escapeAttr(s.url)}">
+      <a class="oldgh-sponsors__avatar" href="${escapeAttr(s.url)}" aria-label="View sponsorship page for ${escapeAttr(s.login)}">
         <img src="${escapeAttr(s.avatarUrl)}" width="64" height="64" alt="" />
       </a>
       <div class="oldgh-sponsors__body">

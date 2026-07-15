@@ -70,7 +70,7 @@ function renderCommit(v: CommitsView, c: CommitEntry): string {
   return `
     <li class="oldgh-repo-commits__item">
       <div class="oldgh-repo-commits__avatar">
-        ${primaryAuthor ? `<a href="${escapeAttr(primaryAuthor.path)}"><img src="${escapeAttr(primaryAuthor.avatarUrl)}" alt="" width="36" height="36" /></a>` : ""}
+        ${primaryAuthor ? `<a href="${escapeAttr(primaryAuthor.path)}" aria-label="View ${escapeAttr(primaryAuthor.login)}'s profile"><img src="${escapeAttr(primaryAuthor.avatarUrl)}" alt="" width="36" height="36" /></a>` : ""}
       </div>
       <div class="oldgh-repo-commits__body">
         <p class="oldgh-repo-commits__msg">${messageHtml}</p>

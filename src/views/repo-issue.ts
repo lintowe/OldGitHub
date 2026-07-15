@@ -618,7 +618,7 @@ function renderCommentBlock(c: CommentInputs): string {
   const anchor = c.commentId && /^\d+$/.test(c.commentId) ? ` id="issuecomment-${c.commentId}"` : "";
   return `
     <article${anchor} class="oldgh-issue__comment ${c.isOpener ? "oldgh-issue__comment--opener" : ""}">
-      <a class="oldgh-issue__avatar" href="/${escapeAttr(login)}">
+      <a class="oldgh-issue__avatar" href="/${escapeAttr(login)}" aria-label="View ${escapeAttr(login)}'s profile">
         <img src="${escapeAttr(avatar)}" alt="" width="44" height="44" />
       </a>
       <div class="oldgh-issue__comment-card">

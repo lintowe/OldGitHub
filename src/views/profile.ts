@@ -1061,7 +1061,7 @@ function renderSponsoringFromFrame(frame: Element, login: string): string {
       <ul class="oldgh-sponsoring__grid">
         ${sponsorees.map((s) => `
           <li class="oldgh-sponsoring__card">
-            <a class="oldgh-sponsoring__avatar" href="/${escapeAttr(s.login)}">
+            <a class="oldgh-sponsoring__avatar" href="/${escapeAttr(s.login)}" aria-label="View ${escapeAttr(s.login)}'s profile">
               <img src="${escapeAttr(s.avatarUrl)}" width="56" height="56" alt="" />
             </a>
             <div class="oldgh-sponsoring__main">

@@ -105,7 +105,7 @@ function renderRow(v: IssueListView, r: IssueRow, kind: "issues" | "pulls"): str
       : `by ${author} was closed ${relativeTimeLink(r.closedAt ?? r.createdAt)}`);
 
   const assignees = r.assignees.length > 0
-    ? `<span class="oldgh-issues__assignees">${r.assignees.slice(0, 3).map((a) => `<a href="/${escapeAttr(a.login)}" title="@${escapeAttr(a.login)}"><img src="${escapeAttr(a.avatarUrl)}" alt="" width="20" height="20" /></a>`).join("")}</span>`
+    ? `<span class="oldgh-issues__assignees">${r.assignees.slice(0, 3).map((a) => `<a href="/${escapeAttr(a.login)}" aria-label="View ${escapeAttr(a.login)}'s profile"><img src="${escapeAttr(a.avatarUrl)}" alt="" width="20" height="20" /></a>`).join("")}</span>`
     : "";
 
   const commentsBadge = r.comments > 0

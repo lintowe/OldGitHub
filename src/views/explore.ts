@@ -259,7 +259,7 @@ function renderDevs(items: TrendingDev[]): string {
     <ol class="oldgh-explore__devs">
       ${items.map((d) => `
         <li class="oldgh-explore__dev">
-          <a class="oldgh-explore__dev-avatar" href="/${escapeAttr(d.login)}">
+          <a class="oldgh-explore__dev-avatar" href="/${escapeAttr(d.login)}" aria-label="View ${escapeAttr(d.login)}'s profile">
             <img src="${escapeAttr(d.avatarUrl)}" width="48" height="48" alt="" />
           </a>
           <div class="oldgh-explore__dev-main">
